@@ -2,7 +2,7 @@ import { ReactNode } from 'react'
 import Head from 'next/head'
 import MainLayout from './MainLayout'
 import ArticleLayout from './ArticleLayout'
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 
 type LayoutVariant = 'home' | 'article'
 
@@ -56,7 +56,6 @@ export default function Layout({
         crossOrigin="anonymous"
         />
 
-
       <script async src="https://www.googletagmanager.com/gtag/js?id=G-WW9W8X84EF"></script>
       <script
         dangerouslySetInnerHTML={{
@@ -71,19 +70,14 @@ export default function Layout({
     </Head>
   )
 
-  if (variant === 'home') {
-    return (
-      <>
-        {sharedHead}
-        <MainLayout>{children}</MainLayout>
-      </>
-    )
-  }
+  const content = variant === 'home' 
+    ? <MainLayout>{children}</MainLayout>
+    : <ArticleLayout>{children}</ArticleLayout>
 
   return (
     <>
       {sharedHead}
-      <ArticleLayout>{children}</ArticleLayout>
+      {content}
       <Analytics />
     </>
   )
