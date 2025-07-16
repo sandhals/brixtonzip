@@ -70,7 +70,7 @@ export default function SketchbookPage() {
 
   if (loading) {
     return (
-      <Layout variant="home" title="📖 sketchbook">
+      <Layout variant="home" title="✏️ sketchbook">
         <div className="loading">Loading sketchbook...</div>
       </Layout>
     );
@@ -78,7 +78,7 @@ export default function SketchbookPage() {
 
   if (totalPages === 0) {
     return (
-      <Layout variant="home" title="📖 sketchbook">
+      <Layout variant="home" title="✏️ sketchbook">
         <div className="box">
           <p>No sketchbook pages found. Add some images to /images/sketchbook/ (pg00.jpg, pg01.jpg, etc.)</p>
         </div>
@@ -87,7 +87,7 @@ export default function SketchbookPage() {
   }
 
   return (
-    <Layout variant="home" title="📖 sketchbook">
+    <Layout variant="home" title="✏️ sketchbook">
       <SketchbookHeaderImage 
         src={getImagePath(currentPage)} 
         alt={`Sketchbook page ${currentPage + 1}`}

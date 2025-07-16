@@ -84,6 +84,7 @@ export default function Layout({
     <>
       {sharedHead}
       <ArticleLayout>{children}</ArticleLayout>
+      <Analytics />
     </>
   )
 }
