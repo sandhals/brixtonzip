@@ -28,10 +28,10 @@
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/sketchbook": [
+    "/unzip": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/sketchbook.js"
+      "static/chunks/pages/unzip.js"
     ]
   },
   "ampFirstPages": []

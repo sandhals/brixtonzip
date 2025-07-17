@@ -25,7 +25,7 @@ export default function HomePage() {
         {/* LANGUAGE */}
         <p className="hometext">
           <span className="pill opener">LANGUAGE</span>
-          Most of my life circles around language. I write for a living, study its history and structure for fun, and <a href="language">learn new ones</a> when I have the time. In another life, I went to grad school to pursue Modernist literature studies and specialized in the life and work of Virginia Woolf. In this timeline, I found a career in copywriting. My two strongest foreign languages are Japanese and Korean, and most of the serious linguistics reading I do is on <a href="https://www.are.na/brixton/japanese-korean-hypothesis">their contested relationship</a> with each other. Recently, I've started <a href="language/chinese-anki.pdf">dabbling</a> in Chinese, and can speak a bit of French and Norwegian too.
+          Most of my life circles around language. I write for a living, study its history and structure for fun, and <a href="language">learn new ones</a> when I have the time. In another life, I went to grad school to pursue Modernist literature studies and specialized in the life and work of Virginia Woolf. In this timeline, I found a career in copywriting. My two strongest foreign languages are Japanese and Korean, and most of the serious linguistics reading I do is on <a href="https://www.are.na/brixton/japanese-korean-hypothesis">their contested relationship</a> with each other. Recently, I've started <a href="files/chinese-anki.pdf">dabbling</a> in Chinese, and can speak a bit of French and Norwegian too.
         </p>
 
         {/* ARTICLES */}
