@@ -19,13 +19,13 @@ export default function HomePage() {
         {/* SOCIALS */}
         <p className="hometext">
           <span className="pill opener">SOCIALS</span>
-          I mostly lurk (but occasionally tweet) at <a href="http://twitter.com/brixton">@brixton</a> on Twitter, I “post physique” at <a href="http://instagram.com/ydalir">@ydalir</a> on Insta, and I collect images, <a href="http://are.na/brixton/alexandria">PDFs</a>, and other digital bric-a-brac on <a href="http://are.na/brixton">Are.na</a>. I am also <a href="https://network.urbit.org/~sattex-ballet">~sattex-ballet</a> on Urbit.
+          I mostly lurk (but occasionally tweet) at <a href="http://twitter.com/brixton">@brixton</a> on Twitter, I “post physique” at <a href="http://instagram.com/ydalir">@ydalir</a> on Insta, and I collect images, <a href="http://are.na/brixton/alexandria">PDFs,</a> and other digital bric-a-brac on <a href="http://are.na/brixton">Are.na.</a> I am also <a href="https://network.urbit.org/~sattex-ballet">~sattex-ballet</a> on Urbit.
         </p>
 
         {/* LANGUAGE */}
         <p className="hometext">
           <span className="pill opener">LANGUAGE</span>
-          Most of my life circles around language. I write for a living, study its history and structure for fun, and <a href="language">learn new ones</a> when I have the time. In another life, I went to grad school to pursue Modernist literature studies and specialized in the life and work of Virginia Woolf. In this timeline, I found a career in copywriting. My two strongest foreign languages are Japanese and Korean, and most of the serious linguistics reading I do is on <a href="https://www.are.na/brixton/japanese-korean-hypothesis">their contested relationship</a> with each other. Recently, I've started <a href="files/chinese-anki.pdf">dabbling</a> in Chinese, and can speak a bit of French and Norwegian too.
+          Most of my life circles around language. I write for a living, study its history and structure for fun, and <a href="language">learn new ones</a> when I have the time. The two foreign languages I study most closely are Japanese and Korean, and most of the serious linguistics reading I do is on <a href="https://www.are.na/brixton/japanese-korean-hypothesis">their contested relationship</a> with each other. Recently, I've started <a href="files/chinese-anki.pdf">dabbling</a> in Chinese, and dabble in French and Norwegian from time to time too.
         </p>
 
         {/* ARTICLES */}
@@ -46,7 +46,7 @@ export default function HomePage() {
           <span className="pill opener">NOW</span>
           <ul className="hometext">
             <li>
-              Sun's out, guns out. I recently weighed in at the heaviest I've ever been (in a good way) and am ready to start cutting for spring and summer! Slowly making more time for reading. Getting progressively more addicted to Substack. Trying to sleep better. All that good stuff.
+              Switched my site from static to dynamic! TSX is so powerful, I love it. Weekly workouts have slowed to about three or four a week, but it seems to be enough. 
             </li>
           </ul>
         </div>
