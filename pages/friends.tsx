@@ -19,7 +19,7 @@ const FriendsPage = () => {
       birthday: "910509"
     },
     {
-      title: "MINGU", 
+      title: "GUHONG", 
       link: "https://minguhongmfg.com",
       birthday: "850305"
     },
