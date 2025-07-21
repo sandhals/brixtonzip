@@ -118,19 +118,19 @@ const FriendsPage = () => {
                 alignItems: 'center'
               }}>
                 <a 
-                  href={friend.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ 
-                    ...baseStyle,
-                    textDecoration: 'none',
-                    fontWeight: 'bold'
-                  }}
-                  onMouseOver={(e) => e.target.style.textDecoration = 'underline'}
-                  onMouseOut={(e) => e.target.style.textDecoration = 'none'}
-                >
-                  {friend.title}
-                </a>
+  href={friend.link}
+  target="_blank"
+  rel="noopener noreferrer"
+  style={{ 
+    ...baseStyle,
+    textDecoration: 'none',
+    fontWeight: 'bold'
+  }}
+  onMouseOver={(e) => (e.target as HTMLElement).style.textDecoration = 'underline'}
+  onMouseOut={(e) => (e.target as HTMLElement).style.textDecoration = 'none'}
+>
+  {friend.title}
+</a>
                 <span style={{ ...baseStyle, fontWeight: 'bold' }}>
                   ¥{friend.birthday}
                 </span>
