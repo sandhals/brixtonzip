@@ -49,6 +49,8 @@ export default function UnzipPage() {
           <a href=".." className="small" target="_top">home</a>
           {'\n'}|——<a href="../archive" className="small" target="_top">archive</a>
           {'\n'}|&nbsp;&nbsp;|——<a href="../archive" className="sublink_small" target="_top">index.html</a>
+          {'\n'}|——<a href="../friends" className="small" target="_top">friends</a>
+          {'\n'}|&nbsp;&nbsp;|——<a href="../friends" className="sublink_small" target="_top">index.html</a>
           {'\n'}|——<a href="../language" className="small" target="_top">language</a>
           {'\n'}|&nbsp;&nbsp;|——<a href="../language" className="sublink_small" target="_top">index.html</a>
           {'\n'}|&nbsp;&nbsp;|——<a href="../files/chinese-anki.pdf" className="sublink_small" target="_top">chinese-anki.pdf</a>
