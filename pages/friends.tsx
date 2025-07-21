@@ -48,35 +48,6 @@ const FriendsPage = () => {
       day: '2-digit'
     });
     setCurrentTime(`${dateString} ${timeString}`);
-    
-    // Try to fetch hit counter with timeout and fallback
-    const fetchCounter = async () => {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-        
-        const response = await fetch('https://api.countapi.xyz/hit/brixton.zip/friends', {
-          signal: controller.signal,
-          mode: 'cors'
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          const data = await response.json();
-          const count = data.value.toString().padStart(4, '０');
-          setHitCount(count);
-        } else {
-          throw new Error('API response not ok');
-        }
-      } catch (error) {
-        // Use a random number between 100-9999 as fallback to simulate real usage
-        const fallbackCount = (Math.floor(Math.random() * 9900) + 100).toString().padStart(4, '０');
-        setHitCount(fallbackCount);
-      }
-    };
-    
-    fetchCounter();
   }, []);
 
   const baseStyle = {
@@ -147,7 +118,7 @@ const FriendsPage = () => {
           {'*'.repeat(36)}
           <br/><br/>
           
-          お訪問者様　{hitCount}
+          お訪問者様　001
           <br/><br/><br/>
 
           <img src="/images/barcode.gif" style={{ width: '200px', height: 'auto' }} />
