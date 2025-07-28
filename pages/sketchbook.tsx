@@ -71,7 +71,7 @@ export default function SketchbookPage() {
   if (loading) {
     return (
       <Layout variant="home" title="✏️ sketchbook">
-        <div className="loading">Loading sketchbook...</div>
+        <div className="loading">Loading sketchbook... This can take a minute, so please hang tight!</div>
       </Layout>
     );
   }

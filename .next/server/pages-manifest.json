@@ -4,5 +4,5 @@
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
   "/unzip": "pages/unzip.js",
-  "/friends": "pages/friends.js"
+  "/api/curius": "pages/api/curius.js"
 }
