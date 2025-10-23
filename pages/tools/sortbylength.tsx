@@ -196,25 +196,25 @@ And sorted by visual width`}
         <canvas ref={canvasRef} style={{ display: 'none' }} />
       </main>
 
-      <style jsx>{`
-        :root {
-          --color-primary: #0022ff;
-          --color-primary-dark: #05008a;
-          --color-bg: #f5f5f5;
-          --color-white: #ffffff;
-          --color-text: #333;
-          --color-text-dark: #1a1a1a;
-          --color-text-light: #666;
-          --color-text-lighter: #999;
-          --color-text-subtle: #555;
-          --color-border: #e0e0e0;
-          --color-border-dark: #ddd;
-          --color-border-darker: #ccc;
-          --color-input-bg: #fafafa;
-          --color-output-bg: #f9f9f9;
-          --color-btn-bg: #f0f0f0;
-          --color-btn-hover: #e5e5e5;
-        }
+      <style jsx global>{`
+  :root {
+    --color-primary: #0022ff;
+    --color-primary-dark: #05008a;
+    --color-bg: #f5f5f5;
+    --color-white: #ffffff;
+    --color-text: #333;
+    --color-text-dark: #1a1a1a;
+    --color-text-light: #666;
+    --color-text-lighter: #999;
+    --color-text-subtle: #555;
+    --color-border: #e0e0e0;
+    --color-border-dark: #ddd;
+    --color-border-darker: #ccc;
+    --color-input-bg: #fafafa;
+    --color-output-bg: #f9f9f9;
+    --color-btn-bg: #f0f0f0;
+    --color-btn-hover: #e5e5e5;
+  }
 
         * {
           margin: 0;
