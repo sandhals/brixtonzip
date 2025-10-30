@@ -15,12 +15,11 @@ export default function HomePage() {
           <span className="pill opener">PROFILE</span>
           Hi, I'm Brixton! I was born in Canada, relocated to the Japanese countryside in 2016, and since 2021 have been living in Korea. I spend most of my free time learning languages, working out, building websites, reading, writing, and <a href="sketchbook">sketching</a>. Welcome to my online zip folder.
         </p>
-{/*
+        
         <p className="hometext">
           <span className="pill opener">SOCIALS</span>
           I mostly lurk (but occasionally tweet) at <a href="http://twitter.com/brixton">@brixton</a> on Twitter, I “post physique” at <a href="http://instagram.com/ydalir">@ydalir</a> on Insta, and I collect images, <a href="http://are.na/brixton/alexandria">PDFs,</a> and other digital bric-a-brac on <a href="http://are.na/brixton">Are.na.</a> I am also <a href="https://network.urbit.org/~sattex-ballet">~sattex-ballet</a> on Urbit.
         </p>
-*/}
 
         {/* LANGUAGE */}
         <p className="hometext">
@@ -46,7 +45,7 @@ export default function HomePage() {
           <span className="pill opener">NOW</span>
           <ul className="hometext">
             <li>
-              Switched my site from static to dynamic! TSX is so powerful, I love it. Weekly workouts have slowed to about three or four a week, but it seems to be enough. 
+              Switched my site from static to dynamic! TSX is so powerful, I love it. Weekly workouts have slowed to about three or four times a week. The progressively cold weather here in Seoul threatens to slow me even further... 
             </li>
           </ul>
         </div>
