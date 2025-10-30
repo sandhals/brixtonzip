@@ -29,7 +29,7 @@ export default function HomePage() {
 
         {/* ARTICLES */}
         <div className="hometext">
-          <span className="pill opener">ARTICLES</span>
+          <span className="pill opener">READING</span>
           <ul>
           <LinkList limit={5} />
             <li style={{ fontStyle: 'italic', fontSize: '80%', paddingTop: '0.5em' }}>
