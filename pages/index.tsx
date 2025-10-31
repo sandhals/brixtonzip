@@ -41,8 +41,7 @@ export default function HomePage() {
         {/* LANGUAGE */}
         <p className="hometext">
           <span className="pill opener">LANGUAGE</span>
-          Most of my life circles around language. I write for a living, study its history and structure for fun, and 
-          <a href="language">learn new ones</a> when I have the time. The two foreign languages I study most closely are Japanese and Korean, and most of the serious linguistics reading I do is on <a href="https://www.are.na/brixton/japanese-korean-hypothesis"> their contested relationship</a> with each other. Recently, I've started <a href="files/chinese-anki.pdf">dabbling</a> in Chinese, and dabble in French and <span className="norwegian-easter"><a href="/lussekatter" className="hidden-link">N</a>orwegian</span> from time to time too.
+          Most of my life circles around language. I write for a living, study its history and structure for fun, and <a href="language">learn new ones</a> when I have the time. The two foreign languages I study most closely are Japanese and Korean, and most of the serious linguistics reading I do is on <a href="https://www.are.na/brixton/japanese-korean-hypothesis"> their contested relationship</a> with each other. Recently, I've started <a href="files/chinese-anki.pdf">dabbling</a> in Chinese, and dabble in French and <span className="norwegian-easter"><a href="/lussekatter" className="hidden-link">N</a>orwegian</span> from time to time too.
         </p>
 
 {/* (°ロ°) ! Psst... Hey! Hey, you!! I usually only 
@@ -81,6 +80,15 @@ export default function HomePage() {
     </Layout>
   )
 }
+
+
+
+
+
+
+
+
+
 
 
 
