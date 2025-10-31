@@ -45,7 +45,11 @@ export default function HomePage() {
           <a href="language">learn new ones</a> when I have the time. The two foreign languages I study most closely are Japanese and Korean, and most of the serious linguistics reading I do is on <a href="https://www.are.na/brixton/japanese-korean-hypothesis"> their contested relationship</a> with each other. Recently, I've started <a href="files/chinese-anki.pdf">dabbling</a> in Chinese, and dabble in French and <span className="norwegian-easter"><a href="/lussekatter" className="hidden-link">N</a>orwegian</span> from time to time too.
         </p>
 
-
+{/* (°ロ°) ! Psst... Hey! Hey, you!! I usually only 
+    tell my friends this, but go back to the site homepage 
+            and click the "N" in Norwegian for a secret surprise...  
+                I know it looks like there's nothing there but... 
+                    Just go click it! (╭ರ_•́) */}
 
         {/* ARTICLES */}
         <div className="hometext">
@@ -77,3 +81,10 @@ export default function HomePage() {
     </Layout>
   )
 }
+
+
+
+
+
+
+/* the end */
