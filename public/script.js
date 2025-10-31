@@ -80,59 +80,67 @@ if (!window.__brixtonScriptInitialized) {
 
   setInterval(updateInfo, 1000);
 
-  // Insert source code and bind toggle
   window.onload = function () {
-    const container = document.querySelector('.sourcecode');
-    const content = document.querySelector('.content');
-    const wrapper = document.querySelector('.container');
-    const trigger = document.querySelector('.showsource');
+  const container = document.querySelector(".sourcecode");
+  const content = document.querySelector(".content");
+  const wrapper = document.querySelector(".container");
+  const trigger = document.querySelector(".showsource");
 
-    if (!container || !content || !wrapper || !trigger) return;
+  if (!container || !content || !wrapper || !trigger) return;
 
-    fetch('/')
-      .then((res) => res.text())
-      .then((html) => {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const prettyHtml = doc.documentElement.outerHTML;
-        container.textContent = prettyHtml;
-      });
+  // Fetch the live GitHub code
+  fetch("https://raw.githubusercontent.com/sandhals/brixtonzip/main/pages/index.tsx")
+    .then((res) => res.text())
+    .then((code) => {
+      container.textContent = code; // preserve spacing and formatting
+    })
+    .catch((err) => {
+      console.error("Failed to fetch code:", err);
+      container.textContent = "Unable to load source code at this time.";
+    });
 
-    trigger.addEventListener('click', () => {
-      container.style.filter = 'blur(0px)';
-      content.style.display = 'none';
-      container.style.position = 'static';
-      wrapper.style.overflowY = 'visible';
+  // Show source toggle
+  trigger.addEventListener("click", () => {
+    // Show code view
+    container.style.filter = "blur(0px)";
+    content.style.display = "none";
+    container.style.position = "static";
+    wrapper.style.overflowY = "visible";
 
-      // 💙 Heart toggle inline
-      const heartSpan = trigger.querySelector('span#heart');
+    const heartSpan = trigger.querySelector("span#heart");
+    if (heartSpan) {
+      heartSpan.textContent = "💙";
+    }
+
+    // Create the hide button if it doesn’t exist yet
+    let hideButton = document.querySelector(".hidesource");
+    if (!hideButton) {
+      hideButton = document.createElement("div");
+      hideButton.className = "hidesource";
+      hideButton.innerText = "this site was handmade with love 💙";
+      document.body.appendChild(hideButton);
+    }
+
+    hideButton.onclick = () => {
+      // Hide code view
+      container.style.filter = "blur(1px)";
+      content.style.display = "block";
+      container.style.position = "absolute";
+      wrapper.style.overflow = "hidden";
+      hideButton.remove();
+
       if (heartSpan) {
-        heartSpan.textContent = '💙';
+        heartSpan.textContent = "🩶";
       }
 
-      const hideButton = document.createElement('div');
-      hideButton.className = 'hidesource';
-      hideButton.innerText = 'this site was handmade with love 💙';
-      hideButton.addEventListener('click', () => {
-        container.style.filter = 'blur(1px)';
-        content.style.display = 'block';
-        container.style.position = 'absolute';
-        wrapper.style.overflow = 'hidden';
-        hideButton.remove();
+      window.scrollTo(
+        0,
+        document.body.scrollHeight || document.documentElement.scrollHeight
+      );
+    };
 
-        // Optional: revert heart to 🩶 if needed
-        if (heartSpan) {
-          heartSpan.textContent = '🩶';
-        }
-
-        window.scrollTo(
-          0,
-          document.body.scrollHeight || document.documentElement.scrollHeight
-        );
-      });
-
-      document.body.appendChild(hideButton);
-      window.scrollTo(0, 0);
-    });
-  };
+    // Scroll to top when showing source
+    window.scrollTo(0, 0);
+  });
+};
 }

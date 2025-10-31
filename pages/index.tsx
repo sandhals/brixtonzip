@@ -1,3 +1,24 @@
+/*
+┌─────────────────────────────────────────────────────────┐
+│   WELCOME TO THE SOURCE CODE! ( ˘ ³˘)ノ°ﾟº❍｡♡            │─┐
+│                                                         │ │
+│      Everything here was written with love and by hand  │ │
+│  in a text editor! No software, no web apps, just an    │ │
+|  idea and a bit of time and effort spent at cafes       | |
+|  around Seoul. If you've never worked with HTML before  | |
+|  and think it looks intimidating... looks can be        | |
+|  deceiving! I encourage you to look up a tutorial       | |
+|  online and to try your hand at it. You might be        | |
+|  surprised at what you can create with even just a few  | |
+|  minutes of study! A good place to start is my friend   | |
+|  Laurel's website http://veryinteractive.net/           | |
+|  You can find plenty of tutorials and ideas for first   | |
+|  projects there! Happy coding and happy reading~!       | |
+│                                                         │ │
+└─────────────────────────────────────────────────────────┘ │
+  └─────────────────────────────────────────────────────────┘
+*/
+
 import Layout from '@/components/Layout'
 import UnzipBox from '@/components/UnzipBox'
 import LinkList from '@/components/LinkList'
@@ -6,10 +27,6 @@ export default function HomePage() {
   return (
     <Layout variant="home" title="🙋🏻‍♂️ brixton.zip">
       <UnzipBox />
-      {/* UNZIP BOX */}
-      {/* <UnzipBox /> */}
-
-      {/* PROFILE */}
       <div className="box">
         <p className="hometext">
           <span className="pill opener">PROFILE</span>
@@ -24,8 +41,11 @@ export default function HomePage() {
         {/* LANGUAGE */}
         <p className="hometext">
           <span className="pill opener">LANGUAGE</span>
-          Most of my life circles around language. I write for a living, study its history and structure for fun, and <a href="language">learn new ones</a> when I have the time. The two foreign languages I study most closely are Japanese and Korean, and most of the serious linguistics reading I do is on <a href="https://www.are.na/brixton/japanese-korean-hypothesis">their contested relationship</a> with each other. Recently, I've started <a href="files/chinese-anki.pdf">dabbling</a> in Chinese, and dabble in French and Norwegian from time to time too.
+          Most of my life circles around language. I write for a living, study its history and structure for fun, and 
+          <a href="language">learn new ones</a> when I have the time. The two foreign languages I study most closely are Japanese and Korean, and most of the serious linguistics reading I do is on <a href="https://www.are.na/brixton/japanese-korean-hypothesis"> their contested relationship</a> with each other. Recently, I've started <a href="files/chinese-anki.pdf">dabbling</a> in Chinese, and dabble in French and <span className="norwegian-easter"><a href="/lussekatter" className="hidden-link">N</a>orwegian</span> from time to time too.
         </p>
+
+
 
         {/* ARTICLES */}
         <div className="hometext">

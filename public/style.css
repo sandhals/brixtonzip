@@ -232,6 +232,40 @@ a:hover {
   color:blue;
 }
 
+.norwegian-easter {
+  display: inline;
+  all: unset;
+  cursor: default;
+}
+
+.hidden-link {
+  all: unset;
+  pointer-events: none;
+  color: inherit;
+  cursor: default;
+  text-decoration: none;
+}
+
+/* Wait 2s before link activates */
+.norwegian-easter:hover .hidden-link {
+  animation: activateLink 0s linear 2s forwards;
+}
+
+/* When hover ends, immediately deactivate */
+.norwegian-easter:not(:hover) .hidden-link {
+  animation: none;
+  pointer-events: none;
+  cursor: default;
+}
+
+@keyframes activateLink {
+  to {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+}
+
+
 .recentcurius {
   filter: grayscale(1);
 }
