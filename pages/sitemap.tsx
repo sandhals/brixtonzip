@@ -8,16 +8,20 @@ interface FileNode {
 }
 
 interface SitemapTreeProps {
-  structure: FileNode[];
+  structure?: FileNode[];
 }
 
-const SitemapTree: React.FC<SitemapTreeProps> = ({ structure }) => {
+const SitemapTree: React.FC<SitemapTreeProps> = ({ structure = [] }) => {
   const renderTree = (
     nodes: FileNode[],
     prefix: string = '',
     isLast: boolean = true,
     isRoot: boolean = true
   ): React.ReactElement[] => {
+    if (!nodes || !Array.isArray(nodes)) {
+      return [];
+    }
+
     return nodes.flatMap((node, index) => {
       const isLastNode = index === nodes.length - 1;
       const connector = isRoot ? '' : isLastNode ? '└── ' : '├── ';
@@ -108,68 +112,3 @@ const SitemapTree: React.FC<SitemapTreeProps> = ({ structure }) => {
 };
 
 export default SitemapTree;
-
-// Example usage with your pages structure:
-// Copy this structure and modify it to match your actual pages folder
-
-export const exampleStructure: FileNode[] = [
-  {
-    name: 'index.tsx',
-    type: 'file',
-    path: '/',
-  },
-  {
-    name: 'about.tsx',
-    type: 'file',
-    path: '/about',
-  },
-  {
-    name: 'sitemap.tsx',
-    type: 'file',
-    path: '/sitemap',
-  },
-  {
-    name: 'api',
-    type: 'folder',
-    path: '/api',
-    children: [
-      {
-        name: 'hello.ts',
-        type: 'file',
-        path: '/api/hello',
-      },
-      {
-        name: 'data.ts',
-        type: 'file',
-        path: '/api/data',
-      },
-    ],
-  },
-  {
-    name: 'blog',
-    type: 'folder',
-    path: '/blog',
-    children: [
-      {
-        name: 'index.tsx',
-        type: 'file',
-        path: '/blog',
-      },
-      {
-        name: '[slug].tsx',
-        type: 'file',
-        path: '/blog/[slug]',
-      },
-    ],
-  },
-  {
-    name: '_app.tsx',
-    type: 'file',
-    path: '/_app',
-  },
-  {
-    name: '_document.tsx',
-    type: 'file',
-    path: '/_document',
-  },
-];
