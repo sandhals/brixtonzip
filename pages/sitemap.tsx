@@ -1,93 +1,175 @@
-// minimal sitemap that lists routes from the pages folder only
-// tweak OWNER, REPO, REF, SITE_URL to your needs
+import React from 'react';
 
-const OWNER = process.env.GITHUB_OWNER || 'sandhals'
-const REPO = process.env.GITHUB_REPO || 'brixtonzip'
-const REF = process.env.GITHUB_REF || 'main' // branch
-const SITE_URL = process.env.SITE_URL || ''
-
-type GHItem = {
-  name: string
-  path: string
-  type: 'file' | 'dir'
+interface FileNode {
+  name: string;
+  type: 'file' | 'folder';
+  path: string;
+  children?: FileNode[];
 }
 
-const exts = ['.tsx', '.jsx', '.ts', '.js', '.mdx']
-
-function isPageFile(name: string) {
-  return exts.some(ext => name.endsWith(ext))
+interface SitemapTreeProps {
+  structure: FileNode[];
 }
 
-function toRoute(p: string) {
-  // drop leading pages/
-  let s = p.replace(/^pages\//, '')
+const SitemapTree: React.FC<SitemapTreeProps> = ({ structure }) => {
+  const renderTree = (
+    nodes: FileNode[],
+    prefix: string = '',
+    isLast: boolean = true,
+    isRoot: boolean = true
+  ): JSX.Element[] => {
+    return nodes.flatMap((node, index) => {
+      const isLastNode = index === nodes.length - 1;
+      const connector = isRoot ? '' : isLastNode ? '└── ' : '├── ';
+      const childPrefix = isRoot ? '' : prefix + (isLastNode ? '    ' : '│   ');
+      
+      const icon = node.type === 'folder' ? '📁 ' : '📄 ';
+      const displayName = node.name;
 
-  // ignore special files and api
-  if (s.startsWith('api/')) return null
-  if (/_app\./.test(s) || /_document\./.test(s) || /_error\./.test(s) || /middleware\./.test(s)) return null
+      const elements: JSX.Element[] = [
+        <div key={node.path} className="sitemap-line">
+          <span className="prefix">{prefix}</span>
+          <span className="connector">{connector}</span>
+          <span className="icon">{icon}</span>
+          <a href={node.path} className="node-name">
+            {displayName}
+          </a>
+        </div>
+      ];
 
-  // drop extension
-  for (const ext of exts) if (s.endsWith(ext)) s = s.slice(0, -ext.length)
-
-  // index handling
-  if (s === 'index') return '/'
-  s = s.replace(/\/index$/, '')
-
-  return `/${s}`
-}
-
-async function listDir(path: string): Promise<GHItem[]> {
-  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${encodeURIComponent(REF)}`
-  const headers: Record<string, string> = { Accept: 'application/vnd.github+json' }
-  if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`
-
-  const res = await fetch(url, { headers, cache: 'no-store' })
-  if (!res.ok) throw new Error(`GitHub contents failed ${res.status}`)
-  return await res.json()
-}
-
-async function listPageFiles(root = 'pages'): Promise<string[]> {
-  const out: string[] = []
-  async function walk(dir: string) {
-    const items = await listDir(dir)
-    for (const it of items) {
-      if (it.type === 'dir') {
-        await walk(it.path)
-      } else if (it.type === 'file' && isPageFile(it.name)) {
-        out.push(it.path)
+      if (node.children && node.children.length > 0) {
+        elements.push(...renderTree(node.children, childPrefix, isLastNode, false));
       }
-    }
-  }
-  await walk(root)
-  return out
-}
 
-export const revalidate = 1800
-
-export default async function SiteMap() {
-  const files = await listPageFiles('pages')
-
-  const routes = Array.from(
-    new Set(
-      files
-        .map(toRoute)
-        .filter((r): r is string => !!r)
-        // optional hide dynamic routes like /blog/[slug]
-        .filter(r => !/\[.*\]/.test(r))
-    )
-  ).sort((a, b) => a.localeCompare(b))
+      return elements;
+    });
+  };
 
   return (
-    <main style={{ padding: '2rem', maxWidth: 860, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 28, marginBottom: 8 }}>Site map</h1>
-      <p style={{ marginBottom: 24 }}>Auto generated from the pages folder on GitHub</p>
-      <ul style={{ lineHeight: 1.9 }}>
-        {routes.map(r => (
-          <li key={r}>
-            <a href={`${SITE_URL}${r}`}>{r}</a>
-          </li>
-        ))}
-      </ul>
-    </main>
-  )
-}
+    <div className="sitemap-tree">
+      <style jsx>{`
+        .sitemap-tree {
+          font-family: 'Courier New', Consolas, Monaco, monospace;
+          background: #1e1e1e;
+          color: #d4d4d4;
+          padding: 2rem;
+          border-radius: 8px;
+          overflow-x: auto;
+          line-height: 1.6;
+          font-size: 14px;
+        }
+
+        .sitemap-line {
+          white-space: pre;
+          transition: background 0.2s ease;
+        }
+
+        .sitemap-line:hover {
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .prefix,
+        .connector {
+          color: #858585;
+        }
+
+        .icon {
+          margin-right: 4px;
+        }
+
+        .node-name {
+          color: #4ec9b0;
+          text-decoration: none;
+          transition: color 0.2s ease;
+        }
+
+        .node-name:hover {
+          color: #6dd9bf;
+          text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+          .sitemap-tree {
+            font-size: 12px;
+            padding: 1rem;
+          }
+        }
+      `}</style>
+      
+      <div className="tree-header">
+        <h2 style={{ color: '#d4d4d4', marginBottom: '1.5rem', fontFamily: 'inherit' }}>
+          📂 pages/
+        </h2>
+      </div>
+      
+      {renderTree(structure)}
+    </div>
+  );
+};
+
+export default SitemapTree;
+
+// Example usage with your pages structure:
+// Copy this structure and modify it to match your actual pages folder
+
+export const exampleStructure: FileNode[] = [
+  {
+    name: 'index.tsx',
+    type: 'file',
+    path: '/',
+  },
+  {
+    name: 'about.tsx',
+    type: 'file',
+    path: '/about',
+  },
+  {
+    name: 'sitemap.tsx',
+    type: 'file',
+    path: '/sitemap',
+  },
+  {
+    name: 'api',
+    type: 'folder',
+    path: '/api',
+    children: [
+      {
+        name: 'hello.ts',
+        type: 'file',
+        path: '/api/hello',
+      },
+      {
+        name: 'data.ts',
+        type: 'file',
+        path: '/api/data',
+      },
+    ],
+  },
+  {
+    name: 'blog',
+    type: 'folder',
+    path: '/blog',
+    children: [
+      {
+        name: 'index.tsx',
+        type: 'file',
+        path: '/blog',
+      },
+      {
+        name: '[slug].tsx',
+        type: 'file',
+        path: '/blog/[slug]',
+      },
+    ],
+  },
+  {
+    name: '_app.tsx',
+    type: 'file',
+    path: '/_app',
+  },
+  {
+    name: '_document.tsx',
+    type: 'file',
+    path: '/_document',
+  },
+];
