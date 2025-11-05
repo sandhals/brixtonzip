@@ -17,7 +17,7 @@ const SitemapTree: React.FC<SitemapTreeProps> = ({ structure }) => {
     prefix: string = '',
     isLast: boolean = true,
     isRoot: boolean = true
-  ): JSX.Element[] => {
+  ): React.ReactElement[] => {
     return nodes.flatMap((node, index) => {
       const isLastNode = index === nodes.length - 1;
       const connector = isRoot ? '' : isLastNode ? '└── ' : '├── ';
@@ -26,7 +26,7 @@ const SitemapTree: React.FC<SitemapTreeProps> = ({ structure }) => {
       const icon = node.type === 'folder' ? '📁 ' : '📄 ';
       const displayName = node.name;
 
-      const elements: JSX.Element[] = [
+      const elements: React.ReactElement[] = [
         <div key={node.path} className="sitemap-line">
           <span className="prefix">{prefix}</span>
           <span className="connector">{connector}</span>
