@@ -5,8 +5,10 @@
 │      Everything here was written with love and by hand  │ │
 │  in a text editor! No software, no web apps, just an    │ │
 |  idea and a bit of time and effort spent at cafes       | |
-|  around Seoul. If you've never worked with HTML before  | |
-|  and think it looks intimidating... looks can be        | |
+|  around Seoul. Although this site is written in TSX,    | |
+|  if you've never made a site before and are curious to  | |
+|  try making one, HTML is a great place to start! I know | |
+|  it looks a bit intimidating... but looks can be        | |
 |  deceiving! I encourage you to look up a tutorial       | |
 |  online and to try your hand at it. You might be        | |
 |  surprised at what you can create with even just a few  | |
@@ -95,4 +97,16 @@ export default function HomePage() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 /* the end */
+/* if you can see this, all that space above is just to make the source code display better on my website's "hand-made with love" toggle" */

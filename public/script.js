@@ -63,7 +63,7 @@ if (!window.__brixtonScriptInitialized) {
 
     if (currentCity === "Seoul") {
       document.getElementById("currentTime").innerText =
-        "\u00A0" + formattedTime + "\u00A0";
+        formattedTime + "\u00A0";
       document.getElementById("currentWeekday").innerText =
         "\u00A0" + today + "\u00A0";
       document.getElementById("myStatus").innerText = statusMessage;

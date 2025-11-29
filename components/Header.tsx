@@ -16,8 +16,8 @@ export default function Header({ variant = 'article' }: HeaderProps) {
     }
   }, [])
 
-  const homeCopy = `IT'S `
-  const articleCopy = `IT'S CURRENTLY `
+  const homeCopy = `IT'S`
+  const articleCopy = `IT'S CURRENTLY`
 
   return (
 <div className="header">
