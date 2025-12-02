@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ratio Measurement Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fafafa;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toolbar {
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .toolbar h1 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .file-upload-btn {
+            width: 100%;
+            padding: 10px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .file-upload-btn:hover {
+            background: #1976d2;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .tool-section {
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+
+        .tool-btn {
+            aspect-ratio: 1;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.2s;
+            padding: 8px;
+        }
+
+        .tool-btn:hover {
+            border-color: #2196f3;
+            background: #f5f5f5;
+        }
+
+        .tool-btn.active {
+            background: #2196f3;
+            border-color: #2196f3;
+            color: white;
+        }
+
+        .tool-icon {
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .tool-label {
+            font-size: 9px;
+            font-weight: 500;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .settings {
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .setting-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .setting-input {
+            width: 60px;
+            padding: 4px 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .measurements-panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .measurement-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 6px;
+            background: #f9f9f9;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .measurement-item.base {
+            background: #ffebee;
+        }
+
+        .measurement-value {
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .measurement-delete {
+            padding: 2px 6px;
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .measurement-delete:hover {
+            color: #f44336;
+        }
+
+        .actions {
+            padding: 16px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .action-btn.undo {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .action-btn.undo:hover:not(:disabled) {
+            background: #e0e0e0;
+        }
+
+        .action-btn.clear {
+            background: #f5f5f5;
+            color: #f44336;
+        }
+
+        .action-btn.clear:hover:not(:disabled) {
+            background: #ffebee;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .status-bar {
+            padding: 8px 16px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .canvas-container {
+            flex: 1;
+            overflow: auto;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="sidebar">
+            <div class="toolbar">
+                <h1>Ratio Tool</h1>
+                <label class="file-upload-btn">
+                    Upload Image
+                    <input type="file" id="imageUpload" accept="image/*">
+                </label>
+            </div>
+
+            <div class="tool-section">
+                <div class="section-label">Shape Tool</div>
+                <div class="tool-grid">
+                    <button class="tool-btn active" data-tool="line">
+                        <div class="tool-icon">─</div>
+                        <div class="tool-label">Line</div>
+                    </button>
+                    <button class="tool-btn" data-tool="circle-radius">
+                        <div class="tool-icon">◯</div>
+                        <div class="tool-label">Circle R</div>
+                    </button>
+                    <button class="tool-btn" data-tool="circle-diameter">
+                        <div class="tool-icon">⊕</div>
+                        <div class="tool-label">Circle D</div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings">
+                <div class="section-label">Settings</div>
+                <div class="setting-row">
+                    <span class="setting-label">Decimal places</span>
+                    <input type="number" class="setting-input" id="decimalPlaces" min="0" max="6" value="2">
+                </div>
+            </div>
+
+            <div class="measurements-panel" id="measurementList">
+                <div class="empty-state">No measurements yet</div>
+            </div>
+
+            <div class="actions">
+                <button class="action-btn undo" id="undoBtn" disabled>↶ Undo</button>
+                <button class="action-btn clear" id="clearBtn" disabled>Clear</button>
+            </div>
+        </div>
+
+        <div class="canvas-area">
+            <div class="status-bar" id="statusBar">Upload an image to begin</div>
+            <div class="canvas-container">
+                <canvas id="canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const imageUpload = document.getElementById('imageUpload');
+        const decimalPlaces = document.getElementById('decimalPlaces');
+        const undoBtn = document.getElementById('undoBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const statusBar = document.getElementById('statusBar');
+        const measurementList = document.getElementById('measurementList');
+        const toolBtns = document.querySelectorAll('.tool-btn');
+
+        let image = null;
+        let baseMeasurement = null;
+        let measurements = [];
+        let history = [];
+        let isDrawing = false;
+        let startPoint = null;
+        let clickedNode = null;
+        let tempLine = null;
+        let selectedTool = 'line';
+        let hoveredNode = null;
+
+        // Tool selection
+        toolBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                toolBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedTool = btn.dataset.tool;
+            });
+        });
+
+        // Image upload
+        imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    image = new Image();
+                    image.onload = () => {
+                        canvas.width = image.width;
+                        canvas.height = image.height;
+                        saveHistory();
+                        baseMeasurement = null;
+                        measurements = [];
+                        updateUI();
+                        setStatus('Draw first shape to set base');
+                        redraw();
+                    };
+                    image.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Undo
+        undoBtn.addEventListener('click', () => {
+            if (history.length > 0) {
+                const state = history.pop();
+                baseMeasurement = state.baseMeasurement;
+                measurements = state.measurements;
+                updateUI();
+                redraw();
+            }
+        });
+
+        // Clear
+        clearBtn.addEventListener('click', () => {
+            saveHistory();
+            baseMeasurement = null;
+            measurements = [];
+            updateUI();
+            setStatus('Draw first shape to set base');
+            redraw();
+        });
+
+        // Find node near point
+        function findNearNode(x, y, threshold = 10) {
+            // Check base measurement nodes
+            if (baseMeasurement) {
+                if (calculateDistance({x, y}, baseMeasurement.start) < threshold) {
+                    return { point: baseMeasurement.start, type: 'base', index: -1 };
+                }
+                if (calculateDistance({x, y}, baseMeasurement.end) < threshold) {
+                    return { point: baseMeasurement.end, type: 'base', index: -1 };
+                }
+            }
+
+            // Check measurement nodes
+            for (let i = 0; i < measurements.length; i++) {
+                const m = measurements[i];
+                if (calculateDistance({x, y}, m.start) < threshold) {
+                    return { point: m.start, type: 'measurement', index: i };
+                }
+                if (calculateDistance({x, y}, m.end) < threshold) {
+                    return { point: m.end, type: 'measurement', index: i };
+                }
+            }
+
+            return null;
+        }
+
+        // Get canvas coordinates from mouse event
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+
+            return { x, y };
+        }
+
+        // Canvas mouse events
+        canvas.addEventListener('mousemove', (e) => {
+            if (!image) return;
+
+            const { x, y } = getCanvasCoords(e);
+
+            if (isDrawing && startPoint) {
+                tempLine = { start: startPoint, end: { x, y } };
+                redraw();
+            } else {
+                // Check for node hover
+                const node = findNearNode(x, y);
+                if (node !== hoveredNode) {
+                    hoveredNode = node;
+                    redraw();
+                }
+            }
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (!image) return;
+
+            const { x, y } = getCanvasCoords(e);
+
+            // Check if clicking on existing node
+            const node = findNearNode(x, y);
+
+            if (node) {
+                clickedNode = node;
+                isDrawing = true;
+                startPoint = { x: node.point.x, y: node.point.y };
+            } else {
+                isDrawing = true;
+                startPoint = { x, y };
+            }
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            if (!image || !isDrawing || !startPoint) return;
+
+            const { x, y } = getCanvasCoords(e);
+
+            const endPoint = { x, y };
+            const length = calculateDistance(startPoint, endPoint);
+
+            if (length < 5) {
+                isDrawing = false;
+                startPoint = null;
+                clickedNode = null;
+                tempLine = null;
+                redraw();
+                return;
+            }
+
+            saveHistory();
+
+            if (!baseMeasurement) {
+                baseMeasurement = {
+                    start: { ...startPoint },
+                    end: { ...endPoint },
+                    length: length,
+                    type: selectedTool,
+                    displayValue: 1
+                };
+                setStatus('Base set. Draw shapes to measure');
+            } else {
+                const ratio = calculateRatio(length, baseMeasurement.length, baseMeasurement.type);
+                measurements.push({
+                    start: { ...startPoint },
+                    end: { ...endPoint },
+                    length: length,
+                    ratio: ratio,
+                    type: selectedTool
+                });
+            }
+
+            isDrawing = false;
+            startPoint = null;
+            clickedNode = null;
+            tempLine = null;
+            updateUI();
+            redraw();
+        });
+
+        // Calculate distance
+        function calculateDistance(p1, p2) {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        // Calculate ratio
+        function calculateRatio(length, baseLength, baseType) {
+            return length / baseLength;
+        }
+
+        // Save history
+        function saveHistory() {
+            history.push({
+                baseMeasurement: baseMeasurement ? JSON.parse(JSON.stringify(baseMeasurement)) : null,
+                measurements: JSON.parse(JSON.stringify(measurements))
+            });
+            if (history.length > 50) history.shift();
+        }
+
+        // Redraw canvas
+        function redraw() {
+            if (!image) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(image, 0, 0);
+
+            // Draw base measurement
+            if (baseMeasurement) {
+                drawShape(baseMeasurement, '#f44336', false);
+            }
+
+            // Draw measurements
+            measurements.forEach((m) => {
+                drawShape(m, '#2196f3', false);
+            });
+
+            // Draw temp line
+            if (tempLine) {
+                const color = !baseMeasurement ? '#f44336' : '#2196f3';
+                const currentShape = {
+                    start: tempLine.start,
+                    end: tempLine.end,
+                    type: selectedTool
+                };
+
+                drawShape(currentShape, color, true);
+
+                // Show temp measurement
+                if (baseMeasurement) {
+                    const length = calculateDistance(tempLine.start, tempLine.end);
+                    const ratio = calculateRatio(length, baseMeasurement.length, baseMeasurement.type);
+                    const decimals = parseInt(decimalPlaces.value);
+                    const midX = (tempLine.start.x + tempLine.end.x) / 2;
+                    const midY = (tempLine.start.y + tempLine.end.y) / 2;
+
+                    ctx.fillStyle = color;
+                    ctx.font = '600 13px -apple-system, sans-serif';
+                    const text = ratio.toFixed(decimals);
+                    const textWidth = ctx.measureText(text).width;
+                    ctx.fillRect(midX - textWidth / 2 - 6, midY - 18, textWidth + 12, 20);
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(text, midX - textWidth / 2, midY - 4);
+                }
+            }
+
+            // Highlight hovered node
+            if (hoveredNode && !isDrawing) {
+                drawNode(hoveredNode.point, hoveredNode.type === 'base' ? '#f44336' : '#2196f3', true);
+            }
+        }
+
+        // Draw shape (line or circle)
+        function drawShape(shape, color, isDashed = false) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.setLineDash(isDashed ? [5, 5] : []);
+
+            if (shape.type === 'line') {
+                ctx.beginPath();
+                ctx.moveTo(shape.start.x, shape.start.y);
+                ctx.lineTo(shape.end.x, shape.end.y);
+                ctx.stroke();
+            } else if (shape.type === 'circle-radius') {
+                const radius = calculateDistance(shape.start, shape.end);
+                ctx.beginPath();
+                ctx.arc(shape.start.x, shape.start.y, radius, 0, Math.PI * 2);
+                ctx.stroke();
+                // Draw radius line
+                ctx.beginPath();
+                ctx.moveTo(shape.start.x, shape.start.y);
+                ctx.lineTo(shape.end.x, shape.end.y);
+                ctx.stroke();
+            } else if (shape.type === 'circle-diameter') {
+                const centerX = (shape.start.x + shape.end.x) / 2;
+                const centerY = (shape.start.y + shape.end.y) / 2;
+                const radius = calculateDistance(shape.start, shape.end) / 2;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.stroke();
+                // Draw diameter line
+                ctx.beginPath();
+                ctx.moveTo(shape.start.x, shape.start.y);
+                ctx.lineTo(shape.end.x, shape.end.y);
+                ctx.stroke();
+            }
+
+            drawNode(shape.start, color);
+            drawNode(shape.end, color);
+        }
+
+        // Draw node
+        function drawNode(point, color, highlight = false) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, highlight ? 6 : 4, 0, Math.PI * 2);
+            ctx.fill();
+            if (highlight) {
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        // Update UI
+        function updateUI() {
+            // Update buttons
+            undoBtn.disabled = history.length === 0;
+            clearBtn.disabled = !baseMeasurement && measurements.length === 0;
+
+            // Update measurements list
+            measurementList.innerHTML = '';
+
+            if (!baseMeasurement && measurements.length === 0) {
+                measurementList.innerHTML = '<div class="empty-state">No measurements yet</div>';
+                return;
+            }
+
+            const decimals = parseInt(decimalPlaces.value);
+
+            if (baseMeasurement) {
+                const item = document.createElement('div');
+                item.className = 'measurement-item base';
+                let typeText = baseMeasurement.type === 'line' ? 'Line' :
+                              baseMeasurement.type === 'circle-radius' ? 'Circle R' : 'Circle D';
+                item.innerHTML = `
+                    <span class="setting-label">Base (${typeText})</span>
+                    <span class="measurement-value">1.00</span>
+                `;
+                measurementList.appendChild(item);
+            }
+
+            measurements.forEach((m, i) => {
+                const item = document.createElement('div');
+                item.className = 'measurement-item';
+                let typeText = m.type === 'line' ? 'Line' :
+                              m.type === 'circle-radius' ? 'Circle R' : 'Circle D';
+                item.innerHTML = `
+                    <span class="setting-label">#${i + 1} (${typeText})</span>
+                    <div>
+                        <span class="measurement-value">${m.ratio.toFixed(decimals)}</span>
+                        <button class="measurement-delete" onclick="deleteMeasurement(${i})">×</button>
+                    </div>
+                `;
+                measurementList.appendChild(item);
+            });
+        }
+
+        // Delete measurement
+        window.deleteMeasurement = function(index) {
+            saveHistory();
+            measurements.splice(index, 1);
+            updateUI();
+            redraw();
+        };
+
+        // Set status
+        function setStatus(message) {
+            statusBar.textContent = message;
+        }
+
+        // Decimal places change
+        decimalPlaces.addEventListener('input', () => {
+            updateUI();
+        });
+
+        // Initial state
+        updateUI();
+    </script>
+</body>
+</html>

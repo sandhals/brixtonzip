@@ -2,8 +2,7 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/": "pages/index.js",
-  "/lussekatter": "pages/lussekatter.js",
   "/unzip": "pages/unzip.js",
-  "/api/curius": "pages/api/curius.js"
+  "/": "pages/index.js",
+  "/garden": "pages/garden.js"
 }
