@@ -148,7 +148,6 @@ export default function GardenHeaderImage({ src, colorSrc, alt }: { src: string;
           width: 100%;
           height: 50vh;
           overflow: hidden;
-          cursor: crosshair;
         }
 
         .base-image,

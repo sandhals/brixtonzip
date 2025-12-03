@@ -43,7 +43,7 @@ export default function GardenPage() {
             </tr>
             <tr>
               <td className="link-cell">
-                <a href="/garden/tetra">Ratio Ruler</a>
+                <a href="/garden/ratio">Ratio Ruler</a>
               </td>
               <td className="desc-cell">
                 A simple line drawing tool for measuring objects in an image relative to each other. 
@@ -59,6 +59,7 @@ export default function GardenPage() {
           border-collapse: collapse;
           font-family: 'Roboto', sans-serif;
           font-weight: 300;
+          margin-bottom: 4em;
         }
 
         .garden-table tr {

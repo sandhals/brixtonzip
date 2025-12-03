@@ -24,11 +24,6 @@ globalThis.__BUILD_MANIFEST = {
       "static/chunks/webpack.js",
       "static/chunks/main.js",
       "static/chunks/pages/garden.js"
-    ],
-    "/unzip": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/unzip.js"
     ]
   },
   "ampFirstPages": []
