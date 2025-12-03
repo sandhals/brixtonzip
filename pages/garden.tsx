@@ -35,7 +35,7 @@ export default function GardenPage() {
             </tr>
             <tr>
               <td className="link-cell">
-                <a href="/garden/tetra">Spectris</a>
+                <a href="/garden/spectris">Spectris</a>
               </td>
               <td className="desc-cell">
                 My very own tetris variant! Multicoloured tetrimos fill the space, but you can only clear the blocks by aligning four or more of the same colour.
