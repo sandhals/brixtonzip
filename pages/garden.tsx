@@ -12,8 +12,8 @@ export default function GardenPage() {
 
       <div className="box">
         <h1>Digital Garden</h1>
-        <p>A collection of small tools and experiments I've built to solve everyday problems or just for fun.</p>
-        <br />
+        <p>A place to keep the small tools, sites, and games I build. Some are more or less finished, others I'm still working on!</p>
+        <h2>🌸 Blooming</h2>
 
         <table className="garden-table">
           <tbody>
@@ -35,10 +35,10 @@ export default function GardenPage() {
             </tr>
             <tr>
               <td className="link-cell">
-                <a href="/garden/tetra">Tetra</a>
+                <a href="/garden/tetra">Spectris</a>
               </td>
               <td className="desc-cell">
-                My very own tetris variant! Multicoloured tetrimos fill the space, but you can only clear the blocks by aligning four or more of the same colour. 
+                My very own tetris variant! Multicoloured tetrimos fill the space, but you can only clear the blocks by aligning four or more of the same colour.
               </td>
             </tr>
             <tr>
@@ -46,7 +46,22 @@ export default function GardenPage() {
                 <a href="/garden/ratio">Ratio Ruler</a>
               </td>
               <td className="desc-cell">
-                A simple line drawing tool for measuring objects in an image relative to each other. 
+                A simple line drawing tool for measuring objects in an image relative to each other.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>☕ Brewing</h2>
+
+        <table className="garden-table brewing-table">
+          <tbody>
+            <tr>
+              <td className="link-cell">
+                <span className="brewing-cell">Autobiographer</span>
+              </td>
+              <td className="desc-cell">
+                An applet I'm building for recording memories as they come to you, automatically compiling them into a detailed timeline of your whole life.
               </td>
             </tr>
           </tbody>
@@ -59,7 +74,7 @@ export default function GardenPage() {
           border-collapse: collapse;
           font-family: 'Roboto', sans-serif;
           font-weight: 300;
-          margin-bottom: 4em;
+          margin-bottom: 2em;
         }
 
         .garden-table tr {
@@ -84,6 +99,22 @@ export default function GardenPage() {
           vertical-align: top;
           font-weight: 300;
         }
+
+        h2 {
+          margin-bottom: 0.5em;
+          font-family: 'Roboto', sans-serif;
+          font-weight: 400;
+          font-size:1.1em;
+        }
+
+        .brewing-desc {
+          margin-bottom: 1em;
+          font-size: 1em;
+          font-weight: 300;
+        }
+
+        .brewing-cell{
+          font-size:0.8em;}
       `}</style>
     </Layout>
   )

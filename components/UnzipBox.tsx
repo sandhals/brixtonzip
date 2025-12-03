@@ -39,7 +39,8 @@ export default function UnzipBox() {
         }
 
         #open:hover:after {
-          content: 'UNZIP?';
+          content: ' UNZIP? ';
+          background: white;
           margin-left: calc(-3rem - 2px);
           margin-bottom: 6px;
         }
