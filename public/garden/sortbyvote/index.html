@@ -88,7 +88,7 @@
       border: none;
       cursor: pointer;
       border-radius: 6px;
-      transition: background 0.15s, transform 0.05s;
+      transition: background 0.15s, transform 0.05s, opacity 0.3s;
     }
 
     .emoji-btn:hover {
@@ -97,6 +97,10 @@
 
     .emoji-btn:active {
       transform: scale(0.98);
+    }
+
+    .emoji-btn.copied {
+      opacity: 1;
     }
 
     .copy-all-btn {
@@ -161,7 +165,6 @@
       display: inline-block;
       text-align: center;
       white-space: nowrap;
-      width: 85px;
     }
 
     .copy-btn:hover {
@@ -297,7 +300,10 @@
       <section class="panel">
         <div class="panel-header">
           <span>Output (most votes → least)</span>
-          <button class="copy-btn" id="copyOutputBtn">Copy</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="copy-btn" id="removeVotesBtn">Remove votes</button>
+            <button class="copy-btn" id="copyOutputBtn">Copy</button>
+          </div>
         </div>
 
         <textarea
@@ -323,6 +329,7 @@
     const formatBtn = document.getElementById('formatBtn');
     const copyInputBtn = document.getElementById('copyInputBtn');
     const copyOutputBtn = document.getElementById('copyOutputBtn');
+    const removeVotesBtn = document.getElementById('removeVotesBtn');
     const inputStats = document.getElementById('inputStats');
     const outputStats = document.getElementById('outputStats');
 
@@ -469,10 +476,43 @@
     copyInputBtn.addEventListener('click', () => copyToClipboard(input.value, copyInputBtn));
     copyOutputBtn.addEventListener('click', () => copyToClipboard(output.value, copyOutputBtn));
 
- document.querySelectorAll('.emoji-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+    removeVotesBtn.addEventListener('click', () => {
+      if (!output.value.trim()) return;
+
+      // Remove all voting balls from the output
+      const linesWithoutVotes = output.value
+        .split('\n')
+        .map(line => line.replace(ballRegex, '').trim())
+        .filter(line => line !== '');
+
+      output.value = linesWithoutVotes.join('\n');
+      updateStats();
+    });
+
+    document.querySelectorAll('.emoji-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
         const emoji = btn.getAttribute('data-emoji');
-        copyToClipboard(emoji, btn);
+        const originalEmoji = btn.textContent;
+
+        try {
+          await navigator.clipboard.writeText(emoji);
+
+          // Show checkmark
+          btn.textContent = '✅';
+          btn.classList.add('copied');
+
+          // Fade back to original emoji
+          setTimeout(() => {
+            btn.style.opacity = '0';
+            setTimeout(() => {
+              btn.textContent = originalEmoji;
+              btn.style.opacity = '1';
+              btn.classList.remove('copied');
+            }, 300);
+          }, 1000);
+        } catch (e) {
+          console.error('Failed to copy emoji', e);
+        }
       });
     });
 
