@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import Header from './Header'
 import Footer from './Footer'
 
@@ -7,7 +7,11 @@ interface Props {
 }
 
 export default function MainLayout({ children }: Props) {
+  const [isMounted, setIsMounted] = useState(false)
+
   useEffect(() => {
+    setIsMounted(true)
+
     const script = document.createElement('script')
     script.src = '/script.js'
     script.async = true
@@ -24,7 +28,7 @@ export default function MainLayout({ children }: Props) {
       <div className="content">
         {children}
       </div>
-      <div className="sourcecode" id="sourceCodeContainer"></div>
+      {isMounted && <div className="sourcecode" id="sourceCodeContainer"></div>}
       <Footer />
     </div>
   )

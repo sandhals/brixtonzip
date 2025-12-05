@@ -10,7 +10,6 @@ interface LinkData {
 
 const FriendsPage = () => {
   const [currentTime, setCurrentTime] = useState('');
-  const [hitCount, setHitCount] = useState('０００１');
 
   const friends: LinkData[] = [
     {

@@ -25,20 +25,10 @@ globalThis.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/colophon": [
+    "/tree": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/colophon.js"
-    ],
-    "/friends": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/friends.js"
-    ],
-    "/unzip": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/unzip.js"
+      "static/chunks/pages/tree.js"
     ]
   },
   "ampFirstPages": []

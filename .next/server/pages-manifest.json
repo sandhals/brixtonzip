@@ -3,8 +3,6 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
-  "/unzip": "pages/unzip.js",
-  "/colophon": "pages/colophon.js",
-  "/friends": "pages/friends.js",
-  "/api/curius": "pages/api/curius.js"
+  "/tree": "pages/tree.js",
+  "/unzip": "pages/unzip.js"
 }

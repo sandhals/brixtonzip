@@ -1,20 +1,9 @@
-import { useEffect } from 'react'
-
 interface HeaderProps {
   variant?: 'home' | 'article'
 }
 
 export default function Header({ variant = 'article' }: HeaderProps) {
-  useEffect(() => {
-    const script = document.createElement('script')
-    script.src = '/script.js'
-    script.async = true
-    document.body.appendChild(script)
-
-    return () => {
-      document.body.removeChild(script)
-    }
-  }, [])
+  // Script injection removed - now handled by MainLayout to avoid duplication
 
   const homeCopy = `IT'S`
   const articleCopy = `IT'S CURRENTLY`
