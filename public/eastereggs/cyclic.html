@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyclic Calendar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            font-weight: 300;
+            background: #fafafa;
+            color: #333;
+            padding: 40px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .settings-button {
+            position: absolute;
+            left: 0;
+            font-size: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px 10px;
+            color:#999;
+        }
+
+        .settings-button:hover {
+            background: #e0e0e0;
+        }
+
+        .settings-panel {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            background: #fff;
+            border: 1px solid #ccc;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            min-width: 200px;
+        }
+
+        .settings-panel label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .settings-panel select {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            font-weight: 300;
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            background: #fff;
+        }
+
+        .year-nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 300;
+            position: relative;
+        }
+
+        .year-nav button {
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            font-weight: 300;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+
+        .year-nav button:hover {
+            background: #e0e0e0;
+        }
+
+        #yearDisplay {
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+
+        #yearDisplay:hover {
+            background: #e0e0e0;
+        }
+
+        #yearInput {
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            font-weight: 300;
+            width: 80px;
+            text-align: center;
+            border: 1px solid #ccc;
+            background: #fff;
+            padding: 5px;
+        }
+
+        .quarters-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .quarter {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .week-headers {
+            display: flex;
+            margin-bottom: 10px;
+            margin-left: 30px;
+        }
+
+        .day-header {
+            width: 30px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 300;
+            color: #999;
+        }
+
+        .calendar {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .week-row {
+            display: flex;
+            align-items: center;
+            height: 22px;
+        }
+
+        .month-marker {
+            width: 30px;
+            text-align: right;
+            font-size: 12px;
+            font-weight: 300;
+            color: #ec4444;
+        }
+
+        .week-days {
+            display: flex;
+        }
+
+        .day {
+            width: 30px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 300;
+        }
+
+        .day.today {
+            background: #333;
+            color: #fafafa;
+            border-radius: 2px;
+        }
+
+        .cycle-break {
+            height: 10px;
+        }
+
+        .reset-break {
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="settings-button" onclick="toggleSettings()">&#26332;</button>
+        <div id="settingsPanel" class="settings-panel" style="display: none;">
+            <label>Start day of week:</label>
+            <select id="startDaySelect" onchange="changeStartDay()">
+                <option value="0">Sunday (日)</option>
+                <option value="1">Monday (月)</option>
+                <option value="2">Tuesday (火)</option>
+                <option value="3">Wednesday (水)</option>
+                <option value="4">Thursday (木)</option>
+                <option value="5">Friday (金)</option>
+                <option value="6">Saturday (土)</option>
+            </select>
+        </div>
+        <div class="year-nav">
+            <button onclick="changeYear(-1)">&#8592;</button>
+            <span id="yearDisplay" onclick="toggleYearInput()">2025</span>
+            <input type="number" id="yearInput" style="display: none;" onblur="applyYearInput()" onkeypress="handleYearKeypress(event)">
+            <button onclick="changeYear(1)">&#8594;</button>
+        </div>
+    </div>
+
+    <div class="quarters-container" id="quartersContainer"></div>
+
+    <script>
+        let currentYear = new Date().getFullYear();
+        const today = new Date();
+        let startDayOfWeek = 0; // Sunday by default
+
+        function changeYear(delta) {
+            currentYear += delta;
+            document.getElementById('yearDisplay').textContent = currentYear;
+            renderCalendar();
+        }
+
+        function toggleYearInput() {
+            const display = document.getElementById('yearDisplay');
+            const input = document.getElementById('yearInput');
+
+            display.style.display = 'none';
+            input.style.display = 'inline';
+            input.value = currentYear;
+            input.focus();
+            input.select();
+        }
+
+        function applyYearInput() {
+            const display = document.getElementById('yearDisplay');
+            const input = document.getElementById('yearInput');
+
+            const newYear = parseInt(input.value);
+            if (!isNaN(newYear) && newYear > 1900 && newYear < 2200) {
+                currentYear = newYear;
+                display.textContent = currentYear;
+                renderCalendar();
+            }
+
+            input.style.display = 'none';
+            display.style.display = 'inline';
+        }
+
+        function handleYearKeypress(event) {
+            if (event.key === 'Enter') {
+                applyYearInput();
+            }
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function changeStartDay() {
+            startDayOfWeek = parseInt(document.getElementById('startDaySelect').value);
+            renderCalendar();
+        }
+
+        // Close settings panel when clicking outside
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('settingsPanel');
+            const button = document.querySelector('.settings-button');
+            if (!panel.contains(event.target) && event.target !== button) {
+                panel.style.display = 'none';
+            }
+        });
+
+        function renderCalendar() {
+            const container = document.getElementById('quartersContainer');
+            container.innerHTML = '';
+
+            const startDate = new Date(currentYear, 0, 1);
+            const dayOfWeek = startDate.getDay();
+
+            // Calculate offset to reach the desired start day
+            let offset;
+            if (dayOfWeek === startDayOfWeek) {
+                offset = 0;
+            } else if (dayOfWeek < startDayOfWeek) {
+                offset = startDayOfWeek - dayOfWeek;
+            } else {
+                offset = 7 - dayOfWeek + startDayOfWeek;
+            }
+
+            // Start on first occurrence of chosen day in the year
+            let firstDay = new Date(currentYear, 0, 1 + offset);
+
+            // If the first occurrence is after January 4th, go back one week
+            // This ensures we always start no later than Jan 4
+            if (firstDay.getDate() > 4) {
+                firstDay.setDate(firstDay.getDate() - 7);
+            }
+
+            let currentDate = new Date(firstDay);
+
+            // Track which calendar months we've already marked
+            let markedMonths = new Set();
+
+            // We'll handle any remaining days by extending the final reset week
+
+            // Day kanji array in order: Sunday through Saturday
+            const allDayKanji = ['&#26085;', '&#26376;', '&#28779;', '&#27700;', '&#26408;', '&#37329;', '&#22303;'];
+
+            // Rotate the array to start with the chosen day
+            const dayKanji = [];
+            for (let i = 0; i < 7; i++) {
+                dayKanji.push(allDayKanji[(startDayOfWeek + i) % 7]);
+            }
+
+            // 4 quarters, each with 3 cycles
+            for (let quarter = 0; quarter < 4; quarter++) {
+                const quarterDiv = document.createElement('div');
+                quarterDiv.className = 'quarter';
+
+                // Week headers
+                const weekHeaders = document.createElement('div');
+                weekHeaders.className = 'week-headers';
+                dayKanji.forEach(kanji => {
+                    const header = document.createElement('div');
+                    header.className = 'day-header';
+                    header.innerHTML = kanji;
+                    weekHeaders.appendChild(header);
+                });
+                quarterDiv.appendChild(weekHeaders);
+
+                // Calendar for this quarter
+                const calendar = document.createElement('div');
+                calendar.className = 'calendar';
+
+                // 3 cycles per quarter
+                for (let cycle = 0; cycle < 3; cycle++) {
+                    // 4 weeks per cycle
+                    for (let week = 0; week < 4; week++) {
+                        const weekRow = document.createElement('div');
+                        weekRow.className = 'week-row';
+
+                        const monthMarker = document.createElement('div');
+                        monthMarker.className = 'month-marker';
+
+                        // Check if this week contains a "01" date or is the very first week
+                        let hasNewMonth = false;
+                        let newMonthNumber = null;
+
+                        for (let day = 0; day < 7; day++) {
+                            const testDate = new Date(currentDate);
+                            testDate.setDate(testDate.getDate() + day);
+                            if (testDate.getDate() === 1) {
+                                hasNewMonth = true;
+                                newMonthNumber = testDate.getMonth() + 1;
+                                break;
+                            }
+                        }
+
+                        // Show month marker if this week has a "01" date and we haven't marked it yet
+                        if (hasNewMonth) {
+                            let monthKey = currentYear + '-' + newMonthNumber;
+                            if (!markedMonths.has(monthKey)) {
+                                monthMarker.textContent = newMonthNumber < 10 ? '0' + newMonthNumber : newMonthNumber;
+                                markedMonths.add(monthKey);
+                            }
+                        }
+                        // Special case: very first week of the cyclic calendar
+                        else if (quarter === 0 && cycle === 0 && week === 0) {
+                            let startMonth = currentDate.getMonth() + 1;
+                            monthMarker.textContent = startMonth < 10 ? '0' + startMonth : startMonth;
+                            markedMonths.add(currentYear + '-' + startMonth);
+                        }
+
+                        weekRow.appendChild(monthMarker);
+
+                        const weekDays = document.createElement('div');
+                        weekDays.className = 'week-days';
+
+                        for (let day = 0; day < 7; day++) {
+                            const dayDiv = document.createElement('div');
+                            dayDiv.className = 'day';
+                            const dateNum = currentDate.getDate();
+                            dayDiv.textContent = dateNum < 10 ? '0' + dateNum : dateNum;
+
+                            // Check if this is today
+                            if (currentDate.getFullYear() === today.getFullYear() &&
+                                currentDate.getMonth() === today.getMonth() &&
+                                currentDate.getDate() === today.getDate()) {
+                                dayDiv.classList.add('today');
+                            }
+
+                            weekDays.appendChild(dayDiv);
+                            currentDate.setDate(currentDate.getDate() + 1);
+                        }
+
+                        weekRow.appendChild(weekDays);
+                        calendar.appendChild(weekRow);
+                    }
+
+                    // Add spacing after each cycle
+                    if (cycle < 2) {
+                        const cycleBreak = document.createElement('div');
+                        cycleBreak.className = 'cycle-break';
+                        calendar.appendChild(cycleBreak);
+                    }
+                }
+
+                // Reset week at end of quarter (after all 3 cycles)
+                const resetBreak = document.createElement('div');
+                resetBreak.className = 'reset-break';
+                calendar.appendChild(resetBreak);
+
+                const resetRow = document.createElement('div');
+                resetRow.className = 'week-row';
+
+                const resetMarker = document.createElement('div');
+                resetMarker.className = 'month-marker';
+
+                // Check if reset week contains a "01" date
+                let hasNewMonthInReset = false;
+                let resetNewMonthNumber = null;
+
+                for (let day = 0; day < 7; day++) {
+                    const testDate = new Date(currentDate);
+                    testDate.setDate(testDate.getDate() + day);
+                    if (testDate.getDate() === 1) {
+                        hasNewMonthInReset = true;
+                        resetNewMonthNumber = testDate.getMonth() + 1;
+                        break;
+                    }
+                }
+
+                if (hasNewMonthInReset) {
+                    let monthKey = currentYear + '-' + resetNewMonthNumber;
+                    if (!markedMonths.has(monthKey)) {
+                        resetMarker.textContent = resetNewMonthNumber < 10 ? '0' + resetNewMonthNumber : resetNewMonthNumber;
+                        markedMonths.add(monthKey);
+                    }
+                }
+
+                resetRow.appendChild(resetMarker);
+
+                const resetDays = document.createElement('div');
+                resetDays.className = 'week-days';
+
+                for (let day = 0; day < 7; day++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'day';
+                    const dateNum = currentDate.getDate();
+                    dayDiv.textContent = dateNum < 10 ? '0' + dateNum : dateNum;
+
+                    // Check if this is today
+                    if (currentDate.getFullYear() === today.getFullYear() &&
+                        currentDate.getMonth() === today.getMonth() &&
+                        currentDate.getDate() === today.getDate()) {
+                        dayDiv.classList.add('today');
+                    }
+
+                    resetDays.appendChild(dayDiv);
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+
+                resetRow.appendChild(resetDays);
+                calendar.appendChild(resetRow);
+
+                // If this is the last quarter, check if we need leap weeks
+                if (quarter === 3) {
+                    // Calculate where next year's start day should be (Jan 1-4)
+                    const nextYear = currentYear + 1;
+                    const jan1NextYear = new Date(nextYear, 0, 1);
+                    const jan1DayOfWeek = jan1NextYear.getDay();
+
+                    // Calculate first occurrence of startDayOfWeek in next year
+                    let nextYearOffset;
+                    if (jan1DayOfWeek === startDayOfWeek) {
+                        nextYearOffset = 0;
+                    } else if (jan1DayOfWeek < startDayOfWeek) {
+                        nextYearOffset = startDayOfWeek - jan1DayOfWeek;
+                    } else {
+                        nextYearOffset = 7 - jan1DayOfWeek + startDayOfWeek;
+                    }
+
+                    let nextYearIdealStart = new Date(nextYear, 0, 1 + nextYearOffset);
+
+                    // If that's after Jan 4, go back one week
+                    if (nextYearIdealStart.getDate() > 4) {
+                        nextYearIdealStart.setDate(nextYearIdealStart.getDate() - 7);
+                    }
+
+                    // Only add leap weeks if the ideal start is Jan 4 (meaning we need to extend to Jan 3)
+                    // If ideal start is Jan 1-3, the regular reset week is sufficient
+                    if (nextYearIdealStart.getDate() === 4) {
+                        // Calculate how many complete weeks fit between currentDate and nextYearIdealStart
+                        // We need to add weeks until the END of a week reaches or passes nextYearIdealStart
+                        let leapWeeksNeeded = 0;
+                        let testDate = new Date(currentDate);
+
+                        // Keep adding weeks while the end of the next week is before the ideal start
+                        while (true) {
+                            let weekEndDate = new Date(testDate);
+                            weekEndDate.setDate(weekEndDate.getDate() + 7);
+
+                            // If the end of this week would be at or after the ideal start,
+                            // this is the last leap week we need
+                            if (weekEndDate >= nextYearIdealStart) {
+                                leapWeeksNeeded++;
+                                break;
+                            }
+
+                            leapWeeksNeeded++;
+                            testDate.setDate(testDate.getDate() + 7);
+                        }
+
+                        // Add leap weeks if needed (spaced like months)
+                        for (let leapWeek = 0; leapWeek < leapWeeksNeeded; leapWeek++) {
+                            // Section break before leap week
+                            const leapBreak = document.createElement('div');
+                            leapBreak.className = 'cycle-break';
+                            calendar.appendChild(leapBreak);
+
+                            const leapRow = document.createElement('div');
+                            leapRow.className = 'week-row';
+
+                            const leapMarker = document.createElement('div');
+                            leapMarker.className = 'month-marker';
+
+                            // Check if leap week contains a "01" date
+                            let hasLeapMonth = false;
+                            for (let day = 0; day < 7; day++) {
+                                const testLeapDate = new Date(currentDate);
+                                testLeapDate.setDate(testLeapDate.getDate() + day);
+                                if (testLeapDate.getDate() === 1) {
+                                    hasLeapMonth = true;
+                                    const leapMonthNum = testLeapDate.getMonth() + 1;
+                                    let monthKey = currentYear + '-' + leapMonthNum;
+                                    if (!markedMonths.has(monthKey)) {
+                                        leapMarker.textContent = leapMonthNum < 10 ? '0' + leapMonthNum : leapMonthNum;
+                                        markedMonths.add(monthKey);
+                                    }
+                                    break;
+                                }
+                            }
+
+                            leapRow.appendChild(leapMarker);
+
+                            const leapDays = document.createElement('div');
+                            leapDays.className = 'week-days';
+
+                            for (let day = 0; day < 7; day++) {
+                                const dayDiv = document.createElement('div');
+                                dayDiv.className = 'day';
+
+                                const dateNum = currentDate.getDate();
+                                dayDiv.textContent = dateNum < 10 ? '0' + dateNum : dateNum;
+
+                                // Check if this is today
+                                if (currentDate.getFullYear() === today.getFullYear() &&
+                                    currentDate.getMonth() === today.getMonth() &&
+                                    currentDate.getDate() === today.getDate()) {
+                                    dayDiv.classList.add('today');
+                                }
+
+                                leapDays.appendChild(dayDiv);
+                                currentDate.setDate(currentDate.getDate() + 1);
+                            }
+
+                            leapRow.appendChild(leapDays);
+                            calendar.appendChild(leapRow);
+                        }
+                    }
+                }
+
+                quarterDiv.appendChild(calendar);
+                container.appendChild(quarterDiv);
+            }
+        }
+
+        renderCalendar();
+    </script>
+</body>
+</html>
