@@ -19,18 +19,10 @@ export default function GardenPage() {
           <tbody>
             <tr>
               <td className="link-cell">
-                <a href="/garden/sortbylength">Sort by Length</a>
+                <a href="/garden/cyclic">Cyclic Calendar</a>
               </td>
               <td className="desc-cell">
-                Sometimes at work, we need to sort lines of text by their precise pixel length. I couldn't find a reliable tool that did this so I made one!
-              </td>
-            </tr>
-            <tr>
-              <td className="link-cell">
-                <a href="/garden/sortbyvote">Sort by Vote</a>
-              </td>
-              <td className="desc-cell">
-                Also at work, we often use ball emojis to cast votes on copy in Google Docs. I built this tool to organize those votes. Probably not useful to many others, but I keep it hosted on my site for easy access!
+                A simple calendar tool for visualizing and customizing <a href="https://www.youtube.com/watch?v=BiY2yUwTgQc">cyclic calendar</a> years.
               </td>
             </tr>
             <tr>
@@ -47,6 +39,22 @@ export default function GardenPage() {
               </td>
               <td className="desc-cell">
                 A simple line drawing tool for measuring objects in an image relative to each other.
+              </td>
+            </tr>
+            <tr>
+              <td className="link-cell">
+                <a href="/garden/sortbylength">Sort by Length</a>
+              </td>
+              <td className="desc-cell">
+                Sometimes at work, we need to sort lines of text by their precise pixel length. I couldn't find a reliable tool that did this so I made one!
+              </td>
+            </tr>
+            <tr>
+              <td className="link-cell">
+                <a href="/garden/sortbyvote">Sort by Vote</a>
+              </td>
+              <td className="desc-cell">
+                Also at work, we often use ball emojis to cast votes on copy in Google Docs. I built this tool to organize those votes. Probably not useful to many others, but I keep it hosted on my site for easy access!
               </td>
             </tr>
           </tbody>
@@ -98,6 +106,10 @@ export default function GardenPage() {
           opacity: 1;
           vertical-align: top;
           font-weight: 300;
+        }
+
+        .desc-cell > a{
+        font-size: 1em!important;
         }
 
         h2 {
