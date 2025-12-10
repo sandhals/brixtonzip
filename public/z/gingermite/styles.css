@@ -139,7 +139,7 @@ button {
 }
 
 .sidebar .logo h1 {
-    font-family: var(--font-heading);
+    font-family: Georgia;
     font-size: 1.5rem;
     color: #000;
     white-space: nowrap;
@@ -361,7 +361,7 @@ button {
 }
 
 .media-logo h1 {
-    font-family: var(--font-heading);
+    font-family: Georgia;
     font-size: 1.5rem;
     color: var(--dark);
     font-weight: normal;
@@ -383,7 +383,7 @@ button {
    =========================== */
 .hero-yellow {
     background-color: var(--jasmine);
-    padding: var(--spacing-sm) 0;
+    padding: var(--spacing-lg) 0;
 }
 
 .hero-yellow-content {
@@ -516,31 +516,19 @@ button {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: var(--spacing-lg);
-    max-width: 900px;
-    margin: 0 auto;
 }
 
 .project-card {
     background-color: white;
-    border-radius: 8px;
+    border-radius: 0;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 1px solid #000;
     transition: all var(--transition-normal);
     opacity: 1;
 }
 
 .project-card.hidden {
-    opacity: 0;
-    height: 0;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    transition: all var(--transition-slow);
-}
-
-.project-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    display: none;
 }
 
 .project-image {
@@ -548,6 +536,7 @@ button {
     height: 300px;
     overflow: hidden;
     background-color: var(--old-rose);
+    border-bottom: #000 solid 1px;
 }
 
 .project-image img {
@@ -627,12 +616,8 @@ button {
     display: flex;
     align-items: center;
     justify-content: center;
-    filter: grayscale(100%) opacity(0.6);
+    filter: grayscale(100%);
     transition: filter var(--transition-normal);
-}
-
-.client-logo:hover {
-    filter: grayscale(0%) opacity(1);
 }
 
 .client-logo img {
