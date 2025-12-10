@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIN Test</title>
+</head>
+<body>
+    <h1>This content should be hidden until you enter PIN: 7899</h1>
+    <p>If you see this immediately, the PIN protection is not working.</p>
+
+    <script src="pin-protection.js"></script>
+    <script>
+        console.log('Test page loaded');
+        console.log('Document ready state:', document.readyState);
+        console.log('SessionStorage PIN key:', sessionStorage.getItem('site_pin_authenticated'));
+    </script>
+</body>
+</html>

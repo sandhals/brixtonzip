@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gingermite - Mother & Son Floral Studio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Media Header Placeholder (for future video) -->
+    <section class="media-header">
+        <div class="media-header-top">
+            <div class="media-logo">
+                <img src="media/logo.png" alt="Gingermite Logo" class="logo-img">
+                <h1>Gingermite</h1>
+            </div>
+            <div class="media-slogan">
+                <p>Crafting moments, one petal at a time</p>
+            </div>
+        </div>
+        <!-- Video or media content placeholder -->
+    </section>
+
+    <!-- Yellow Hero Block -->
+    <section class="hero-yellow">
+            <div class="hero-yellow-content">
+                <div class="hero-title">
+                    <h2>See what the universe has bloomed for you.</h2>
+                </div>
+                <div class="hero-description">
+                    <p>Gingermite is a luxury flower shop located in Central Hong Kong, known for tailor-made bouquets and artistic floral creations. Inspired by fine art and storytelling, we offer flower delivery, workshops, and event styling for luxury brands and individuals. Every arrangement is a poetic expression made with the finest blooms.</p>
+                    <a href="#about" class="cta-button">Meet the Chans</a>
+                </div>
+            </div>
+        </section>
+
+    <!-- Page wrapper for sidebar and content -->
+    <div class="page-wrapper">
+        <!-- Collapsible Sidebar (starts after hero) -->
+        <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="media/logo.png" alt="Gingermite Logo" class="logo-img">
+                <h1>Gingermite</h1>
+            </div>
+        </div>
+        <nav class="sidebar-nav-top">
+            <a href="#portfolio" class="nav-link">
+                <span class="nav-text">Portfolio</span>
+            </a>
+            <a href="#services" class="nav-link">
+                <span class="nav-text">Services</span>
+            </a>
+            <a href="#about" class="nav-link">
+                <span class="nav-text">About</span>
+            </a>
+        </nav>
+
+        <button class="sidebar-toggle" aria-label="Toggle sidebar">
+            <svg class="arrow" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 4L6 10L12 16" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+
+        <nav class="sidebar-nav-bottom">
+            <a href="#videos" class="nav-link">
+                <span class="nav-text">Videos</span>
+            </a>
+            <a href="#press" class="nav-link">
+                <span class="nav-text">Press</span>
+            </a>
+            <a href="#contact" class="nav-link">
+                <span class="nav-text">Contact</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" aria-label="Toggle mobile menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+        <!-- Portfolio Section -->
+        <section class="portfolio-section" id="portfolio">
+            <div class="content-container">
+                <h2 class="section-title">Recent Projects</h2>
+                <!-- Filter Bar -->
+                <div class="filter-section">
+                    <div class="filter-header">
+                        <span class="filter-label">FILTERS</span>
+                        <button class="filter-tag active" data-filter="all">All Projects</button>
+                    </div>
+                    <div class="filter-bar">
+                        <button class="filter-tag" data-filter="weddings">Weddings</button>
+                        <button class="filter-tag" data-filter="events">Events</button>
+                        <button class="filter-tag" data-filter="bouquets">Bouquets</button>
+                        <button class="filter-tag" data-filter="installations">Installations</button>
+                        <button class="filter-tag" data-filter="seasonal">Seasonal</button>
+                    </div>
+                </div>
+
+                <!-- Projects - Vertical Layout -->
+                <div class="projects-container">
+                    <article class="project-card" data-tags="weddings bouquets">
+                        <div class="project-image">
+                            <img src="media/familyphotoyellow.jpg" alt="Romantic Wedding Bouquet">
+                        </div>
+                        <div class="project-content">
+                            <h3>Romantic Garden Wedding</h3>
+                            <p>Elegant rose and peony arrangements for a summer celebration, featuring soft blush tones and natural greenery.</p>
+                            <div class="project-tags">
+                                <span class="tag">Weddings</span>
+                                <span class="tag">Bouquets</span>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="project-card" data-tags="events installations">
+                        <div class="project-image">
+                            <img src="media/familyphotopoint.jpg" alt="Corporate Event Installation">
+                        </div>
+                        <div class="project-content">
+                            <h3>Corporate Gala Installation</h3>
+                            <p>Grand floral archway and statement centerpieces for an annual celebration, bringing sophistication and warmth to the venue.</p>
+                            <div class="project-tags">
+                                <span class="tag">Events</span>
+                                <span class="tag">Installations</span>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="project-card" data-tags="bouquets seasonal">
+                        <div class="project-image">
+                            <img src="media/familyphotoyellow.jpg" alt="Spring Bouquet Collection">
+                        </div>
+                        <div class="project-content">
+                            <h3>Spring Wildflower Collection</h3>
+                            <p>Fresh seasonal blooms in natural, organic arrangements that celebrate the beauty of spring.</p>
+                            <div class="project-tags">
+                                <span class="tag">Bouquets</span>
+                                <span class="tag">Seasonal</span>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="project-card" data-tags="weddings installations">
+                        <div class="project-image">
+                            <img src="media/familyphotopoint.jpg" alt="Ceremony Backdrop">
+                        </div>
+                        <div class="project-content">
+                            <h3>Ceremony Floral Backdrop</h3>
+                            <p>Lush greenery wall with cascading blooms, creating an unforgettable focal point for the wedding ceremony.</p>
+                            <div class="project-tags">
+                                <span class="tag">Weddings</span>
+                                <span class="tag">Installations</span>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="project-card" data-tags="events bouquets">
+                        <div class="project-image">
+                            <img src="media/familyphotoyellow.jpg" alt="Birthday Celebration">
+                        </div>
+                        <div class="project-content">
+                            <h3>Birthday Celebration Florals</h3>
+                            <p>Vibrant mixed arrangements for a milestone birthday, featuring bold colors and joyful energy.</p>
+                            <div class="project-tags">
+                                <span class="tag">Events</span>
+                                <span class="tag">Bouquets</span>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="project-card" data-tags="seasonal installations">
+                        <div class="project-image">
+                            <img src="media/familyphotopoint.jpg" alt="Holiday Installation">
+                        </div>
+                        <div class="project-content">
+                            <h3>Holiday Window Display</h3>
+                            <p>Festive seasonal installation for a local boutique, capturing the magic of the holiday season.</p>
+                            <div class="project-tags">
+                                <span class="tag">Seasonal</span>
+                                <span class="tag">Installations</span>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Clients Carousel Section -->
+        <section class="clients-section" id="clients">
+            <div class="content-container">
+                <h2 class="section-title">Selected Clients</h2>
+                <div class="clients-carousel">
+                    <div class="clients-track">
+                        <div class="client-logo"><img src="media/apple.png" alt="Apple"></div>
+                        <div class="client-logo"><img src="media/gucci.svg" alt="Gucci"></div>
+                        <div class="client-logo"><img src="media/mercedesbenz.png" alt="Mercedes-Benz"></div>
+                        <div class="client-logo"><img src="media/minicooper.png" alt="Mini Cooper"></div>
+                        <div class="client-logo"><img src="media/prada.jpg" alt="Prada"></div>
+                        <div class="client-logo"><img src="media/tiffany.png" alt="Tiffany & Co."></div>
+                        <!-- Duplicate for seamless loop -->
+                        <div class="client-logo"><img src="media/apple.png" alt="Apple"></div>
+                        <div class="client-logo"><img src="media/gucci.svg" alt="Gucci"></div>
+                        <div class="client-logo"><img src="media/mercedesbenz.png" alt="Mercedes-Benz"></div>
+                        <div class="client-logo"><img src="media/minicooper.png" alt="Mini Cooper"></div>
+                        <div class="client-logo"><img src="media/prada.jpg" alt="Prada"></div>
+                        <div class="client-logo"><img src="media/tiffany.png" alt="Tiffany & Co."></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <!-- End main-wrapper -->
+    </div>
+    <!-- End page-wrapper -->
+
+    <!-- Footer (Minimal) -->
+    <footer class="footer" id="contact">
+            <div class="content-container">
+                <div class="footer-content">
+                    <div class="footer-brand">
+                        <h3>Gingermite</h3>
+                        <p>Mother & Son Floral Studio</p>
+                    </div>
+                    <div class="footer-contact">
+                        <p>hello@gingermite.com</p>
+                        <p>(555) 123-4567</p>
+                    </div>
+                    <div class="footer-links">
+                        <a href="#portfolio">Portfolio</a>
+                        <a href="#about">About</a>
+                        <a href="#contact">Contact</a>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2025 Gingermite Floral Studio. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+
+    <!-- Backdrop for mobile sidebar -->
+    <div class="sidebar-backdrop"></div>
+
+    <!-- TEMPORARY PIN PROTECTION - Remove this script tag to disable -->
+    <script src="pin-protection.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
