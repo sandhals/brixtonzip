@@ -447,19 +447,18 @@ button {
 }
 
 .content-container {
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 0 var(--spacing-xl);
 }
 
 .section-title {
     font-family: var(--font-heading);
-    font-size: 2.8rem;
-    font-weight: 300;
+    font-size: 2.5rem;
+    font-weight: 400;
     color: var(--dark);
     margin-bottom: var(--spacing-lg);
     text-align: left;
-    letter-spacing: -0.5px;
 }
 
 /* ===========================
@@ -514,16 +513,18 @@ button {
    PROJECTS - VERTICAL LAYOUT
    =========================== */
 .projects-container {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xl);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: var(--spacing-lg);
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 .project-card {
     background-color: white;
-    border-radius: 0;
+    border-radius: 8px;
     overflow: hidden;
-    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     transition: all var(--transition-normal);
     opacity: 1;
 }
@@ -538,12 +539,13 @@ button {
 }
 
 .project-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-8px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
 }
 
 .project-image {
     width: 100%;
-    height: 450px;
+    height: 300px;
     overflow: hidden;
     background-color: var(--old-rose);
 }
@@ -560,24 +562,22 @@ button {
 }
 
 .project-content {
-    padding: var(--spacing-lg) var(--spacing-xl);
+    padding: var(--spacing-md);
 }
 
 .project-content h3 {
     font-family: var(--font-heading);
-    font-size: 1.8rem;
-    font-weight: 300;
+    font-size: 1.5rem;
+    font-weight: 500;
     color: var(--dark);
     margin-bottom: var(--spacing-sm);
-    letter-spacing: -0.3px;
 }
 
 .project-content p {
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: #666;
-    line-height: 1.7;
+    line-height: 1.6;
     margin-bottom: var(--spacing-md);
-    font-weight: 300;
 }
 
 .project-tags {
