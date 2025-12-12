@@ -163,7 +163,8 @@
         .controls p { margin: 3px 0; font-size: 14px; color: var(--text-dim) }
         .controls strong { color: var(--accent-gold); min-width: 45px; display: inline-block }
 
-        .settings-btn {
+        .settings-btn,
+        #pauseBtn {
             width: 140px;
             padding: 8px;
             margin-top: 8px;
@@ -173,6 +174,10 @@
             font-family: VT323, monospace;
             font-size: 18px;
             cursor: pointer;
+        }
+
+        #pauseBtn {
+            display: none;
         }
 
         .pause-overlay,
@@ -293,77 +298,136 @@
         .close-settings-btn { width: 100%; padding: 15px; border: 2px solid var(--accent-gold); background: var(--panel-bg); color: var(--accent-gold); cursor: pointer; font-family: VT323, monospace; font-size: 18px; }
 
         .game-title { font-size: 24px; color: var(--accent-gold); letter-spacing: 6px }
+        .game-info { display: flex; gap: 15px; justify-content: center; align-items: center }
         .level-indicator { color: var(--glow-cyan); font-size: 14px }
         .difficulty-indicator { color: var(--accent-silver); font-size: 14px }
 
         /* Mobile Responsive Styles */
         @media (max-width: 768px) {
             body {
-                padding: 5px 5px 80px 5px;
+                padding: 0;
                 align-items: flex-start;
                 min-height: 100vh;
                 min-height: 100dvh;
+                overflow: hidden;
             }
 
             .game-container {
                 flex-direction: column;
-                padding: 10px;
-                gap: 10px;
-                width: 100%;
+                padding: 5px;
+                gap: 3px;
+                width: 100vw;
+                height: 100vh;
+                height: 100dvh;
                 max-width: 100vw;
-                margin-bottom: env(safe-area-inset-bottom);
+                margin: 0;
             }
 
             .main-section {
                 width: 100%;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+                min-height: 0;
             }
 
             .game-title {
-                font-size: 20px;
-                letter-spacing: 3px;
+                font-size: 16px;
+                letter-spacing: 1px;
+                margin: 0;
+                flex-shrink: 0;
             }
 
             canvas#gameCanvas {
                 width: 100%;
                 max-width: 100%;
-                height: auto;
-                aspect-ratio: 10 / 20;
+                height: 0;
+                flex-grow: 1;
+                object-fit: contain;
+                display: block;
+            }
+
+            .game-info {
+                gap: 8px;
+                flex-shrink: 0;
+            }
+
+            .level-indicator,
+            .difficulty-indicator {
+                font-size: 10px;
+                margin: 0;
             }
 
             .side-panel {
                 width: 100%;
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: space-between;
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                grid-template-rows: auto auto;
+                gap: 5px;
+                background: var(--panel-bg);
+                border-top: 2px solid var(--panel-border);
+                padding: 5px;
+                padding-bottom: calc(5px + env(safe-area-inset-bottom));
+                flex-shrink: 0;
             }
 
             .info-box {
-                width: calc(50% - 5px);
-                padding: 6px;
+                padding: 4px 2px;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+            }
+
+            .info-box:nth-child(1),
+            .info-box:nth-child(2) {
+                grid-row: span 2;
+            }
+
+            .info-box:nth-child(5) {
+                grid-column: 3;
+                grid-row: 1;
             }
 
             .info-box h2 {
-                font-size: 12px;
-                margin-bottom: 4px;
+                font-size: 9px;
+                margin-bottom: 2px;
+                font-weight: bold;
             }
 
             .score {
-                font-size: 20px;
-                margin: 4px 0;
+                font-size: 14px;
+                margin: 0;
             }
 
             .preview-canvas {
-                width: 60px;
-                height: 60px;
+                width: 100%;
+                max-width: 60px;
+                height: auto;
+                aspect-ratio: 1;
             }
 
             .controls {
                 display: none;
             }
 
+            #pauseBtn {
+                display: none;
+            }
+
             .settings-btn {
-                width: 100%;
+                grid-column: 3;
+                grid-row: 2;
                 margin-top: 0;
+                padding: 4px 2px;
+                font-size: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
             }
 
             .settings-content {
@@ -455,17 +519,14 @@
     <div class="game-container" id="gameContainer">
         <div class="main-section">
             <div class="game-title">SPECTRIS</div>
+            <div class="game-info">
+                <div class="level-indicator">LVL <span id="level">1</span></div>
+                <div class="difficulty-indicator"><span id="colorDifficulty">HARD</span> MODE</div>
+            </div>
             <canvas id="gameCanvas" width="280" height="560"></canvas>
-            <div class="level-indicator">LVL <span id="level">1</span></div>
-            <div class="difficulty-indicator"><span id="colorDifficulty">HARD</span> MODE</div>
         </div>
 
         <div class="side-panel">
-            <div class="info-box">
-                <h2>Score</h2>
-                <div class="score" id="score">0</div>
-            </div>
-
             <div class="info-box">
                 <h2>Hold</h2>
                 <canvas id="holdCanvas" class="preview-canvas" width="80" height="80"></canvas>
@@ -476,20 +537,14 @@
                 <canvas id="previewCanvas" class="preview-canvas" width="80" height="80"></canvas>
             </div>
 
-            <div class="info-box">
-                <h2>Controls</h2>
-                <div class="controls">
-                    <p><strong>←/→</strong> MOVE</p>
-                    <p><strong>↓</strong> SOFT DROP</p>
-                    <p><strong>↑</strong> ROTATE</p>
-                    <p><strong>SPACE</strong> HARD DROP</p>
-                    <p><strong>C</strong> HOLD</p>
-                    <p><strong>P</strong> PAUSE</p>
-                    <p><strong>S</strong> SETTINGS</p>
-                </div>
-            </div>
+            <button id="pauseBtn">⏸</button>
 
             <button class="settings-btn" id="settingsBtn">⚙</button>
+
+            <div class="info-box">
+                <h2>Score</h2>
+                <div class="score" id="score">0</div>
+            </div>
         </div>
     </div>
 

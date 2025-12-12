@@ -1069,11 +1069,28 @@ function gameLoop(timestamp) {
 // Initialize settings UI
 function initSettingsUI() {
     const settingsBtn = document.getElementById('settingsBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
     const settingsModal = document.getElementById('settingsModal');
     const closeBtn = document.getElementById('closeSettings');
     const pauseOverlay = document.getElementById('pauseOverlay');
     const gameContainer = document.getElementById('gameContainer');
-    
+
+    // Pause button
+    if (pauseBtn) {
+        pauseBtn.addEventListener('click', () => {
+            isPaused = !isPaused;
+            if (isPaused) {
+                pauseOverlay.classList.add('show');
+                gameContainer.classList.add('paused');
+                pauseBtn.textContent = '▶';
+            } else {
+                pauseOverlay.classList.remove('show');
+                gameContainer.classList.remove('paused');
+                pauseBtn.textContent = '⏸';
+            }
+        });
+    }
+
     // Open settings
     settingsBtn.addEventListener('click', () => {
         settingsModal.classList.add('show');
