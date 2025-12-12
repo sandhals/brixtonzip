@@ -1261,7 +1261,9 @@ let softDropInterval = null;
 
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
-    if (gameOver || isPaused || isAnimating) return;
+    e.stopPropagation();
+
+    if (gameOver || isAnimating) return;
 
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
@@ -1269,6 +1271,8 @@ canvas.addEventListener('touchstart', (e) => {
     touchStartY = touch.clientY - rect.top;
     touchStartTime = Date.now();
     isTouchHolding = true;
+
+    if (isPaused) return;
 
     // Start soft drop after brief delay
     setTimeout(() => {
@@ -1308,6 +1312,8 @@ canvas.addEventListener('touchmove', (e) => {
 
 canvas.addEventListener('touchend', (e) => {
     e.preventDefault();
+    e.stopPropagation();
+
     if (gameOver || isPaused || isAnimating) return;
 
     // Clear soft drop
