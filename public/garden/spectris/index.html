@@ -122,18 +122,13 @@
         canvas#gameCanvas {
             border: 2px solid var(--panel-border);
             background: #000;
-            box-shadow:
-                inset 0 0 30px rgba(0, 0, 0, 0.8),
-                0 0 20px var(--gradient-1);
             touch-action: none;
             -webkit-user-select: none;
             user-select: none;
         }
 
         body.pudding-theme canvas#gameCanvas {
-            box-shadow:
-                inset 0 0 30px rgba(0, 0, 0, 0.15),
-                0 4px 12px rgba(212, 165, 116, 0.1);
+            background: #fffaf5;
         }
 
         .info-box {
@@ -275,11 +270,25 @@
             z-index: 200;
         }
 
+        body.pudding-theme .settings-modal {
+            background: rgba(255, 250, 245, 0.85);
+        }
+
         .settings-content {
             background: var(--bg-darker);
             border: 3px solid var(--accent-gold);
             padding: 35px;
             min-width: 380px;
+        }
+
+        .settings-content h1 {
+            font-size: 28px;
+            color: var(--accent-gold);
+            letter-spacing: 8px;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 30px;
+            font-weight: normal;
         }
 
         .setting-group { margin-bottom: 30px; padding: 20px; background: var(--panel-bg); border: 2px solid var(--panel-border) }
@@ -341,10 +350,8 @@
 
             canvas#gameCanvas {
                 width: 100%;
-                max-width: 100%;
-                height: 0;
-                flex-grow: 1;
-                object-fit: contain;
+                height: auto;
+                max-height: calc(100vh - 180px);
                 display: block;
             }
 

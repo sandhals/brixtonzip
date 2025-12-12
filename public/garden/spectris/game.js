@@ -759,18 +759,6 @@ function drawBoard() {
     }
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Add subtle background pattern
-    if (settings.palette === 'pudding') {
-        ctx.fillStyle = 'rgba(245, 215, 196, 0.08)';
-    } else {
-        ctx.fillStyle = 'rgba(122, 58, 170, 0.02)';
-    }
-    for (let i = 0; i < ROWS; i++) {
-        if (i % 2 === 0) {
-            ctx.fillRect(0, i * BLOCK_SIZE, canvas.width, BLOCK_SIZE);
-        }
-    }
-
     // Draw placed blocks
     for (let row = 0; row < ROWS; row++) {
         for (let col = 0; col < COLS; col++) {
@@ -842,26 +830,7 @@ function drawBoard() {
     updateParticles();
     drawParticles();
 
-    // Draw subtle grid
-    if (settings.palette === 'pudding') {
-        ctx.strokeStyle = 'rgba(212, 165, 116, 0.15)';
-    } else {
-        ctx.strokeStyle = 'rgba(122, 58, 170, 0.1)';
-    }
-    ctx.lineWidth = 1;
-    ctx.setLineDash([]);
-    for (let row = 0; row <= ROWS; row++) {
-        ctx.beginPath();
-        ctx.moveTo(0, row * BLOCK_SIZE);
-        ctx.lineTo(COLS * BLOCK_SIZE, row * BLOCK_SIZE);
-        ctx.stroke();
-    }
-    for (let col = 0; col <= COLS; col++) {
-        ctx.beginPath();
-        ctx.moveTo(col * BLOCK_SIZE, 0);
-        ctx.lineTo(col * BLOCK_SIZE, ROWS * BLOCK_SIZE);
-        ctx.stroke();
-    }
+    // Grid disabled for clean look
     
     // Add pause effect overlay
     if (isPaused) {
