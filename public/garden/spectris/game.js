@@ -5,8 +5,8 @@ const BLOCK_SIZE = 28;
 
 // Get colors from CSS variables
 function getColorsFromCSS() {
-    const root = document.documentElement;
-    const computedStyle = getComputedStyle(root);
+    // Read from body since pudding-theme class is on body
+    const computedStyle = getComputedStyle(document.body);
 
     return [
         computedStyle.getPropertyValue('--block-red').trim(),
@@ -1105,35 +1105,40 @@ function initSettingsUI() {
             const setting = btn.dataset.setting;
             const value = btn.dataset.value;
 
-            // Check if this will change game-affecting settings
-            const willRestartGame = (setting === 'colorMode' || setting === 'palette') &&
-                                   settings[setting] !== value;
+            // Check if setting is actually changing
+            const isChanging = settings[setting] !== value;
 
             // Update setting
             settings[setting] = value;
             saveSettings();
 
-            // Update colors if color mode or palette changed
-            if (setting === 'colorMode' || setting === 'palette') {
-                COLORS = getActiveColors();
-                updateDifficultyDisplay();
-
-                // Update theme
-                if (setting === 'palette') {
-                    updateTheme();
-                }
-
-                // Restart the game with new settings
-                if (willRestartGame) {
+            // Handle different setting types
+            if (setting === 'colorMode') {
+                // Color mode changes affect gameplay - restart required
+                if (isChanging) {
+                    COLORS = getActiveColors();
+                    updateDifficultyDisplay();
                     restartGame();
+                }
+            } else if (setting === 'palette') {
+                // Palette changes colors - restart to apply new colors to all pieces
+                if (isChanging) {
+                    updateTheme();
+                    // Wait for theme to apply, then restart with new colors
+                    setTimeout(() => {
+                        COLORS = getActiveColors();
+                        restartGame();
+                    }, 0);
+                }
+            } else if (setting === 'ghostMode') {
+                // Ghost mode is just visual - no restart needed
+                if (isChanging) {
+                    drawBoard();
                 }
             }
 
             // Update UI
             updateSettingsUI();
-
-            // Redraw to show changes immediately
-            drawBoard();
         });
     });
 
@@ -1230,8 +1235,10 @@ function restartGame() {
 function init() {
     // Load saved settings
     loadSettings();
+    updateTheme(); // Apply saved theme FIRST
+
+    // Now get colors after theme is applied
     COLORS = getActiveColors();
-    updateTheme(); // Apply saved theme
 
     initBoard();
     spawnPiece();
@@ -1244,6 +1251,135 @@ function init() {
 
     requestAnimationFrame(gameLoop);
 }
+
+// Mobile touch controls
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTime = 0;
+let isTouchHolding = false;
+let softDropInterval = null;
+
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (gameOver || isPaused || isAnimating) return;
+
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    touchStartX = touch.clientX - rect.left;
+    touchStartY = touch.clientY - rect.top;
+    touchStartTime = Date.now();
+    isTouchHolding = true;
+
+    // Start soft drop after brief delay
+    setTimeout(() => {
+        if (isTouchHolding && !softDropInterval) {
+            softDropInterval = setInterval(() => {
+                if (isTouchHolding && isValidPosition(currentPiece, currentX, currentY + 1)) {
+                    currentY++;
+                    lockDelayActive = false;
+                    lockDelayMoves = 0;
+                    drawBoard();
+                }
+            }, 50); // Fast drop while holding
+        }
+    }, 200); // 200ms delay before soft drop starts
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    // Cancel hold if finger moves significantly
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const currentX = touch.clientX - rect.left;
+    const currentY = touch.clientY - rect.top;
+    const moveDistance = Math.sqrt(
+        Math.pow(currentX - touchStartX, 2) +
+        Math.pow(currentY - touchStartY, 2)
+    );
+
+    if (moveDistance > 20) {
+        isTouchHolding = false;
+        if (softDropInterval) {
+            clearInterval(softDropInterval);
+            softDropInterval = null;
+        }
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    if (gameOver || isPaused || isAnimating) return;
+
+    // Clear soft drop
+    isTouchHolding = false;
+    if (softDropInterval) {
+        clearInterval(softDropInterval);
+        softDropInterval = null;
+    }
+
+    const touch = e.changedTouches[0];
+    const rect = canvas.getBoundingClientRect();
+    const touchEndX = touch.clientX - rect.left;
+    const touchEndY = touch.clientY - rect.top;
+    const touchDuration = Date.now() - touchStartTime;
+
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+
+    // Swipe threshold
+    const swipeThreshold = 30;
+
+    // Check for swipe gestures
+    if (absDeltaX > swipeThreshold || absDeltaY > swipeThreshold) {
+        if (absDeltaY > absDeltaX) {
+            // Vertical swipe
+            if (deltaY < 0) {
+                // Swipe up - Hold Queue
+                holdCurrentPiece();
+            } else {
+                // Swipe down - Hard Drop
+                hardDrop();
+            }
+        } else {
+            // Horizontal swipe
+            if (deltaX < 0) {
+                // Swipe left - Move left
+                movePiece(-1, 0);
+            } else {
+                // Swipe right - Move right
+                movePiece(1, 0);
+            }
+        }
+    } else if (touchDuration < 200) {
+        // Quick tap - check left/right side for rotation direction
+        const canvasWidth = rect.width;
+        const tapX = touchEndX;
+
+        if (tapX < canvasWidth * 0.3) {
+            // Tap on left side - rotate counterclockwise (reverse rotation)
+            // Rotate 3 times to get counterclockwise effect
+            rotate();
+            rotate();
+            rotate();
+        } else if (tapX > canvasWidth * 0.7) {
+            // Tap on right side - rotate clockwise
+            rotate();
+        } else {
+            // Tap in center - rotate clockwise (default)
+            rotate();
+        }
+    }
+
+    drawBoard();
+    drawHold();
+}, { passive: false });
+
+// Prevent scrolling on the canvas
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+}, { passive: false });
 
 // Start the game
 init();

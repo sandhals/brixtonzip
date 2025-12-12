@@ -42,6 +42,11 @@
             --text-dim: #a89584;
             --glow-purple: #e8d4c8;
             --glow-cyan: #d4c8e8;
+            --block-red: #ff9aa2;
+            --block-yellow: #ffd97d;
+            --block-cyan: #91d5ff;
+            --block-green: #7fefbd;
+            --block-purple: #d4a5ff;
             --gradient-1: rgba(245, 215, 196, 0.15);
             --gradient-2: rgba(228, 212, 200, 0.12);
             --scanline-color: rgba(245, 215, 196, 0.05);
@@ -270,14 +275,173 @@
         }
 
         .setting-group { margin-bottom: 30px; padding: 20px; background: var(--panel-bg); border: 2px solid var(--panel-border) }
+        .setting-group label {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 18px;
+            color: var(--accent-gold);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
         .toggle-group { display: flex; gap: 10px }
-        .toggle-btn { flex: 1; padding: 10px; border: 2px solid var(--panel-border); background: var(--bg-dark); color: var(--text-dim); cursor: pointer }
-        .toggle-btn.active { background: var(--accent-gold); color: var(--bg-darker) }
-        .close-settings-btn { width: 100%; padding: 15px; border: 2px solid var(--accent-gold); background: var(--panel-bg); color: var(--accent-gold); cursor: pointer }
+        .toggle-btn { flex: 1; padding: 10px; border: 2px solid var(--panel-border); background: var(--bg-dark); color: var(--text-dim); cursor: pointer; font-family: VT323, monospace; font-size: 16px; }
+        .toggle-btn.active { background: var(--accent-gold); color: var(--bg-darker); font-weight: bold; }
+        .close-settings-btn { width: 100%; padding: 15px; border: 2px solid var(--accent-gold); background: var(--panel-bg); color: var(--accent-gold); cursor: pointer; font-family: VT323, monospace; font-size: 18px; }
 
         .game-title { font-size: 24px; color: var(--accent-gold); letter-spacing: 6px }
         .level-indicator { color: var(--glow-cyan); font-size: 14px }
         .difficulty-indicator { color: var(--accent-silver); font-size: 14px }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+                align-items: flex-start;
+            }
+
+            .game-container {
+                flex-direction: column;
+                padding: 10px;
+                gap: 10px;
+                width: 100%;
+                max-width: 100vw;
+            }
+
+            .main-section {
+                width: 100%;
+            }
+
+            .game-title {
+                font-size: 20px;
+                letter-spacing: 3px;
+            }
+
+            canvas#gameCanvas {
+                width: 100%;
+                max-width: 100%;
+                height: auto;
+                aspect-ratio: 10 / 20;
+            }
+
+            .side-panel {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-between;
+            }
+
+            .info-box {
+                width: calc(50% - 5px);
+                padding: 6px;
+            }
+
+            .info-box h2 {
+                font-size: 12px;
+                margin-bottom: 4px;
+            }
+
+            .score {
+                font-size: 20px;
+                margin: 4px 0;
+            }
+
+            .preview-canvas {
+                width: 60px;
+                height: 60px;
+            }
+
+            .controls {
+                display: none;
+            }
+
+            .settings-btn {
+                width: 100%;
+                margin-top: 0;
+            }
+
+            .settings-content {
+                min-width: 90vw;
+                padding: 20px;
+            }
+
+            .settings-content h1 {
+                font-size: 24px;
+            }
+
+            .setting-group {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .setting-group label {
+                font-size: 16px;
+                margin-bottom: 8px;
+            }
+
+            .toggle-btn {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            .pause-overlay {
+                padding: 30px 40px;
+            }
+
+            .pause-overlay h1 {
+                font-size: 28px;
+            }
+
+            .game-over {
+                padding: 30px 40px;
+            }
+
+            .game-over h1 {
+                font-size: 28px;
+            }
+
+            .level-indicator,
+            .difficulty-indicator {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 8px;
+            }
+
+            .game-title {
+                font-size: 18px;
+                letter-spacing: 2px;
+            }
+
+            .info-box {
+                padding: 5px;
+            }
+
+            .info-box h2 {
+                font-size: 11px;
+            }
+
+            .score {
+                font-size: 18px;
+            }
+
+            .preview-canvas {
+                width: 50px;
+                height: 50px;
+            }
+
+            .settings-content {
+                padding: 15px;
+            }
+
+            .pause-overlay,
+            .game-over {
+                padding: 20px 30px;
+            }
+        }
     </style>
 </head>
 
