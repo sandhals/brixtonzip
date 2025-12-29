@@ -323,13 +323,14 @@
 
             .game-container {
                 flex-direction: column;
-                padding: 5px;
-                gap: 3px;
+                padding: 8px;
+                gap: 5px;
                 width: 100vw;
                 height: 100vh;
                 height: 100dvh;
                 max-width: 100vw;
                 margin: 0;
+                box-sizing: border-box;
             }
 
             .main-section {
@@ -337,8 +338,9 @@
                 flex: 1;
                 display: flex;
                 flex-direction: column;
-                gap: 3px;
+                gap: 5px;
                 min-height: 0;
+                overflow: hidden;
             }
 
             .game-title {
@@ -351,8 +353,11 @@
             canvas#gameCanvas {
                 width: 100%;
                 height: auto;
-                max-height: calc(100vh - 180px);
+                max-width: min(100%, 560px);
+                max-height: 100%;
                 display: block;
+                margin: 0 auto;
+                object-fit: contain;
             }
 
             .game-info {
@@ -374,9 +379,10 @@
                 gap: 5px;
                 background: var(--panel-bg);
                 border-top: 2px solid var(--panel-border);
-                padding: 5px;
-                padding-bottom: calc(5px + env(safe-area-inset-bottom));
+                padding: 8px;
+                padding-bottom: max(8px, env(safe-area-inset-bottom));
                 flex-shrink: 0;
+                box-sizing: border-box;
             }
 
             .info-box {

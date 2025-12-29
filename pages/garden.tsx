@@ -72,6 +72,14 @@ export default function GardenPage() {
                 An applet I'm building for recording memories as they come to you, automatically compiling them into a detailed timeline of your whole life.
               </td>
             </tr>
+            <tr>
+              <td className="link-cell">
+                <span className="brewing-cell">HanTyLe</span>
+              </td>
+              <td className="desc-cell">
+                I'm trying to build a Korean lemmatizer that is built from Typescript as an alternative to similar libraries that use Python.
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>

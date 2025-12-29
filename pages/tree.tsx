@@ -20,13 +20,21 @@ const TreePage = () => {
       url: "https://are.na/brixton"
     },
     {
+      title: "Substack",
+      url: "https://brixton.substack.com"
+    },
+        {
+      title: "Goodreads",
+      url: "https://goodreads.com/lehtia"
+    },
+    {
       title: "Ko-fi",
       url: "https://ko-fi.com/brixton"
     },
     {
       title: "Amazon Wishlist",
       url: "https://www.amazon.com/hz/wishlist/ls/1ZG25EG7ZYUTS?ref_=wl_share"
-    }
+    },
   ];
 
   return (
@@ -35,7 +43,7 @@ const TreePage = () => {
         <div className="tree-container">
           <div className="profile">
             <h1>@brixton</h1>
-            <p>find me on other people's sites!</p>
+            <p>find me outside my domain</p>
           </div>
 
           <div className="links">
