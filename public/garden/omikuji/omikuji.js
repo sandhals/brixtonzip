@@ -542,6 +542,11 @@ let lastOrientation = { beta: null, gamma: null };
 
 // Event handlers
 function onPointerDown(e) {
+    // Initialize audio on first user interaction (for mobile/Safari)
+    if (!audioInitialized) {
+        initializeAudio();
+    }
+    
     isDragging = true;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
