@@ -19,7 +19,7 @@ export default function GardenPage() {
           <tbody>
             <tr>
               <td className="link-cell">
-                <a href="/garden/omikuji">Omikuji</a>
+                <a href="/garden/omikuji/index.html">Omikuji</a>
               </td>
               <td className="desc-cell">
                 A digital omikuji for those who can't make it to a shrine but want to know their fortune.
