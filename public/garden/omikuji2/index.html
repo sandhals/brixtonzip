@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>おみくじ - Omikuji</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #000000; --paper: #ffffff; --highlight: rgba(255, 243, 176, 0.7);
+            --header-font-size: 2.1rem; --tooltip-bg: rgba(0, 0, 0, 0.95);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Sawarabi Mincho', serif; background-color: #ffffff; overflow: hidden; }
+
+        #canvas-container { width: 100vw; height: 100vh; position: relative; z-index: 1; }
+        #top-info { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); z-index: 10; text-align: center; pointer-events: none; }
+        #top-info h1 { font-size: 14px; margin-bottom: 10px; color: #000; font-weight: 400; letter-spacing: 0.5px; }
+        #shake-count { font-size: 12px; color: #666; display: none; margin-top: 5px; }
+
+        #bottom-info { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10; text-align: center; }
+        #bottom-text { font-size: 12px; color: #666; margin-bottom: 10px; }
+        
+        .btn-boxed { padding: 8px 16px; font-size: 12px; cursor: pointer; background: #fff; border: 1px solid #000; transition: 0.2s; font-family: inherit; }
+        .btn-boxed:hover { background: #000; color: #fff; }
+
+        #read-fortune-btn { display: none; margin-top: 10px; }
+
+        /* MODAL OVERLAY */
+        #fortune-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px);
+            z-index: 100; display: none; justify-content: center; align-items: flex-start;
+            padding: 40px 0; overflow-y: auto; cursor: pointer;
+        }
+
+        .omikuji-paper { background-color: var(--paper); width: 400px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; cursor: default; height: auto; }
+        .frame { border: 4px double var(--ink); padding: 2px; display: flex; flex-direction: column; height: auto; }
+        .header-row { display: grid; grid-template-columns: 1fr 2fr 1fr; min-height: 280px; border-bottom: 1px solid var(--ink); }
+        .body-row { display: grid; grid-template-columns: 1fr 1.2fr; height: auto; }
+        .v-text { writing-mode: vertical-rl; text-orientation: upright; width: auto; min-width: 40px; }
+        .h-cell:not(:last-child), .body-left-col { border-right: 1px solid var(--ink); }
+        .center-content { display: flex; justify-content: center; align-items: center; text-align: center; }
+        .text-cell { padding: 35px 25px 35px 15px; display: block; height: auto; }
+
+        ruby rt { font-size: 0.35em; font-weight: normal; }
+        .header-text { font-size: var(--header-font-size); }
+        .main-fortune-text { line-height: 1.9; font-size: 1.25rem; }
+        .items-text { line-height: 1.7; font-size: 1.05rem; }
+
+        .tip { cursor: help; transition: background 0.2s; border-radius: 4px; }
+        .tip:hover { background-color: var(--highlight); }
+        .item-line { display: block; margin-left: 10px; white-space: nowrap; }
+
+        #tooltip { position: fixed; pointer-events: none; background: var(--tooltip-bg); color: #fff; padding: 12px 16px; border-radius: 4px; font-size: 0.85rem; width: 240px; z-index: 1000; opacity: 0; transition: opacity 0.2s; font-family: sans-serif; line-height: 1.5; writing-mode: horizontal-tb; }
+
+        @media (max-width: 600px) { .omikuji-paper { width: 95%; } #tooltip.mobile-active { top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; width: 85%; } }
+    </style>
+</head>
+<body>
+    <div id="tooltip"></div>
+    <div id="canvas-container"></div>
+
+    <div id="top-info">
+        <h1>おみくじ</h1>
+        <p id="shake-count"><span id="shake-value">0</span> shakes</p>
+    </div>
+
+    <div id="bottom-info">
+        <p id="bottom-text">Shake the container!</p>
+        <button id="take-omikuji-btn" class="btn-boxed" style="display: none;">Take Omikuji</button>
+        <button id="read-fortune-btn" class="btn-boxed">Read Fortune</button>
+    </div>
+
+    <div id="fortune-overlay">
+        <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
+            <div class="omikuji-paper">
+                <div class="frame">
+                    <div class="header-row">
+                        <div class="h-cell v-text center-content bold header-text tip" id="modal-luck"></div>
+                        <div class="h-cell v-text center-content header-text tip" data-tip="Internet Hongu / Brixton Shrine Fortune">
+                            <div style="line-height: 2.8;">
+                                <ruby>電<rt>でん</rt></ruby><ruby>脳<rt>のう</rt></ruby><ruby>本<rt>ほん</rt></ruby><ruby>宮<rt>ぐう</rt></ruby><br>
+                                <ruby>振<rt>ぶり</rt></ruby><ruby>楠<rt>くす</rt></ruby><ruby>神<rt>じん</rt></ruby><ruby>社<rt>じゃ</rt></ruby><ruby>籤<rt>くじ</rt></ruby>
+                            </div>
+                        </div>
+                        <div class="h-cell v-text center-content bold header-text tip" id="modal-number"></div>
+                    </div>
+                    <div class="body-row">
+                        <div class="body-left-col">
+                            <div style="display:flex; flex-direction:column; height:auto;">
+                                <div id="items-top" class="v-text text-cell items-text" style="border-bottom: 1px solid black;"></div>
+                                <div id="items-bottom" class="v-text text-cell items-text"></div>
+                            </div>
+                        </div>
+                        <div class="body-right-col">
+                            <div class="v-text text-cell main-fortune-text center-content tip" id="modal-unsei"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer" style="text-align: center; padding: 15px 0 10px; font-size: 0.8rem;">振楠神社社務所（<a href="https://brixton.zip" style="color:#000;">brixton.zip</a>）</div>
+            </div>
+            <button id="close-modal-btn" class="btn-boxed" style="margin-top:20px;">Try Again</button>
+        </div>
+    </div>
+
+    <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+    </script>
+    <script type="module" src="omikuji.js"></script>
+</body>
+</html>
