@@ -60,17 +60,39 @@ export default async function handler(
         ? await readFile(filePath) 
         : await readFile(filePath, 'utf-8')
       
-      // For HTML files served from a directory path, inject a base tag to fix relative paths
+      // For HTML files served from a directory path, inject a base tag and cache-busting meta tags
       if (!hasExtension && typeof content === 'string') {
         const baseUrl = `/garden/${pathString}/`
         // Check if base tag already exists
         if (!content.includes('<base')) {
-          // Inject base tag right after <head>
-          content = content.replace('<head>', `<head>\n    <base href="${baseUrl}">`)
+          // Inject base tag and cache-busting meta tags right after <head>
+          const absoluteBaseUrl = baseUrl.startsWith('/') ? baseUrl : `/${baseUrl}`
+          const timestamp = Date.now()
+          const cacheBustingMeta = `
+    <base href="${absoluteBaseUrl}">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="cache-timestamp" content="${timestamp}">`
+          content = content.replace('<head>', `<head>${cacheBustingMeta}`)
+          
+          // Also add cache-busting query params to script and link tags
+          content = content.replace(/src="([^"]+\.(js|css))"/g, (match, src) => {
+            const separator = src.includes('?') ? '&' : '?'
+            return `src="${src}${separator}v=${timestamp}"`
+          })
+          content = content.replace(/href="([^"]+\.(js|css))"/g, (match, href) => {
+            const separator = href.includes('?') ? '&' : '?'
+            return `href="${href}${separator}v=${timestamp}"`
+          })
         }
       }
       
+      // Set cache-control headers to prevent caching for all file types
       res.setHeader('Content-Type', contentType)
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+      res.setHeader('Pragma', 'no-cache')
+      res.setHeader('Expires', '0')
       return res.status(200).send(content)
     } catch (fileError) {
       // File doesn't exist

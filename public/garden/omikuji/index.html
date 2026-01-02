@@ -346,7 +346,8 @@ body.no-tooltips #tooltip {
             
             /* Mobile modal font size adjustments */
             .omikuji-paper {
-                width: 95%;
+                width: 98%;
+                max-width: 98%;
                 padding: 15px;
             }
             
@@ -374,6 +375,11 @@ body.no-tooltips #tooltip {
             
             .header-row {
                 min-height: 200px;
+            }
+            
+            .close-button-mobile {
+                display: block !important;
+                margin-top: 15px;
             }
         }
     </style>
@@ -446,6 +452,7 @@ body.no-tooltips #tooltip {
             <div class="footer">振楠神社社務所（<a href="https://brixton.zip">brixton.zip</a>）</div>
             </div>
             <button class="save-button" id="save-fortune-btn">画像として保存</button>
+            <button class="save-button close-button-mobile" id="close-modal-btn" style="display: none;">閉じる</button>
         </div>
     </div>
 

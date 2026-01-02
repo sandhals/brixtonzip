@@ -1355,6 +1355,16 @@ if (modalOverlay) {
     });
 }
 
+// Close modal button (mobile)
+const closeModalBtn = document.getElementById('close-modal-btn');
+if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+        if (modalOverlay) {
+            modalOverlay.classList.remove('active');
+        }
+    });
+}
+
 // "Start over" link event listener
 const startOverLink = document.getElementById('start-over-link');
 if (startOverLink) {
