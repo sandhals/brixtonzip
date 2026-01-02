@@ -1,7 +1,89 @@
 import * as THREE from 'three';
+import { getFortuneByNumber } from './data.js';
 
 console.log('Omikuji script loading...');
 console.log('THREE version:', THREE.REVISION);
+
+// Language system
+let currentLanguage = 'jp'; // Default to Japanese
+
+const translations = {
+    jp: {
+        title: 'おみくじ',
+        shakeLabel: '回',
+        bottomTextInitial: '容器を振って！',
+        bottomTextShake: '振り出す',
+        getOmikujiBtn: 'おみくじを引く',
+        checkFortuneBtn: '運勢を見る',
+        startOver: 'やり直す',
+        saveImage: '画像として保存'
+    },
+    en: {
+        title: 'Omikuji',
+        shakeLabel: 'shakes',
+        bottomTextInitial: 'Shake the container!',
+        bottomTextShake: 'Shake it out',
+        getOmikujiBtn: 'Get omikuji',
+        checkFortuneBtn: 'Check your fortune',
+        startOver: 'Start over',
+        saveImage: 'Save as image'
+    },
+    ko: {
+        title: '오미쿠지',
+        shakeLabel: '번',
+        bottomTextInitial: '용기를 흔들어!',
+        bottomTextShake: '흔들어 빼내세요',
+        getOmikujiBtn: '오미쿠지 뽑기',
+        checkFortuneBtn: '운세 확인',
+        startOver: '다시 시작',
+        saveImage: '이미지로 저장'
+    }
+};
+
+function updateLanguage(lang) {
+    currentLanguage = lang;
+    document.body.classList.toggle('no-tooltips', lang === 'jp');
+    const t = translations[lang];
+
+    // Update UI elements
+    const title = document.getElementById('title');
+    const shakeLabel = document.getElementById('shake-label');
+    const bottomText = document.getElementById('bottom-text');
+    const takeOmikujiBtn = document.getElementById('take-omikuji-btn');
+    const readFortuneBtn = document.getElementById('read-fortune-btn');
+    const startOverLink = document.getElementById('start-over-link');
+    const saveFortuneBtn = document.getElementById('save-fortune-btn');
+    const languageToggle = document.getElementById('language-toggle');
+
+    if (title) title.textContent = t.title;
+    if (shakeLabel) shakeLabel.textContent = t.shakeLabel;
+    if (takeOmikujiBtn) takeOmikujiBtn.textContent = t.getOmikujiBtn;
+    if (readFortuneBtn) readFortuneBtn.textContent = t.checkFortuneBtn;
+    if (startOverLink) startOverLink.textContent = t.startOver;
+    if (saveFortuneBtn) saveFortuneBtn.textContent = t.saveImage;
+
+    // Update bottom text based on current state
+    if (bottomText && bottomText.style.display !== 'none') {
+        if (currentState === State.IDLE) {
+            bottomText.textContent = t.bottomTextInitial;
+        } else if (currentState === State.SHAKING || currentState === State.FLIPPING) {
+            bottomText.textContent = t.bottomTextShake;
+        }
+    }
+
+    // Update language toggle button to show current language
+    if (languageToggle) {
+        if (lang === 'jp') {
+            languageToggle.textContent = 'JP';
+        } else if (lang === 'en') {
+            languageToggle.textContent = 'EN';
+        } else if (lang === 'ko') {
+            languageToggle.textContent = 'KO';
+        }
+    }
+
+    console.log('Language updated to:', lang);
+}
 
 // Scene setup
 const scene = new THREE.Scene();
@@ -97,13 +179,36 @@ function createHexagonalCylinder() {
     }
     hexShape.closePath();
 
-    // Top cap (hexagon)
-    const capGeometry = new THREE.ShapeGeometry(hexShape);
-    const topCap = new THREE.Mesh(capGeometry, woodMaterial);
+    // Top cap (hexagon with hole cutout)
+    const holeRadius = 0.15;
+
+    // Create a copy of hexShape with a hole
+    const hexShapeWithHole = hexShape.clone();
+
+    // Create circular hole in the center
+    const holePath = new THREE.Path();
+    for (let i = 0; i < 32; i++) {
+        const angle = (i / 32) * Math.PI * 2;
+        const x = holeRadius * Math.cos(angle);
+        const y = holeRadius * Math.sin(angle);
+        if (i === 0) {
+            holePath.moveTo(x, y);
+        } else {
+            holePath.lineTo(x, y);
+        }
+    }
+    holePath.closePath();
+    hexShapeWithHole.holes.push(holePath);
+
+    const topCapGeometry = new THREE.ShapeGeometry(hexShapeWithHole);
+    const topCap = new THREE.Mesh(topCapGeometry, woodMaterial);
     topCap.rotation.x = -Math.PI / 2;
     topCap.rotation.z = Math.PI / 6; // Match cylinder rotation
     topCap.position.y = height / 2;
     group.add(topCap);
+
+    // Bottom cap uses the original shape without hole
+    const capGeometry = new THREE.ShapeGeometry(hexShape);
 
     // Bottom cap (hexagon)
     const bottomCap = new THREE.Mesh(capGeometry, woodMaterial);
@@ -112,18 +217,39 @@ function createHexagonalCylinder() {
     bottomCap.position.y = -height / 2;
     group.add(bottomCap);
 
-    // Create hole on top (recessed into the cap, darker wood)
-    const holeRadius = 0.15;
+    // Create hole on top (recessed into the cap, perfectly dark)
+    // holeRadius already defined above for the cap cutout
     const holeDepth = 0.2;
-    const holeGeometry = new THREE.CylinderGeometry(holeRadius, holeRadius, holeDepth, 16);
-    const holeMaterial = new THREE.MeshToonMaterial({
-        color: 0x2a1a0f,
-        gradientMap: createToonGradient()
+
+    // Create perfectly black material with no lighting interaction
+    const holeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x000000, // Pure black
+        side: THREE.DoubleSide,
+        depthWrite: true,
+        depthTest: true
     });
+
+    // Create the hole cylinder (walls)
+    const holeGeometry = new THREE.CylinderGeometry(holeRadius, holeRadius, holeDepth, 32);
     const hole = new THREE.Mesh(holeGeometry, holeMaterial);
-    // Position it so it's recessed into the top cap
     hole.position.y = height / 2 - holeDepth / 2;
     group.add(hole);
+
+    // Add a solid black cap at the bottom of the hole to block any light/artifacts
+    const holeCapGeometry = new THREE.CircleGeometry(holeRadius, 32);
+    const holeCap = new THREE.Mesh(holeCapGeometry, holeMaterial);
+    holeCap.rotation.x = -Math.PI / 2; // Face upward
+    holeCap.position.y = height / 2 - holeDepth;
+    group.add(holeCap);
+
+    // Add another cap at the top entrance to ensure complete coverage
+    const holeTopCap = new THREE.Mesh(
+        new THREE.RingGeometry(holeRadius, holeRadius + 0.001, 32),
+        holeMaterial
+    );
+    holeTopCap.rotation.x = -Math.PI / 2;
+    holeTopCap.position.y = height / 2;
+    group.add(holeTopCap);
 
     // Add engraved text
     addEngravedText(group, radius);
@@ -174,15 +300,22 @@ async function addEngravedText(group, radius) {
     });
 
     const textPlane = new THREE.PlaneGeometry(1.2, 2.4);
-    const textMesh = new THREE.Mesh(textPlane, textMaterial);
 
     // Position text on one of the flat hexagonal faces
     // For a hexagon with 6 sides, we want the center of a face
     // The distance from center to a flat face is radius * cos(30°)
     const distanceToFace = radius * Math.cos(Math.PI / 6);
-    textMesh.position.set(0, 0, distanceToFace + 0.05);
 
-    group.add(textMesh);
+    // Add text to front face
+    const textMeshFront = new THREE.Mesh(textPlane, textMaterial);
+    textMeshFront.position.set(0, 0, distanceToFace + 0.05);
+    group.add(textMeshFront);
+
+    // Add text to back face (opposite side)
+    const textMeshBack = new THREE.Mesh(textPlane, textMaterial.clone());
+    textMeshBack.position.set(0, 0, -(distanceToFace + 0.05));
+    textMeshBack.rotation.y = Math.PI; // Rotate 180° so text faces outward
+    group.add(textMeshBack);
 
     console.log('Text added to container');
 }
@@ -230,7 +363,7 @@ function createFortuneStick() {
     tip.position.y = (stickLength / 2) + (tipHeight / 2);
     stickGroup.add(tip);
 
-    // Create glow effect as outline - larger mesh with BackSide rendering
+    // Create glow effect as outline - wraps around entire stick
     const glowMaterial = new THREE.MeshBasicMaterial({
         color: 0xffdd44,
         transparent: true,
@@ -238,9 +371,15 @@ function createFortuneStick() {
         side: THREE.BackSide, // Only render back faces to create outline
         depthWrite: false
     });
-    // Make it noticeably larger to create outline effect
-    const glowGeometry = new THREE.BoxGeometry(stickWidth * 1.4, stickLength * 1.1, stickDepth * 1.4);
+    // Glow should cover the entire stick (stick body + red tip)
+    // Stick body: 3 units tall, centered at 0 (from -1.5 to 1.5)
+    // Red tip: 0.3 units tall, at y = 1.65 (from 1.5 to 1.8)
+    // Total height: from -1.5 to 1.8 = 3.3 units
+    // Center point: (-1.5 + 1.8) / 2 = 0.15
+    const totalGlowHeight = stickLength + tipHeight; // 3.0 + 0.3 = 3.3
+    const glowGeometry = new THREE.BoxGeometry(stickWidth * 1.4, totalGlowHeight, stickDepth * 1.4);
     const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+    glowMesh.position.y = tipHeight / 2; // Center the glow to cover entire stick
     glowMesh.visible = false; // Hidden by default
     glowMesh.name = 'stickGlow';
     glowMesh.renderOrder = -1; // Render behind stick
@@ -297,7 +436,9 @@ async function addFortuneNumberToStick(stickGroup, number) {
 
     // Z-offset: Stick depth is 0.03, so face is at 0.015.
     // Set text to 0.017 to avoid Z-fighting.
-    textMesh.position.set(0, 0.7, 0.017);
+    // Position just below red tip: red tip bottom is at Y=1.5, text height is 0.8
+    // So center of text should be at Y = 1.5 - 0.4 = 1.1
+    textMesh.position.set(0, 1.1, 0.017);
 
     // Rotate 180 degrees around Z because the container is upside down
     textMesh.rotation.z = Math.PI;
@@ -310,6 +451,26 @@ async function addFortuneNumberToStick(stickGroup, number) {
 
 // Load shake sound
 const shakeSound = new Audio('shakesound.wav');
+let audioInitialized = false;
+
+// Initialize audio on user interaction (for Safari)
+function initializeAudio() {
+    if (!audioInitialized) {
+        shakeSound.load();
+        // Try to play and immediately pause to unlock audio
+        const playPromise = shakeSound.play();
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                shakeSound.pause();
+                shakeSound.currentTime = 0;
+                audioInitialized = true;
+                console.log('Audio initialized');
+            }).catch(e => {
+                console.log('Audio initialization failed:', e);
+            });
+        }
+    }
+}
 
 // Game state machine (must be declared before container creation)
 const State = {
@@ -344,14 +505,17 @@ let isHoveringStick = false;
 let isZoomedIn = false;
 let zoomProgress = 0;
 const originalCameraPosition = { x: 0, y: 0, z: 8 };
-// Zoom to focus on the red tip and number area
-// When container is upside down (rotated 180°) at Y=1.5, stick emerges downward
-// Stick local Y goes from -1.5 to 1.5, red tip at local Y=1.65, number at Y=0.8
-// When upside down and emerged to local Y=2.0:
-// Red tip world Y = 1.5 - (2.0 + 1.65) = 1.5 - 3.65 = -2.15
-// Number world Y = 1.5 - (2.0 + 0.8) = 1.5 - 2.8 = -1.3
-const zoomedCameraPosition = { x: 0, y: -1.5, z: 3 };
-const zoomLookAt = { x: 0, y: -1.8, z: 0 }; // Look at red tip area
+// Zoom to focus on the fortune number
+// When container is upside down (rotated 180°) at world Y=1.5, stick emerges downward to local Y=2.0
+// In the upside-down container, the stick extends DOWNWARD (negative world Y direction)
+// Text is at stick local Y=1.1 (just below red tip at 1.5)
+// When the container is at world Y=1.5 and rotated 180°:
+// - Stick at local Y=2.0 is actually 2.0 units BELOW the container in world space
+// - Text at local Y=1.1 is at: 1.5 - 2.0 - (1.5 - 1.1) = 1.5 - 2.0 - 0.4 = -0.9
+// Actually simpler: container at Y=1.5, stick goes down 2.0 = -0.5, text is 0.4 higher = -0.1
+// User requested camera go even lower to better frame the stick and text
+const zoomedCameraPosition = { x: 0, y: -1.2, z: 2.5 };
+const zoomLookAt = { x: 0, y: -1.0, z: 0 }; // Look directly at the stick/number area
 
 // Create the omikuji container
 const omikujiContainer = createHexagonalCylinder();
@@ -578,10 +742,28 @@ if (renderer.domElement) {
 // Add mouse move for hover detection
 window.addEventListener('mousemove', onMouseMove);
 
+// Language toggle button event listener
+const languageToggle = document.getElementById('language-toggle');
+if (languageToggle) {
+    languageToggle.addEventListener('click', () => {
+        // Cycle through languages: jp -> en -> ko -> jp
+        if (currentLanguage === 'jp') {
+            updateLanguage('en');
+        } else if (currentLanguage === 'en') {
+            updateLanguage('ko');
+        } else {
+            updateLanguage('jp');
+        }
+    });
+}
+
 // Button event listener
 const takeOmikujiBtn = document.getElementById('take-omikuji-btn');
 if (takeOmikujiBtn) {
     takeOmikujiBtn.addEventListener('click', () => {
+        // Initialize audio on first user interaction (for Safari)
+        initializeAudio();
+
         if (currentState === State.IDLE) {
             currentState = State.FLIPPING;
             requiredShakes = Math.floor(Math.random() * 3) + 1; // 1-3 shakes
@@ -608,7 +790,7 @@ if (takeOmikujiBtn) {
             const shakeCountEl = document.getElementById('shake-count');
 
             if (bottomText) {
-                bottomText.textContent = 'Shake it out';
+                bottomText.textContent = translations[currentLanguage].bottomTextShake;
                 bottomText.style.display = 'block';
             }
 
@@ -740,7 +922,15 @@ function animate() {
                 }
             } else {
                 currentState = State.FINISHED;
-                document.getElementById('instruction').textContent = 'Fortune received!';
+
+                // Show "Check your fortune" button and "Start over" link
+                const bottomText = document.getElementById('bottom-text');
+                const readFortuneBtn = document.getElementById('read-fortune-btn');
+                const startOverLink = document.getElementById('start-over-link');
+
+                if (bottomText) bottomText.style.display = 'none';
+                if (readFortuneBtn) readFortuneBtn.style.display = 'inline-block';
+                if (startOverLink) startOverLink.style.display = 'block';
             }
 
             // Keep container at elevated position
@@ -779,27 +969,29 @@ function animate() {
             break;
     }
 
-    // Camera zoom animation
-    if (isZoomedIn) {
-        if (zoomProgress < 1.0) {
-            zoomProgress = Math.min(zoomProgress + 0.05, 1.0);
-            const t = zoomProgress;
-            const eased = t * t * (3 - 2 * t); // Smooth easing
-            camera.position.x = originalCameraPosition.x + (zoomedCameraPosition.x - originalCameraPosition.x) * eased;
-            camera.position.y = originalCameraPosition.y + (zoomedCameraPosition.y - originalCameraPosition.y) * eased;
-            camera.position.z = originalCameraPosition.z + (zoomedCameraPosition.z - originalCameraPosition.z) * eased;
-            camera.lookAt(zoomLookAt.x, zoomLookAt.y, zoomLookAt.z); // Look at the number area
-        }
+    // Camera zoom animation - runs every frame
+    if (zoomProgress > 0) {
+        const t = zoomProgress;
+        const eased = t * t * (3 - 2 * t); // Smooth easing
+        camera.position.x = originalCameraPosition.x + (zoomedCameraPosition.x - originalCameraPosition.x) * eased;
+        camera.position.y = originalCameraPosition.y + (zoomedCameraPosition.y - originalCameraPosition.y) * eased;
+        camera.position.z = originalCameraPosition.z + (zoomedCameraPosition.z - originalCameraPosition.z) * eased;
+
+        // Interpolate lookAt target
+        const lookAtX = 0 + (zoomLookAt.x - 0) * eased;
+        const lookAtY = 0 + (zoomLookAt.y - 0) * eased;
+        const lookAtZ = 0 + (zoomLookAt.z - 0) * eased;
+        camera.lookAt(lookAtX, lookAtY, lookAtZ);
     } else {
-        if (zoomProgress > 0) {
-            zoomProgress = Math.max(zoomProgress - 0.05, 0);
-            const t = zoomProgress;
-            const eased = t * t * (3 - 2 * t);
-            camera.position.x = originalCameraPosition.x + (zoomedCameraPosition.x - originalCameraPosition.x) * eased;
-            camera.position.y = originalCameraPosition.y + (zoomedCameraPosition.y - originalCameraPosition.y) * eased;
-            camera.position.z = originalCameraPosition.z + (zoomedCameraPosition.z - originalCameraPosition.z) * eased;
-            camera.lookAt(0, 0, 0); // Look at scene center
-        }
+        // Default camera lookAt when not zoomed
+        camera.lookAt(0, 0, 0);
+    }
+
+    // Update zoom progress
+    if (isZoomedIn && zoomProgress < 1.0) {
+        zoomProgress = Math.min(zoomProgress + 0.05, 1.0);
+    } else if (!isZoomedIn && zoomProgress > 0) {
+        zoomProgress = Math.max(zoomProgress - 0.05, 0);
     }
 
     renderer.render(scene, camera);
@@ -809,3 +1001,425 @@ console.log('Starting animation loop');
 console.log('Scene children count:', scene.children.length);
 console.log('Camera position:', camera.position);
 animate();
+
+// ===== FORTUNE MODAL LOGIC =====
+
+function createRubyText(jp, furigana_parts) {
+    if (!furigana_parts || furigana_parts.length === 0) {
+        return jp;
+    }
+
+    let result = '';
+    let charIndex = 0;
+
+    furigana_parts.forEach(part => {
+        const kanji = jp[charIndex];
+        result += `<ruby>${kanji}<rt>${part}</rt></ruby>`;
+        charIndex++;
+    });
+
+    return result;
+}
+
+function displayFortuneModal(fortuneNumber) {
+    const fortune = getFortuneByNumber(fortuneNumber);
+    if (!fortune) {
+        console.error('Fortune not found for number:', fortuneNumber);
+        return;
+    }
+
+    console.log('Displaying fortune:', fortune);
+
+    // Always display Japanese text in the modal
+    // Only tooltips change based on language (no tooltips for Japanese)
+
+    // Update fortune type (left header) - always Japanese with furigana
+    const fortuneTypeEl = document.getElementById('fortune-type');
+    if (fortuneTypeEl) {
+        fortuneTypeEl.innerHTML = createRubyText(fortune.fortune_jp, fortune.furigana_parts);
+
+        // Set tooltip based on current language (no tooltip for Japanese)
+        if (currentLanguage === 'ko') {
+            fortuneTypeEl.setAttribute('data-tip', `운세:<br>${fortune.gloss_ko}`);
+        } else if (currentLanguage === 'en') {
+            fortuneTypeEl.setAttribute('data-tip', `Fortune:<br>${fortune.gloss_en}`);
+        } else {
+            fortuneTypeEl.removeAttribute('data-tip');
+        }
+    }
+
+    // Update fortune number (right header) - always Japanese
+    const fortuneNumberEl = document.getElementById('fortune-number');
+    if (fortuneNumberEl) {
+        const kanji = numberToKanji(fortuneNumber);
+        fortuneNumberEl.textContent = kanji + '番';
+
+        // Set tooltip based on current language (no tooltip for Japanese)
+        if (currentLanguage === 'ko') {
+            fortuneNumberEl.setAttribute('data-tip', `번호:<br>${fortuneNumber}번`);
+        } else if (currentLanguage === 'en') {
+            fortuneNumberEl.setAttribute('data-tip', `Number:<br>${fortuneNumber}`);
+        } else {
+            fortuneNumberEl.removeAttribute('data-tip');
+        }
+    }
+
+    // Update shrine title (center header) tooltip - text always stays Japanese
+    const shrineTitleEl = document.getElementById('shrine-title');
+    if (shrineTitleEl) {
+        // Set tooltip based on current language (no tooltip for Japanese)
+        if (currentLanguage === 'ko') {
+            shrineTitleEl.setAttribute('data-tip', '인터넷 본궁<br>브릭 신사');
+        } else if (currentLanguage === 'en') {
+            shrineTitleEl.setAttribute('data-tip', 'Internet Hongu<br>Brixton Shrine Fortune');
+        } else {
+            shrineTitleEl.removeAttribute('data-tip');
+        }
+    }
+
+    // Update main fortune text (right body section) - always Japanese
+    const mainFortuneEl = document.getElementById('main-fortune-content');
+    if (mainFortuneEl && fortune.sections.unsei) {
+        const parts = fortune.sections.unsei.jp_parts || [fortune.sections.unsei.jp];
+        mainFortuneEl.innerHTML = `<div>${parts.join('<br>')}</div>`;
+
+        // Set tooltip based on current language
+        if (currentLanguage === 'ko') {
+            const koParts = fortune.sections.unsei.ko_parts || [fortune.sections.unsei.ko];
+            mainFortuneEl.setAttribute('data-tip', `${fortune.sections.unsei.category_ko}:<br>${koParts.join(' ')}`);
+        } else if (currentLanguage === 'en') {
+            mainFortuneEl.setAttribute('data-tip', `${fortune.sections.unsei.category_en}:<br>${fortune.sections.unsei.en}`);
+        } else {
+            mainFortuneEl.removeAttribute('data-tip');
+        }
+    }
+
+    // Define the order of sections for items (top 5, bottom 5)
+    const sectionOrder = [
+        'ganbou',      // Wishes
+        'tabi_dachi',  // Travel
+        'shobai',      // Business
+        'kin_un',      // Money
+        'en_dan',      // Love
+        'byoki',       // Health
+        'arasai_goto', // Conflict
+        'hogaku',      // Direction
+        'sns',         // Social Media
+        'advice'       // Advice
+    ];
+
+    // Map section IDs to labels in all languages
+    const sectionLabels = {
+        jp: {
+            'ganbou': '願望',
+            'tabi_dachi': '旅立ち',
+            'shobai': '商売',
+            'kin_un': '金運',
+            'en_dan': '縁談',
+            'byoki': '病気',
+            'arasai_goto': '争い事',
+            'hogaku': '方角',
+            'sns': 'ＳＮＳ',
+            'advice': '助言'
+        },
+        en: {
+            'ganbou': 'Wish',
+            'tabi_dachi': 'Travel',
+            'shobai': 'Business',
+            'kin_un': 'Money',
+            'en_dan': 'Love',
+            'byoki': 'Health',
+            'arasai_goto': 'Conflict',
+            'hogaku': 'Direction',
+            'sns': 'Social Media',
+            'advice': 'Advice'
+        },
+        ko: {
+            'ganbou': '소망',
+            'tabi_dachi': '여행',
+            'shobai': '사업',
+            'kin_un': '금전운',
+            'en_dan': '인연',
+            'byoki': '건강',
+            'arasai_goto': '분쟁',
+            'hogaku': '방향',
+            'sns': 'SNS',
+            'advice': '조언'
+        }
+    };
+
+    // Always use Japanese labels for display
+    const labels = sectionLabels.jp;
+
+    // Update top items (first 5) - always Japanese text
+    const itemsTopEl = document.getElementById('items-top-content');
+    if (itemsTopEl) {
+        itemsTopEl.innerHTML = '';
+        sectionOrder.slice(0, 5).forEach(sectionId => {
+            const section = fortune.sections[sectionId];
+            if (section) {
+                const label = labels[sectionId];
+                const span = document.createElement('span');
+                span.className = 'item-line tip';
+
+                // Always display Japanese text
+                span.innerHTML = `<b>${label}</b>　　${section.jp}`;
+
+                // Set tooltip based on current language
+                if (currentLanguage === 'ko') {
+                    span.setAttribute('data-tip', `${section.category_ko}:<br>${section.ko}`);
+                } else if (currentLanguage === 'en') {
+                    span.setAttribute('data-tip', `${section.category_en}:<br>${section.en}`);
+                } else {
+                    span.removeAttribute('data-tip');
+                }
+
+                itemsTopEl.appendChild(span);
+            }
+        });
+    }
+
+    // Update bottom items (last 5) - always Japanese text
+    const itemsBottomEl = document.getElementById('items-bottom-content');
+    if (itemsBottomEl) {
+        itemsBottomEl.innerHTML = '';
+        sectionOrder.slice(5, 10).forEach(sectionId => {
+            const section = fortune.sections[sectionId];
+            if (section) {
+                const label = labels[sectionId];
+                const span = document.createElement('span');
+                span.className = 'item-line tip';
+
+                // Always display Japanese text
+                span.innerHTML = `<b>${label}</b>　　${section.jp}`;
+
+                // Set tooltip based on current language
+                if (currentLanguage === 'ko') {
+                    span.setAttribute('data-tip', `${section.category_ko}:<br>${section.ko}`);
+                } else if (currentLanguage === 'en') {
+                    span.setAttribute('data-tip', `${section.category_en}:<br>${section.en}`);
+                } else {
+                    span.removeAttribute('data-tip');
+                }
+
+                itemsBottomEl.appendChild(span);
+            }
+        });
+    }
+
+    // Initialize tooltip behavior
+    initializeTooltips();
+
+    // Show modal
+    const modalOverlay = document.getElementById('fortune-modal-overlay');
+    if (modalOverlay) {
+        modalOverlay.classList.add('active');
+    }
+}
+function initializeTooltips() {
+    const tooltip = document.getElementById('tooltip');
+    const tips = document.querySelectorAll('.tip');
+    const isMobile = window.matchMedia("(max-width: 600px)").matches;
+
+    // Remove previous listeners by cloning and replacing
+    tips.forEach(t => {
+        const newTip = t.cloneNode(true);
+        t.parentNode.replaceChild(newTip, t);
+    });
+
+    // Re-query after replacement
+    const newTips = document.querySelectorAll('.tip');
+
+    // Always hide tooltip immediately
+    if (tooltip) {
+        tooltip.style.opacity = '0';
+        tooltip.classList.remove('mobile-active');
+    }
+
+    // If Japanese is selected, do not attach any tooltip listeners at all
+    if (currentLanguage === 'jp') {
+        return;
+    }
+
+    newTips.forEach(t => {
+        t.addEventListener('mouseenter', () => {
+            if (!isMobile && tooltip) {
+                const tipText = t.getAttribute('data-tip');
+                if (!tipText) return; // nothing to show
+                tooltip.innerHTML = tipText;
+                tooltip.style.opacity = '1';
+            }
+        });
+
+        t.addEventListener('mousemove', (e) => {
+            if (!isMobile && tooltip) {
+                tooltip.style.left = (e.clientX + 20) + 'px';
+                tooltip.style.top = (e.clientY + 20) + 'px';
+            }
+        });
+
+        t.addEventListener('mouseleave', () => {
+            if (!isMobile && tooltip) {
+                tooltip.style.opacity = '0';
+            }
+        });
+
+        t.addEventListener('click', (e) => {
+            if (isMobile && tooltip) {
+                const tipText = t.getAttribute('data-tip');
+                if (!tipText) return; // nothing to show
+                e.stopPropagation();
+                tooltip.innerHTML = tipText;
+                tooltip.classList.add('mobile-active');
+                tooltip.style.opacity = '1';
+
+                setTimeout(() => {
+                    tooltip.style.opacity = '0';
+                    tooltip.classList.remove('mobile-active');
+                }, 5000);
+            }
+        });
+    });
+
+    document.addEventListener('click', () => {
+        if (isMobile && tooltip) {
+            tooltip.style.opacity = '0';
+            tooltip.classList.remove('mobile-active');
+        }
+    });
+}
+
+
+// "Read your fortune" button event listener
+const readFortuneBtn = document.getElementById('read-fortune-btn');
+if (readFortuneBtn) {
+    readFortuneBtn.addEventListener('click', () => {
+        displayFortuneModal(fortuneNumber);
+    });
+}
+
+// "Save as image" button event listener
+const saveFortuneBtn = document.getElementById('save-fortune-btn');
+if (saveFortuneBtn) {
+    saveFortuneBtn.addEventListener('click', async () => {
+        const paper = document.querySelector('.omikuji-paper');
+        if (!paper) return;
+
+        try {
+            // Temporarily hide the save button while capturing
+            saveFortuneBtn.style.display = 'none';
+
+            // Use dom-to-image for better CSS support (including vertical text)
+            // Capture at 2x scale for higher quality
+            const scale = 2;
+            const dataUrl = await domtoimage.toPng(paper, {
+                quality: 1.0,
+                bgcolor: '#ffffff',
+                width: paper.offsetWidth * scale,
+                height: paper.offsetHeight * scale,
+                style: {
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'top left',
+                    width: paper.offsetWidth + 'px',
+                    height: paper.offsetHeight + 'px'
+                }
+            });
+
+            // Show the button again
+            saveFortuneBtn.style.display = 'block';
+
+            // Download the image
+            const link = document.createElement('a');
+            link.download = `omikuji-fortune-${fortuneNumber}.png`;
+            link.href = dataUrl;
+            link.click();
+        } catch (error) {
+            console.error('Error saving fortune:', error);
+            saveFortuneBtn.style.display = 'block';
+        }
+    });
+}
+
+// Close modal on overlay click
+const modalOverlay = document.getElementById('fortune-modal-overlay');
+if (modalOverlay) {
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+            modalOverlay.classList.remove('active');
+        }
+    });
+}
+
+// "Start over" link event listener
+const startOverLink = document.getElementById('start-over-link');
+if (startOverLink) {
+    startOverLink.addEventListener('click', () => {
+        // Reset to IDLE state
+        currentState = State.IDLE;
+        hasShaken = false;
+        shakeCount = 0;
+        requiredShakes = 0;
+        flipProgress = 0;
+        stickProgress = 0;
+        fortuneNumber = 0;
+        isZoomedIn = false;
+        zoomProgress = 0;
+
+        // Reset container position and rotation
+        omikujiContainer.position.y = 0;
+        omikujiContainer.rotation.x = 0;
+        omikujiContainer.rotation.y = 0;
+
+        // Hide stick
+        fortuneStick.visible = false;
+        fortuneStick.position.y = 0;
+        fortuneStick.userData.hasText = false;
+
+        // Remove fortune number text if it exists
+        const textMesh = fortuneStick.children.find(child => child.name === 'fortuneNumber');
+        if (textMesh) {
+            fortuneStick.remove(textMesh);
+        }
+
+        // Reset UI with current language
+        const bottomText = document.getElementById('bottom-text');
+        const takeBtn = document.getElementById('take-omikuji-btn');
+        const readBtn = document.getElementById('read-fortune-btn');
+        const shakeCountEl = document.getElementById('shake-count');
+        const shakeValueEl = document.getElementById('shake-value');
+
+        if (bottomText) {
+            bottomText.textContent = translations[currentLanguage].bottomTextInitial;
+            bottomText.style.display = 'block';
+        }
+        if (takeBtn) takeBtn.style.display = 'none';
+        if (readBtn) readBtn.style.display = 'none';
+        if (startOverLink) startOverLink.style.display = 'none';
+        if (shakeCountEl) shakeCountEl.style.display = 'none';
+        if (shakeValueEl) shakeValueEl.textContent = '0';
+
+        // Close modal if open
+        const modalOverlay = document.getElementById('fortune-modal-overlay');
+        if (modalOverlay) {
+            modalOverlay.classList.remove('active');
+        }
+
+        console.log('Reset to initial state');
+    });
+
+    // Initialize no-tooltips class on page load if language is Japanese
+    if (typeof document !== 'undefined') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                if (currentLanguage === 'jp') {
+                    document.body.classList.add('no-tooltips');
+                }
+            });
+        } else {
+            // DOM is already ready
+            if (currentLanguage === 'jp') {
+                document.body.classList.add('no-tooltips');
+            }
+        }
+    }
+}

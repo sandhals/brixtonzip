@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/:path*",
-        destination: "/:path*/index.html"
+        source: "/garden/:path*",
+        destination: "/api/garden/:path*"
       }
     ]
   }

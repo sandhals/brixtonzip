@@ -4,7 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>おみくじ - Omikuji</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --ink: #000000;
+            --paper: #ffffff;
+            --highlight: rgba(255, 243, 176, 0.7);
+            --header-font-size: 2.1rem;
+            --tooltip-bg: rgba(0, 0, 0, 0.95);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -69,7 +78,7 @@
             font-weight: 300;
         }
 
-        #take-omikuji-btn {
+        #take-omikuji-btn, #read-fortune-btn {
             padding: 8px 16px;
             font-size: 12px;
             cursor: pointer;
@@ -81,9 +90,23 @@
             font-family: inherit;
         }
 
-        #take-omikuji-btn:hover {
+        #take-omikuji-btn:hover, #read-fortune-btn:hover {
             background: #000;
             color: #fff;
+        }
+
+        #start-over-link {
+            font-size: 11px;
+            color: #999;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: color 0.2s;
+            text-decoration: none;
+            display: none;
+        }
+
+        #start-over-link:hover {
+            color: #333;
         }
 
         .shake-hint {
@@ -93,6 +116,224 @@
         @keyframes pulse {
             0%, 100% { opacity: 0.6; }
             50% { opacity: 1; }
+        }
+
+        /* Modal Overlay */
+        #fortune-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-y: auto;
+            padding: 40px 20px;
+        }
+
+        #fortune-modal-overlay.active {
+            display: flex;
+        }
+
+        /* Modal Content Wrapper */
+        .modal-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Fortune Paper */
+        .omikuji-paper {
+            background-color: var(--paper);
+            width: 400px;
+            height: auto;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            font-family: 'Sawarabi Mincho', serif;
+            position: relative;
+        }
+
+        .frame {
+            border: 4px double var(--ink);
+            height: auto;
+            display: flex;
+            flex-direction: column;
+            padding: 2px;
+        }
+
+        /* HEADER: Locked proportions */
+        .header-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            height: auto;
+            min-height: 280px;
+            border-bottom: 1px solid var(--ink);
+        }
+
+        /* BODY: Left section (items) gets 2/3 width, right section (unsei) gets 1/3 for 2 lines */
+        .body-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            height: auto;
+        }
+
+        .items-stack {
+            display: flex;
+            flex-direction: column;
+            height: auto;
+        }
+
+        .items-top {
+            border-bottom: 1px solid var(--ink);
+        }
+
+        .v-text {
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            width: 100%;
+            height: auto;
+        }
+
+        .h-cell:not(:last-child), .body-left-col {
+            border-right: 1px solid var(--ink);
+        }
+
+        .center-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .text-cell {
+            padding: 35px 25px 35px 15px;
+            display: block;
+            height: auto;
+        }
+
+        .bold { font-weight: bold; }
+        ruby rt { font-size: 0.35em; font-weight: normal; }
+        .header-text { font-size: var(--header-font-size); }
+        .title-container { line-height: 2.8; }
+        .main-fortune-text { line-height: 1.9; font-size: 1.25rem; }
+        .items-text { line-height: 1.7; font-size: 1.05rem; }
+
+        /* Safari-specific fix for grid column widths - force correct proportions */
+        @supports (-webkit-appearance: none) and (not (appearance: none)) {
+            .body-row {
+                grid-template-columns: 66.67% 33.33%;
+            }
+        }
+
+        .tip {
+            cursor: help;
+            transition: background 0.2s;
+        }
+        .tip:hover, .tip:active { background-color: var(--highlight); }
+
+
+        /* Disable tooltip affordances in Japanese */
+body.no-tooltips .tip {
+    cursor: default !important;
+}
+body.no-tooltips .tip:hover,
+body.no-tooltips .tip:active {
+    background-color: transparent !important;
+}
+body.no-tooltips #tooltip {
+    display: none !important;
+}
+        .item-line {
+            display: block;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+
+        #tooltip {
+            position: fixed;
+            pointer-events: none;
+            background: var(--tooltip-bg);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            width: 240px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            font-family: sans-serif;
+            line-height: 1.5;
+            writing-mode: horizontal-tb;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            text-align: center;
+        }
+
+        .footer { text-align: center; padding: 25px 0 10px; font-size: 0.8rem; }
+        .footer a { color: var(--ink); text-decoration: underline; }
+
+        .mon-logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            display: block;
+        }
+
+        .save-button {
+            padding: 8px 16px;
+            font-size: 11px;
+            cursor: pointer;
+            background: #fff;
+            border: 1px solid #000;
+            border-radius: 0;
+            font-weight: 400;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .save-button:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .language-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 6px 12px;
+            font-size: 11px;
+            cursor: pointer;
+            background: #fff;
+            border: 1px solid #000;
+            border-radius: 0;
+            font-weight: 400;
+            transition: all 0.2s;
+            font-family: inherit;
+            z-index: 100;
+        }
+
+        .language-btn:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        @media (max-width: 600px) {
+            .omikuji-paper {
+                width: 95%;
+                max-width: 400px;
+            }
+
+            #tooltip.mobile-active {
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                width: 85%;
+            }
         }
 
         @media (max-width: 768px) {
@@ -106,18 +347,77 @@
     </style>
 </head>
 <body>
+    <button id="language-toggle" class="language-btn">JP</button>
+
     <div id="canvas-container"></div>
 
     <div id="top-info">
-        <h1>おみくじ</h1>
-        <p id="shake-count" style="display: none;"><span id="shake-value">0</span> shakes</p>
+        <h1 id="title">おみくじ</h1>
+        <p id="shake-count" style="display: none;"><span id="shake-value">0</span> <span id="shake-label">回</span></p>
     </div>
 
     <div id="bottom-info">
-        <p id="bottom-text">Shake the container!</p>
-        <button id="take-omikuji-btn" style="display: none;">Take Omikuji</button>
+        <p id="bottom-text">容器を振って！</p>
+        <button id="take-omikuji-btn" style="display: none;">おみくじを引く</button>
+        <button id="read-fortune-btn" style="display: none;">運勢を見る</button>
+        <a id="start-over-link">やり直す</a>
     </div>
 
+    <!-- Fortune Modal -->
+    <div id="fortune-modal-overlay">
+        <div id="tooltip"></div>
+        <div class="modal-content-wrapper">
+            <div class="omikuji-paper">
+                <img src="mon.jpg" alt="Shrine Mon" class="mon-logo">
+                <div class="frame">
+                <div class="header-row">
+                    <div class="h-cell v-text center-content bold header-text tip" id="fortune-type">
+                        大吉
+                    </div>
+
+                    <div class="h-cell v-text center-content header-text tip" id="shrine-title" data-tip="Internet Hongu </br> Brixton Shrine Fortune">
+                        <div class="title-container">
+                            <ruby>電<rt>でん</rt></ruby><ruby>脳<rt>のう</rt></ruby><ruby>本<rt>ほん</rt></ruby><ruby>宮<rt>ぐう</rt></ruby><br>
+                            <ruby>振<rt>ぶり</rt></ruby><ruby>楠<rt>くす</rt></ruby><ruby>神<rt>じん</rt></ruby><ruby>社<rt>じゃ</rt></ruby><ruby>籤<rt>くじ</rt></ruby>
+                        </div>
+                    </div>
+
+                    <div class="h-cell v-text center-content bold header-text tip" id="fortune-number">
+                        十二番
+                    </div>
+                </div>
+
+                <div class="body-row">
+                    <div class="body-left-col">
+                        <div class="items-stack">
+                            <div class="items-half items-top">
+                                <div class="v-text text-cell items-text" id="items-top-content">
+                                    <!-- Top 5 items filled dynamically -->
+                                </div>
+                            </div>
+                            <div class="items-half">
+                                <div class="v-text text-cell items-text" id="items-bottom-content">
+                                    <!-- Bottom 5 items filled dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="body-right-col">
+                        <div class="v-text text-cell main-fortune-text center-content tip" id="main-fortune-content">
+                            <!-- Main fortune text filled dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">振楠神社社務所（<a href="https://brixton.zip">brixton.zip</a>）</div>
+            </div>
+            <button class="save-button" id="save-fortune-btn">画像として保存</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
     <script type="importmap">
     {
         "imports": {
