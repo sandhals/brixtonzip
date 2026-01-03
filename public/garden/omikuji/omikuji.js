@@ -1689,16 +1689,34 @@ if (saveFortuneBtn) {
             // Temporarily hide the save button while capturing
             saveFortuneBtn.style.display = 'none';
 
+            // Store original overflow style
+            const originalOverflow = paper.style.overflow;
+            paper.style.overflow = 'visible';
+
             // Add seal stamp overlay with user's name
             const sealStamp = createSealStamp(fortuneNumber, userName);
             if (sealStamp) {
                 paper.appendChild(sealStamp);
             }
 
-            // Use dom-to-image with natural dimensions
+            // Force virtual desktop render at fixed 400px width with 2x scale for high-DPI
+            // This prevents mobile browsers from using their narrow viewport width
+            const virtualWidth = 400;
+            const scaleFactor = 2;
+            const captureWidth = virtualWidth * scaleFactor;
+            const captureHeight = paper.scrollHeight * scaleFactor;
+
             const dataUrl = await domtoimage.toPng(paper, {
                 quality: 1.0,
                 bgcolor: '#ffffff',
+                width: captureWidth,
+                height: captureHeight,
+                style: {
+                    width: `${virtualWidth}px`,
+                    transform: `scale(${scaleFactor})`,
+                    transformOrigin: 'top left',
+                    overflow: 'visible'
+                },
                 filter: (node) => node.id !== 'save-fortune-btn'
             });
 
@@ -1706,6 +1724,7 @@ if (saveFortuneBtn) {
             if (sealStamp) {
                 paper.removeChild(sealStamp);
             }
+            paper.style.overflow = originalOverflow;
             saveFortuneBtn.style.display = 'block';
 
             // Check if we're on mobile and have native share API
