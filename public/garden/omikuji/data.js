@@ -5,9 +5,9 @@ export const fortunes = [
     "fortune_ko":"대길",
     "furigana":"だいきち",
     "furigana_parts":["だい","きち"],
-    "fortune_en":"Daikichi",
-    "gloss_en":"Great blessing / Excellent luck",
-    "gloss_ko":"대길 / 최고의 행운",
+    "fortune_en":"Best Luck",
+    "gloss_en":"Best Luck",
+    "gloss_ko":"대길",
     "sections":{
       "unsei":{
         "category":"Unsei",
@@ -62,7 +62,7 @@ export const fortunes = [
       },
       "byoki":{
         "category":"Byouki",
-        "category_en":"Health",
+        "category_en":"Sickness",
         "category_ko":"건강",
         "jp":"快方。休みを惜しむな。",
         "en":"Improving. Do not be stingy with rest.",
@@ -108,9 +108,9 @@ export const fortunes = [
     "fortune_ko":"길",
     "furigana":"きち",
     "furigana_parts":["きち"],
-    "fortune_en":"Kichi",
-    "gloss_en":"Blessing / Good luck",
-    "gloss_ko":"길 / 좋은 운",
+    "fortune_en":"Good Luck",
+    "gloss_en":"Good Luck",
+    "gloss_ko":"길",
     "sections":{
       "unsei":{
         "category":"Unsei",
@@ -165,7 +165,7 @@ export const fortunes = [
       },
       "byoki":{
         "category":"Byouki",
-        "category_en":"Health",
+        "category_en":"Sickness",
         "category_ko":"건강",
         "jp":"軽し。早めの手当て吉。",
         "en":"Minor. Early care is favorable.",
@@ -211,9 +211,9 @@ export const fortunes = [
     "fortune_ko":"중길",
     "furigana":"ちゅうきち",
     "furigana_parts":["ちゅう","きち"],
-    "fortune_en":"Chukichi",
-    "gloss_en":"Middle blessing / Good fortune",
-    "gloss_ko":"중길 / 무난한 행운",
+    "fortune_en":"Medium Luck",
+    "gloss_en":"Medium Luck",
+    "gloss_ko":"중길",
     "sections":{
       "unsei":{
         "category":"Unsei",
@@ -268,7 +268,7 @@ export const fortunes = [
       },
       "byoki":{
         "category":"Byouki",
-        "category_en":"Health",
+        "category_en":"Sickness",
         "category_ko":"건강",
         "jp":"長引きやすし。生活を整えよ。",
         "en":"May linger. Fix daily habits.",
@@ -314,9 +314,9 @@ export const fortunes = [
     "fortune_ko":"소길",
     "furigana":"しょうきち",
     "furigana_parts":["しょう","きち"],
-    "fortune_en":"Shokichi",
-    "gloss_en":"Small blessing / Small luck",
-    "gloss_ko":"소길 / 작은 행운",
+    "fortune_en":"Little Luck",
+    "gloss_en":"Little Luck",
+    "gloss_ko":"소길",
     "sections":{
       "unsei":{
         "category":"Unsei",
@@ -371,7 +371,7 @@ export const fortunes = [
       },
       "byoki":{
         "category":"Byouki",
-        "category_en":"Health",
+        "category_en":"Sickness",
         "category_ko":"건강",
         "jp":"油断すると悪化。早寝吉。",
         "en":"Neglect can worsen it. Early sleep is favorable.",
@@ -417,8 +417,8 @@ export const fortunes = [
     "fortune_ko":"반길",
     "furigana":"はんきち",
     "furigana_parts":["はん","きち"],
-    "fortune_en":"Hankichi",
-    "gloss_en":"Half blessing",
+    "fortune_en":"Half Luck",
+    "gloss_en":"Half Luck",
     "gloss_ko":"반길",
     "sections":{
       "unsei":{
@@ -474,7 +474,7 @@ export const fortunes = [
       },
       "byoki":{
         "category":"Byouki",
-        "category_en":"Health",
+        "category_en":"Sickness",
         "category_ko":"건강",
         "jp":"回復はするが再発注意。",
         "en":"Recovery happens but watch for relapse.",
@@ -520,9 +520,9 @@ export const fortunes = [
     "fortune_ko":"말길",
     "furigana":"すえきち",
     "furigana_parts":["すえ","きち"],
-    "fortune_en":"Suekichi",
-    "gloss_en":"Future blessing / Blessing to come",
-    "gloss_ko":"말길 / 나중에 오는 행운",
+    "fortune_en":"Future Luck",
+    "gloss_en":"Future Luck",
+    "gloss_ko":"말길",
     "sections":{
       "unsei":{
         "category":"Unsei",
@@ -577,7 +577,7 @@ export const fortunes = [
       },
       "byoki":{
         "category":"Byouki",
-        "category_en":"Health",
+        "category_en":"Sickness",
         "category_ko":"건강",
         "jp":"良くなる。焦るとぶり返す。",
         "en":"It improves. Hurry and it rebounds.",
@@ -623,9 +623,9 @@ export const fortunes = [
     "fortune_ko":"말소길",
     "furigana":"すえしょうきち",
     "furigana_parts":["すえ","しょう","きち"],
-    "fortune_en":"Sue-shokichi",
-    "gloss_en":"Future small blessing",
-    "gloss_ko":"말소길 / 나중에 오는 작은 행운",
+    "fortune_en":"Future Little Luck",
+    "gloss_en":"Future Little Luck",
+    "gloss_ko":"말소길",
     "sections":{
       "unsei":{
         "category":"Unsei",
@@ -680,7 +680,7 @@ export const fortunes = [
       },
       "byoki":{
         "category":"Byouki",
-        "category_en":"Health",
+        "category_en":"Sickness",
         "category_ko":"건강",
         "jp":"回復。食を正せ。",
         "en":"Recovery. Correct your diet.",
@@ -726,9 +726,9 @@ export const fortunes = [
     "fortune_ko":"흉",
     "furigana":"きょう",
     "furigana_parts":["きょう"],
-    "fortune_en":"Kyo",
-    "gloss_en":"Curse / Bad luck",
-    "gloss_ko":"흉 / 나쁜 운",
+    "fortune_en":"Bad Luck",
+    "gloss_en":"Bad Luck",
+    "gloss_ko":"흉",
     "sections":{
       "unsei":{
         "category":"Unsei",
@@ -783,7 +783,7 @@ export const fortunes = [
       },
       "byoki":{
         "category":"Byouki",
-        "category_en":"Health",
+        "category_en":"Sickness",
         "category_ko":"건강",
         "jp":"悪化注意。早めに整えよ。",
         "en":"Risk of worsening. Get it addressed early.",
@@ -829,8 +829,8 @@ export const fortunes = [
     "fortune_ko":"소흉",
     "furigana":"しょうきょう",
     "furigana_parts":["しょう","きょう"],
-    "fortune_en":"Shokyo",
-    "gloss_en":"Small curse",
+    "fortune_en":"Worse Luck",
+    "gloss_en":"Worse Luck",
     "gloss_ko":"소흉",
     "sections":{
       "unsei":{
@@ -886,7 +886,7 @@ export const fortunes = [
       },
       "byoki":{
         "category":"Byouki",
-        "category_en":"Health",
+        "category_en":"Sickness",
         "category_ko":"건강",
         "jp":"軽しが長引く。休養を取れ。",
         "en":"Mild but lingering. Rest properly.",
@@ -932,8 +932,8 @@ export const fortunes = [
     "fortune_ko":"반흉",
     "furigana":"はんきょう",
     "furigana_parts":["はん","きょう"],
-    "fortune_en":"Hankyo",
-    "gloss_en":"Half curse",
+    "fortune_en":"Half Bad Luck",
+    "gloss_en":"Half Bad Luck",
     "gloss_ko":"반흉",
     "sections":{
       "unsei":{
@@ -989,7 +989,7 @@ export const fortunes = [
       },
       "byoki":{
         "category":"Byouki",
-        "category_en":"Health",
+        "category_en":"Sickness",
         "category_ko":"건강",
         "jp":"気力落ちる。睡眠を最優先。",
         "en":"Energy drops. Make sleep the top priority.",
@@ -1035,9 +1035,9 @@ export const fortunes = [
     "fortune_ko":"말흉",
     "furigana":"すえきょう",
     "furigana_parts":["すえ","きょう"],
-    "fortune_en":"Suekyō",
-    "gloss_en":"Future curse / Misfortune to come",
-    "gloss_ko":"말흉 / 나중에 오는 불운",
+    "fortune_en":"Future Bad Luck",
+    "gloss_en":"Future Bad Luck",
+    "gloss_ko":"말흉",
     "sections":{
       "unsei":{
         "category":"Unsei",
@@ -1092,7 +1092,7 @@ export const fortunes = [
       },
       "byoki":{
         "category":"Byouki",
-        "category_en":"Health",
+        "category_en":"Sickness",
         "category_ko":"건강",
         "jp":"ぶり返し注意。定期の手当て吉。",
         "en":"Watch for recurrence. Routine care is favorable.",
@@ -1138,9 +1138,9 @@ export const fortunes = [
     "fortune_ko":"대흉",
     "furigana":"だいきょう",
     "furigana_parts":["だい","きょう"],
-    "fortune_en":"Daikyō",
-    "gloss_en":"Great curse / Great misfortune",
-    "gloss_ko":"대흉 / 큰 불운",
+    "fortune_en":"Worst Luck",
+    "gloss_en":"Worst Luck",
+    "gloss_ko":"대흉",
     "sections":{
       "unsei":{
         "category":"Unsei",
@@ -1195,7 +1195,7 @@ export const fortunes = [
       },
       "byoki":{
         "category":"Byouki",
-        "category_en":"Health",
+        "category_en":"Sickness",
         "category_ko":"건강",
         "jp":"重し。無理を断ち、医の助けを得よ。",
         "en":"Serious. Stop overexertion and seek professional help.",

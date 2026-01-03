@@ -150,13 +150,14 @@
         .omikuji-paper {
             background-color: var(--paper);
             width: 400px;
-            height: auto;
+            height: fit-content;
             padding: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
             font-family: 'Sawarabi Mincho', serif;
             position: relative;
+            overflow: hidden;
         }
 
         .frame {
@@ -315,11 +316,203 @@ body.no-tooltips #tooltip {
             transition: all 0.2s;
             font-family: inherit;
             z-index: 100;
+            min-width: 75px;
+            text-align: center;
         }
 
         .language-btn:hover {
             background: #000;
             color: #fff;
+        }
+
+        .number-input-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .number-input-container input {
+            width: 50px;
+            padding: 6px;
+            font-size: 11px;
+            background: #fff;
+            border: 1px solid #000;
+            border-radius: 0;
+            font-family: inherit;
+            text-align: center;
+            -moz-appearance: textfield; /* Firefox */
+            appearance: textfield;
+        }
+
+        /* Hide spinner arrows in Chrome, Safari, Edge, Opera */
+        .number-input-container input::-webkit-outer-spin-button,
+        .number-input-container input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Mobile number picker modal */
+        #mobile-number-picker {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #mobile-number-picker.active {
+            display: flex;
+        }
+
+        .number-picker-content {
+            background: #fff;
+            border: 2px solid #000;
+            width: 280px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .number-picker-header {
+            padding: 15px;
+            border-bottom: 1px solid #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .number-picker-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .number-picker-close {
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            padding: 0;
+            background: none;
+            border: none;
+        }
+
+        .number-picker-list {
+            overflow-y: auto;
+            flex: 1;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .number-picker-item {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.2s;
+        }
+
+        .number-picker-item:hover,
+        .number-picker-item:active {
+            background: #f0f0f0;
+        }
+
+        .number-picker-item.selected {
+            background: #000;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .number-input-container button {
+            padding: 6px 12px;
+            font-size: 11px;
+            cursor: pointer;
+            background: #fff;
+            border: 1px solid #000;
+            border-radius: 0;
+            font-weight: 400;
+            transition: all 0.2s;
+            font-family: inherit;
+            min-width: 75px;
+            text-align: center;
+        }
+
+        .number-input-container button:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .number-input-container button:hover .icon-svg {
+            stroke: #fff;
+        }
+
+        #mobile-instruction-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instruction-content {
+            background: #fff;
+            padding: 30px;
+            border: 2px solid #000;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .instruction-content p {
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        #instruction-close-btn {
+            padding: 10px 30px;
+            font-size: 14px;
+            cursor: pointer;
+            background: #fff;
+            border: 1px solid #000;
+            border-radius: 0;
+            font-weight: 400;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        #instruction-close-btn:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        /* SVG Icon styles */
+        .icon-svg {
+            width: 18px;
+            height: 18px;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+
+        .drawer-icon .drawer-pull {
+            transition: transform 0.3s ease;
+            transform-origin: center;
+        }
+
+        .number-input-container:hover .drawer-pull {
+            transform: translateY(-6px);
         }
 
         @media (max-width: 600px) {
@@ -385,7 +578,42 @@ body.no-tooltips #tooltip {
     </style>
 </head>
 <body>
-    <button id="language-toggle" class="language-btn">EN</button>
+    <button id="language-toggle" class="language-btn">
+        <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        EN
+    </button>
+
+    <div class="number-input-container">
+        <input type="number" id="fortune-number-input" min="1" max="100" placeholder="#" />
+        <button id="view-fortune-btn">
+            <svg class="icon-svg drawer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <!-- Drawer box outline -->
+                <rect x="5" y="5" width="14" height="14" rx="1" stroke="currentColor" fill="none"/>
+                <!-- Drawer that pulls out (animates on hover) -->
+                <g class="drawer-pull">
+                    <rect x="7" y="15" width="10" height="3" fill="currentColor" stroke="currentColor"/>
+                    <circle cx="12" cy="16.5" r="0.8" fill="white"/>
+                </g>
+            </svg>
+            <span id="view-btn-text">View</span>
+        </button>
+    </div>
+
+    <!-- Mobile number picker -->
+    <div id="mobile-number-picker">
+        <div class="number-picker-content">
+            <div class="number-picker-header">
+                <h3 id="picker-title">Select Fortune Number</h3>
+                <button class="number-picker-close" id="picker-close">×</button>
+            </div>
+            <div class="number-picker-list" id="number-picker-list">
+                <!-- Numbers 1-100 will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </div>
 
     <div id="canvas-container"></div>
 
@@ -404,6 +632,15 @@ body.no-tooltips #tooltip {
     <!-- Fortune Modal -->
     <div id="fortune-modal-overlay">
         <div id="tooltip"></div>
+
+        <!-- Mobile tooltip instruction modal -->
+        <div id="mobile-instruction-modal" style="display: none;">
+            <div class="instruction-content">
+                <p id="instruction-text">Tap any section to see translation</p>
+                <button id="instruction-close-btn">Got it</button>
+            </div>
+        </div>
+
         <div class="modal-content-wrapper">
             <div class="omikuji-paper">
                 <img src="mon.jpg" alt="Shrine Mon" class="mon-logo">
@@ -451,8 +688,8 @@ body.no-tooltips #tooltip {
 
             <div class="footer">振楠神社社務所（<a href="https://brixton.zip">brixton.zip</a>）</div>
             </div>
-            <button class="save-button" id="save-fortune-btn">画像として保存</button>
-            <button class="save-button close-button-mobile" id="close-modal-btn" style="display: none;">閉じる</button>
+            <button class="save-button" id="save-fortune-btn">Save as image</button>
+            <button class="save-button close-button-mobile" id="close-modal-btn" style="display: none;">Close</button>
         </div>
     </div>
 
