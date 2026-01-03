@@ -1461,133 +1461,388 @@ if (viewFortuneBtn && fortuneNumberInput) {
 
 
 /// DELETED. ADDING NEW HERE
-
 // --- 1. SEAL STAMP LOGIC ---
 function createSealStamp(fortuneNumber, userName = '') {
     const fortune = getFortuneByNumber(fortuneNumber);
     if (!fortune) return null;
 
     const luckNameMapEN = {
-        'daikichi': 'BEST LUCK', 'kichi': 'GOOD LUCK', 'chukichi': 'MEDIUM LUCK',
-        'shokichi': 'LITTLE LUCK', 'hankichi': 'HALF LUCK', 'suekichi': 'FUTURE LUCK',
-        'sue_shokichi': 'FUTURE LITTLE LUCK', 'kyo': 'BAD LUCK', 'shokyo': 'WORSE LUCK',
-        'hankyo': 'HALF BAD LUCK', 'suekyou': 'FUTURE BAD LUCK', 'daikyou': 'WORST LUCK'
+        'daikichi': 'BEST LUCK',
+        'kichi': 'GOOD LUCK',
+        'chukichi': 'MEDIUM LUCK',
+        'shokichi': 'LITTLE LUCK',
+        'hankichi': 'HALF LUCK',
+        'suekichi': 'FUTURE LUCK',
+        'sue_shokichi': 'FUTURE LITTLE LUCK',
+        'kyo': 'BAD LUCK',
+        'shokyo': 'WORSE LUCK',
+        'hankyo': 'HALF BAD LUCK',
+        'suekyou': 'FUTURE BAD LUCK',
+        'daikyou': 'WORST LUCK'
     };
 
-    const luckName = luckNameMapEN[fortune.id] || "GOOD LUCK";
+    let luckName;
+
+    // Use Korean label when site language is Korean
+    if (currentLanguage === 'ko') {
+        // Prefer explicit Korean fortune name, fall back to gloss_ko or a generic label
+        luckName = fortune.fortune_ko || fortune.gloss_ko || '행운';
+    } else if (currentLanguage === 'jp') {
+        // For Japanese, you can choose kanji, or keep English if you prefer
+        luckName = fortune.fortune_jp || 'おみくじ';
+    } else {
+        // Default English behavior
+        luckName = luckNameMapEN[fortune.id] || fortune.fortune_en || 'GOOD LUCK';
+    }
+
     const canvas = document.createElement('canvas');
-    const size = 220; 
-    canvas.width = size; canvas.height = size;
+    const size = 220;
+    canvas.width = size;
+    canvas.height = size;
     const ctx = canvas.getContext('2d');
-    const red = '#b32428'; 
-    const cx = size / 2; const cy = size / 2;
+    const red = '#b32428';
+    const cx = size / 2;
+    const cy = size / 2;
 
     ctx.strokeStyle = red;
     ctx.lineWidth = 4.5;
-    ctx.beginPath(); ctx.arc(cx, cy, 100, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx, cy, 100, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.lineWidth = 1.8;
-    ctx.beginPath(); ctx.arc(cx, cy, 90, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx, cy, 90, 0, Math.PI * 2);
+    ctx.stroke();
 
-    ctx.fillStyle = red; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = red;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
 
-    let nameStr = (userName || "NAME").toUpperCase().substring(0, 12);
+    let nameStr = (userName || 'NAME').toUpperCase().substring(0, 12);
     ctx.font = 'bold 22px sans-serif';
-    while(ctx.measureText(nameStr).width > 100) { 
+    while (ctx.measureText(nameStr).width > 100) {
         const fs = parseFloat(ctx.font);
-        ctx.font = `bold ${fs - 0.5}px sans-serif`; 
+        ctx.font = `bold ${fs - 0.5}px sans-serif`;
     }
     ctx.fillText(nameStr, cx, cy - 72);
 
     ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(cx - 48, cy - 48); ctx.lineTo(cx + 48, cy - 48); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx - 48, cy + 38); ctx.lineTo(cx + 48, cy + 38); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx - 48, cy - 48);
+    ctx.lineTo(cx + 48, cy - 48);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx - 48, cy + 38);
+    ctx.lineTo(cx + 48, cy + 38);
+    ctx.stroke();
 
     const numStr = fortuneNumber.toString();
     ctx.font = `900 ${numStr.length === 3 ? 62 : 78}px "Yu Mincho", serif`;
-    ctx.fillText(numStr, cx, cy - 5); 
+    ctx.fillText(numStr, cx, cy - 5);
 
-    const words = luckName.split(" ");
-    let lines = words.length === 3 ? [words[0] + " " + words[1], words[2]] : 
-                words.length === 2 ? [words[0], words[1]] : [luckName];
+    // Split only matters for English where we have multi word labels
+    const words = luckName.split(' ');
+    const lines =
+        words.length === 3
+            ? [words[0] + ' ' + words[1], words[2]]
+            : words.length === 2
+            ? [words[0], words[1]]
+            : [luckName];
 
     if (lines.length === 2) {
-        ctx.font = "bold 15px sans-serif"; ctx.fillText(lines[0], cx, cy + 54);
-        ctx.font = "bold 13px sans-serif"; ctx.fillText(lines[1], cx, cy + 72);
+        ctx.font = 'bold 15px sans-serif';
+        ctx.fillText(lines[0], cx, cy + 54);
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillText(lines[1], cx, cy + 72);
     } else {
-        ctx.font = "bold 20px sans-serif";
-        while(ctx.measureText(lines[0]).width > 110) { 
+        ctx.font = 'bold 20px sans-serif';
+        while (ctx.measureText(lines[0]).width > 110) {
             const fs = parseFloat(ctx.font);
-            ctx.font = `bold ${fs - 0.5}px sans-serif`; 
+            ctx.font = `bold ${fs - 0.5}px sans-serif`;
         }
         ctx.fillText(lines[0], cx, cy + 60);
     }
 
     ctx.globalCompositeOperation = 'destination-out';
-    for(let i=0; i<90; i++) {
-        ctx.beginPath(); ctx.arc(Math.random()*size, Math.random()*size, Math.random()*1.5, 0, Math.PI*2); ctx.fill();
+    for (let i = 0; i < 90; i++) {
+        ctx.beginPath();
+        ctx.arc(Math.random() * size, Math.random() * size, Math.random() * 1.5, 0, Math.PI * 2);
+        ctx.fill();
     }
 
     const stampDiv = document.createElement('div');
     stampDiv.id = 'seal-stamp-overlay';
-    stampDiv.style.cssText = `position:absolute; bottom:100px; right:25px; width:${size}px; height:${size}px; transform:rotate(-6deg); z-index:1000; pointer-events:none;`;
+    stampDiv.style.cssText =
+        `position:absolute; bottom:100px; right:25px; width:${size}px; height:${size}px; ` +
+        'transform:rotate(-6deg); z-index:1000; pointer-events:none;';
     stampDiv.appendChild(canvas);
     return stampDiv;
 }
 
-// --- 2. HEADLESS SANDBOX SAVE LOGIC ---
+
+
+function buildExportPaper(fortune, fortuneNumber) {
+    const wrapper = document.createElement('div');
+
+    // Build a standalone omikuji-paper that matches your mockup layout
+    // Only Japanese text is used, tooltips etc are not needed for the image
+    const unsei = fortune.sections.unsei;
+    const unseiLines = unsei ? (unsei.jp_parts || [unsei.jp]) : [''];
+
+    const sectionOrder = [
+        'ganbou',
+        'tabi_dachi',
+        'shobai',
+        'kin_un',
+        'en_dan',
+        'byoki',
+        'arasai_goto',
+        'hogaku',
+        'sns',
+        'advice'
+    ];
+
+    const sectionLabels = {
+        ganbou: '願望',
+        tabi_dachi: '旅立ち',
+        shobai: '商売',
+        kin_un: '金運',
+        en_dan: '縁談',
+        byoki: '病気',
+        arasai_goto: '争い事',
+        hogaku: '方角',
+        sns: 'ＳＮＳ',
+        advice: '助言'
+    };
+
+    // Split into top 5 and bottom 5 like your layout
+    const topIds = sectionOrder.slice(0, 5);
+    const bottomIds = sectionOrder.slice(5, 10);
+
+    function buildItemsHtml(ids) {
+        return ids.map(id => {
+            const s = fortune.sections[id];
+            if (!s) return '';
+            const label = sectionLabels[id] || '';
+            return `<span class="item-line"><b>${label}</b>　　${s.jp}</span>`;
+        }).join('');
+    }
+
+    const topItemsHtml = buildItemsHtml(topIds);
+    const bottomItemsHtml = buildItemsHtml(bottomIds);
+
+    const unseiHtml = unseiLines.join('<br>');
+
+    wrapper.innerHTML = `
+      <div class="omikuji-paper export-paper">
+        <div class="frame">
+          <div class="header-row">
+            <div class="h-cell v-text center-content bold header-text">
+              ${fortune.fortune_jp}
+            </div>
+
+            <div class="h-cell v-text center-content header-text">
+              <div class="title-container">
+                <ruby>電<rt>でん</rt></ruby><ruby>脳<rt>のう</rt></ruby><ruby>本<rt>ほん</rt></ruby><ruby>宮<rt>ぐう</rt></ruby><br>
+                <ruby>振<rt>ぶり</rt></ruby><ruby>楠<rt>くす</rt></ruby><ruby>神<rt>じん</rt></ruby><ruby>社<rt>じゃ</rt></ruby><ruby>籤<rt>くじ</rt></ruby>
+              </div>
+            </div>
+
+            <div class="h-cell v-text center-content bold header-text">
+              ${numberToKanji(fortuneNumber)}番
+            </div>
+          </div>
+
+          <div class="body-row">
+            <div class="body-left-col">
+              <div class="items-stack">
+                <div class="items-half items-top">
+                  <div class="v-text text-cell items-text">
+                    ${topItemsHtml}
+                  </div>
+                </div>
+                <div class="items-half">
+                  <div class="v-text text-cell items-text">
+                    ${bottomItemsHtml}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="body-right-col">
+              <div class="v-text text-cell main-fortune-text center-content">
+                <div>${unseiHtml}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          振楠神社社務所（<a href="https://brixton.zip">brixton.zip</a>）
+        </div>
+      </div>
+    `;
+
+    return wrapper.firstElementChild;
+}
+
+
+
+function renderFortuneToCanvas(fortune, fortuneNumber, userName) {
+    // Fixed export size - same everywhere
+    const width = 800;
+    const height = 1600;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext('2d');
+
+    // Background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+
+    const margin = 80;
+    let y = margin;
+
+    // Shrine title - Japanese header
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.font = 'bold 32px "Yu Mincho", "Hiragino Mincho ProN", serif';
+    ctx.fillText('インターネット本宮　ブリック神社', width / 2, y);
+
+    y += 60;
+
+    // Fortune type - e.g. 大吉
+    ctx.font = 'bold 40px "Yu Mincho", "Hiragino Mincho ProN", serif';
+    ctx.fillText(fortune.fortune_jp, width / 2, y);
+
+    y += 70;
+
+    // Main unsei section - smaller and tighter for export
+    ctx.textAlign = 'left';
+
+    const unsei = fortune.sections.unsei;
+    if (unsei) {
+        const unseiLines = unsei.jp_parts || [unsei.jp];
+
+        // Smaller font and tighter line height only in export
+        ctx.font = '24px "Yu Mincho", "Hiragino Mincho ProN", serif';
+        const unseiX = margin;
+        let unseiY = y;
+        const lineHeight = 30;
+
+        unseiLines.forEach(line => {
+            ctx.fillText(line, unseiX, unseiY);
+            unseiY += lineHeight;
+        });
+
+        y = unseiY + 40;
+    }
+
+    // Sections list (ganbou etc) - Japanese labels and text
+    const sectionOrder = [
+        'ganbou',
+        'tabi_dachi',
+        'shobai',
+        'kin_un',
+        'en_dan',
+        'byoki',
+        'arasai_goto',
+        'hogaku',
+        'sns',
+        'advice'
+    ];
+
+    const sectionLabels = {
+        ganbou: '願望',
+        tabi_dachi: '旅立ち',
+        shobai: '商売',
+        kin_un: '金運',
+        en_dan: '縁談',
+        byoki: '病気',
+        arasai_goto: '争い事',
+        hogaku: '方角',
+        sns: 'ＳＮＳ',
+        advice: '助言'
+    };
+
+    ctx.font = '22px "Yu Mincho", "Hiragino Mincho ProN", serif';
+
+    sectionOrder.forEach(sectionId => {
+        const section = fortune.sections[sectionId];
+        if (!section) return;
+
+        const label = sectionLabels[sectionId] || '';
+        const line = label + '　　' + section.jp;
+
+        ctx.fillText(line, margin, y);
+        y += 32;
+    });
+
+    // Draw seal stamp into this canvas
+    const stampOverlay = createSealStamp(fortuneNumber, userName);
+    if (stampOverlay) {
+        const stampCanvas = stampOverlay.querySelector('canvas');
+        if (stampCanvas) {
+            const stampSize = stampCanvas.width;
+            const stampX = width - stampSize - 60;
+            const stampY = height - stampSize - 80;
+            ctx.drawImage(stampCanvas, stampX, stampY);
+        }
+    }
+
+    return canvas;
+}
+
+// --- 2. EXPORT TEMPLATE SAVE LOGIC ---
 const saveFortuneBtn = document.getElementById('save-fortune-btn');
 if (saveFortuneBtn) {
     saveFortuneBtn.addEventListener('click', async () => {
-        const paper = document.querySelector('.omikuji-paper');
-        if (!paper) return;
-
-        let userName = prompt(translations[currentLanguage].namePrompt) || "";
+        let userName = prompt(translations[currentLanguage].namePrompt) || '';
 
         try {
             saveFortuneBtn.style.display = 'none';
 
-            // CREATE HEADLESS SANDBOX
+            const fortune = getFortuneByNumber(fortuneNumber);
+            if (!fortune) {
+                console.error('No fortune for number', fortuneNumber);
+                return;
+            }
+
+            // Create hidden sandbox
             const sandbox = document.createElement('div');
-            // Fixed 400px width forces desktop layout rules
             sandbox.style.cssText = 'position:fixed; top:0; left:-9999px; width:400px; background:white;';
             document.body.appendChild(sandbox);
 
-            // CLONE PAPER INTO SANDBOX
-            const clone = paper.cloneNode(true);
-            clone.style.width = '400px';
-            clone.style.maxWidth = 'none';
-            clone.style.height = 'auto';
-            clone.style.margin = '0';
-            clone.style.padding = '40px'; 
-            clone.style.transform = 'none';
-            clone.style.visibility = 'visible';
-            sandbox.appendChild(clone);
+            // Build a fresh export-only paper
+            const exportPaper = buildExportPaper(fortune, fortuneNumber);
+            sandbox.appendChild(exportPaper);
 
-            // tighten unsei section only for the export image
-const unseiForExport = clone.querySelector('#main-fortune-content');
-if (unseiForExport) {
-    unseiForExport.style.fontSize = '13px';    // smaller text in image
-    unseiForExport.style.lineHeight = '1.2';   // tighter line spacing in image
-}
-
-
-            // INJECT STAMP INTO CLONE
+            // Add the seal stamp onto the export paper
             const sealStamp = createSealStamp(fortuneNumber, userName);
-            if (sealStamp) clone.appendChild(sealStamp);
+            if (sealStamp) {
+                exportPaper.appendChild(sealStamp);
+            }
 
-            // WAIT FOR FONT RENDERING
+            // Wait for fonts/layout
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready;
+            }
             await new Promise(r => setTimeout(r, 150));
 
             const scale = 2;
             const width = 400;
-            const height = clone.scrollHeight;
+            const height = exportPaper.scrollHeight;
 
-            // CAPTURE CLONE
-            const dataUrl = await domtoimage.toPng(clone, {
+            // Capture export paper as PNG
+            const dataUrl = await domtoimage.toPng(exportPaper, {
                 width: width * scale,
                 height: height * scale,
                 style: {
-                    transform: `scale(${scale})`,
+                    transform: 'scale(' + scale + ')',
                     transformOrigin: 'top left',
                     width: width + 'px',
                     height: height + 'px',
@@ -1595,32 +1850,34 @@ if (unseiForExport) {
                 }
             });
 
-            // CLEANUP
+            // Clean up sandbox
             document.body.removeChild(sandbox);
-            saveFortuneBtn.style.display = 'block';
 
-            // SHARE OR DOWNLOAD
+            // Share or download
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             if (isMobile && navigator.share) {
                 const blob = await (await fetch(dataUrl)).blob();
-                const file = new File([blob], `omikuji.png`, { type: 'image/png' });
+                const file = new File([blob], 'omikuji.png', { type: 'image/png' });
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     await navigator.share({ files: [file], title: 'My Omikuji' });
                     return;
                 }
             }
-            
+
             const link = document.createElement('a');
-            link.download = `omikuji-fortune-${fortuneNumber}.png`;
+            link.download = 'omikuji-fortune-' + fortuneNumber + '.png';
             link.href = dataUrl;
             link.click();
 
         } catch (e) {
-            console.error("Headless Save failed", e);
+            console.error('Export template save failed', e);
+        } finally {
             saveFortuneBtn.style.display = 'block';
         }
     });
 }
+
+
 
 /// ENDED DELETED AND APPENDED.
 
