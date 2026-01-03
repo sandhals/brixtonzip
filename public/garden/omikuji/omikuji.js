@@ -24,7 +24,7 @@ const translations = {
         instructionBtn: 'OK',
         pickerTitle: '番号を選択',
         namePrompt: '印鑑に入れる名前を入力してください（任意、最大12文字）:',
-        stampForScreenshotBtn: 'スクショ用の印を押す'
+        stampForScreenshotBtn: '名前入り印鑑を追加してシェア'
     },
     en: {
         title: 'Omikuji',
@@ -42,7 +42,7 @@ const translations = {
         instructionBtn: 'OK',
         pickerTitle: 'Select Fortune Number',
         namePrompt: 'Enter your name for the seal (optional, max 12 characters):',
-        stampForScreenshotBtn: 'Add name for screenshot'
+        stampForScreenshotBtn: 'Add stamp with your name to share'
     },
     ko: {
         title: '오미쿠지',
@@ -60,7 +60,7 @@ const translations = {
         instructionBtn: 'OK',
         pickerTitle: '번호 선택',
         namePrompt: '도장에 넣을 이름을 입력하세요 (선택사항, 최대 12자):',
-        stampForScreenshotBtn: '스크린샷용 도장 추가'
+        stampForScreenshotBtn: '이름이 들어간 도장을 추가하여 공유'
     }
 };
 
