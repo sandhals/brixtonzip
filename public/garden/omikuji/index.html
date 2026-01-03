@@ -146,6 +146,16 @@
             gap: 15px;
         }
 
+/* Screenshot mode for mobile stamp capture */
+#fortune-modal-overlay.screenshot-mode {
+  background: #f7f1e3; /* soft cream */
+}
+
+#fortune-modal-overlay.screenshot-mode .omikuji-paper {
+  box-shadow: none; /* flatter, more "printed" look */
+}
+
+
         /* Fortune Paper */
         .omikuji-paper {
             background-color: var(--paper);
@@ -159,6 +169,17 @@
             position: relative;
             overflow: hidden;
         }
+
+        .omikuji-paper {
+  position: relative;
+}
+
+/* Export-only tweaks: smaller unsei text in saved image */
+.omikuji-paper.export-paper .main-fortune-text {
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
 
         .frame {
             border: 4px double var(--ink);

@@ -23,7 +23,8 @@ const translations = {
         instructionText: 'セクションをタップして翻訳を表示',
         instructionBtn: 'OK',
         pickerTitle: '番号を選択',
-        namePrompt: '印鑑に入れる名前を入力してください（任意、最大12文字）:'
+        namePrompt: '印鑑に入れる名前を入力してください（任意、最大12文字）:',
+        stampForScreenshotBtn: 'スクショ用の印を押す'
     },
     en: {
         title: 'Omikuji',
@@ -40,7 +41,8 @@ const translations = {
         instructionText: 'Tap any section to see translation',
         instructionBtn: 'OK',
         pickerTitle: 'Select Fortune Number',
-        namePrompt: 'Enter your name for the seal (optional, max 12 characters):'
+        namePrompt: 'Enter your name for the seal (optional, max 12 characters):',
+        stampForScreenshotBtn: 'Add name for screenshot'
     },
     ko: {
         title: '오미쿠지',
@@ -57,7 +59,8 @@ const translations = {
         instructionText: '섹션을 탭하여 번역 보기',
         instructionBtn: 'OK',
         pickerTitle: '번호 선택',
-        namePrompt: '도장에 넣을 이름을 입력하세요 (선택사항, 최대 12자):'
+        namePrompt: '도장에 넣을 이름을 입력하세요 (선택사항, 최대 12자):',
+        stampForScreenshotBtn: '스크린샷용 도장 추가'
     }
 };
 
@@ -86,7 +89,12 @@ function updateLanguage(lang) {
     if (takeOmikujiBtn) takeOmikujiBtn.textContent = t.getOmikujiBtn;
     if (readFortuneBtn) readFortuneBtn.textContent = t.checkFortuneBtn;
     if (startOverLink) startOverLink.textContent = t.startOver;
-    if (saveFortuneBtn) saveFortuneBtn.textContent = t.saveImage;
+    if (saveFortuneBtn) {
+        const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        saveFortuneBtn.textContent = isMobileDevice
+            ? t.stampForScreenshotBtn
+            : t.saveImage;
+    }
     if (viewBtnText) viewBtnText.textContent = t.viewBtn;
     if (closeModalBtn) closeModalBtn.textContent = t.closeBtn;
     if (instructionText) instructionText.textContent = t.instructionText;
@@ -1247,6 +1255,21 @@ function displayFortuneModal(fortuneNumber) {
         });
     }
 
+    // Reset screenshot mode and live stamp whenever the modal opens
+    const overlay = document.getElementById('fortune-modal-overlay');
+    if (overlay) {
+        overlay.classList.remove('screenshot-mode');
+    }
+    const liveStamp = document.getElementById('seal-stamp-overlay');
+    if (liveStamp && liveStamp.parentNode) {
+        liveStamp.parentNode.removeChild(liveStamp);
+    }
+    const saveBtnEl = document.getElementById('save-fortune-btn');
+    if (saveBtnEl) {
+        saveBtnEl.style.display = 'inline-block';
+    }
+
+
     // Initialize tooltip behavior
     initializeTooltips();
 
@@ -1458,322 +1481,408 @@ if (viewFortuneBtn && fortuneNumberInput) {
     }
 }
 
-// Function to create red seal stamp overlay with personalized name
+
+/// DELETED. ADDING NEW HERE
+
+// --- 1. SEAL STAMP LOGIC ---
 function createSealStamp(fortuneNumber, userName = '') {
     const fortune = getFortuneByNumber(fortuneNumber);
     if (!fortune) return null;
 
-    // Map fortune types to English luck names (all caps)
     const luckNameMapEN = {
-        'daikichi': 'BEST LUCK',
-        'kichi': 'GOOD LUCK',
-        'chukichi': 'MEDIUM LUCK',
-        'shokichi': 'LITTLE LUCK',
-        'hankichi': 'HALF LUCK',
-        'suekichi': 'FUTURE LUCK',
-        'sue_shokichi': 'FUTURE LITTLE LUCK',
-        'kyo': 'BAD LUCK',
-        'shokyo': 'WORSE LUCK',
-        'hankyo': 'HALF BAD LUCK',
-        'suekyou': 'FUTURE BAD LUCK',
-        'daikyou': 'WORST LUCK'
+        daikichi: 'BEST LUCK',
+        kichi: 'GOOD LUCK',
+        chukichi: 'MEDIUM LUCK',
+        shokichi: 'LITTLE LUCK',
+        hankichi: 'HALF LUCK',
+        suekichi: 'FUTURE LUCK',
+        sue_shokichi: 'FUTURE LITTLE LUCK',
+        kyo: 'BAD LUCK',
+        shokyo: 'WORSE LUCK',
+        hankyo: 'HALF BAD LUCK',
+        suekyou: 'FUTURE BAD LUCK',
+        daikyou: 'WORST LUCK'
     };
 
-    // Map fortune types to Korean luck names
-    const luckNameMapKO = {
-        'daikichi': '대길',
-        'kichi': '길',
-        'chukichi': '중길',
-        'shokichi': '소길',
-        'hankichi': '반길',
-        'suekichi': '말길',
-        'sue_shokichi': '말소길',
-        'kyo': '흉',
-        'shokyo': '소흉',
-        'hankyo': '반흉',
-        'suekyou': '말흉',
-        'daikyou': '대흉'
-    };
-
-    // Use Korean for ko language, English otherwise
     let luckName;
+
+    // Use Korean label when site language is Korean
     if (currentLanguage === 'ko') {
-        luckName = luckNameMapKO[fortune.id] || fortune.fortune_ko;
+        luckName = fortune.fortune_ko || fortune.gloss_ko || '행운';
+    } else if (currentLanguage === 'jp') {
+        // For Japanese, use the kanji fortune label
+        luckName = fortune.fortune_jp || 'おみくじ';
     } else {
-        luckName = (luckNameMapEN[fortune.id] || fortune.fortune_en).toUpperCase();
+        // Default English behavior
+        luckName = luckNameMapEN[fortune.id] || fortune.fortune_en || 'GOOD LUCK';
     }
 
-    // Create canvas for the seal (larger for 3-tier layout)
     const canvas = document.createElement('canvas');
-    const size = 180;
+    const size = 220;
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
+    const red = '#b32428';
+    const cx = size / 2;
+    const cy = size / 2;
 
-    // Transparent background
-    ctx.clearRect(0, 0, size, size);
-
-    const centerX = size / 2;
-    const centerY = size / 2;
-    const redColor = '#b32428'; // Traditional cinnabar red
-
-    // Draw double border rings
-    ctx.strokeStyle = redColor;
-    ctx.lineCap = 'round';
-
-    // Outer circle
+    // Outer and inner circles
+    ctx.strokeStyle = red;
     ctx.lineWidth = 4.5;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, size / 2 - 10, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 100, 0, Math.PI * 2);
     ctx.stroke();
-
-    // Inner circle
     ctx.lineWidth = 1.8;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, size / 2 - 20, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 90, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.fillStyle = redColor;
+    ctx.fillStyle = red;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // TOP: User name (if provided)
-    if (userName && userName.trim()) {
-        const nameStr = userName.toUpperCase().substring(0, 12); // Limit to 12 chars
-        let nameFontSize = 20;
-        ctx.font = `bold ${nameFontSize}px sans-serif`;
-        let nameWidth = ctx.measureText(nameStr).width;
-
-        // Shrink font size until it fits
-        while (nameWidth > 110 && nameFontSize > 10) {
-            nameFontSize -= 0.5;
-            ctx.font = `bold ${nameFontSize}px sans-serif`;
-            nameWidth = ctx.measureText(nameStr).width;
-        }
-
-        ctx.fillText(nameStr, centerX, centerY - 55);
-
-        // Divider 1 (below name)
-        ctx.strokeStyle = redColor;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(centerX - 48, centerY - 35);
-        ctx.lineTo(centerX + 48, centerY - 35);
-        ctx.stroke();
+    // Name at the top
+    let nameStr = (userName || 'NAME').toUpperCase().substring(0, 12);
+    ctx.font = 'bold 22px sans-serif';
+    while (ctx.measureText(nameStr).width > 100) {
+        const parts = ctx.font.split(' ');
+        const sizePart = parts[1] || '22px';
+        const numeric = parseFloat(sizePart);
+        const newSize = numeric - 0.5;
+        ctx.font = 'bold ' + newSize + 'px sans-serif';
     }
+    ctx.fillText(nameStr, cx, cy - 72);
 
-    // MIDDLE: Fortune number with dynamic sizing
-    const numDigits = fortuneNumber.toString().length;
-    let numberFontSize;
-    if (numDigits === 3) {
-        numberFontSize = 52;
-    } else if (numDigits === 2) {
-        numberFontSize = 62;
-    } else {
-        numberFontSize = 70;
-    }
-
-    ctx.font = `900 ${numberFontSize}px "Yu Mincho", "Hiragino Mincho ProN", serif`;
-    const numberY = userName && userName.trim() ? centerY - 5 : centerY - 15;
-    ctx.fillText(fortuneNumber, centerX, numberY);
-
-    // Divider 2 (below number)
-    ctx.strokeStyle = redColor;
+    // Horizontal lines
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    const divider2Y = userName && userName.trim() ? centerY + 25 : centerY + 15;
-    ctx.moveTo(centerX - 48, divider2Y);
-    ctx.lineTo(centerX + 48, divider2Y);
+    ctx.moveTo(cx - 48, cy - 48);
+    ctx.lineTo(cx + 48, cy - 48);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx - 48, cy + 38);
+    ctx.lineTo(cx + 48, cy + 38);
     ctx.stroke();
 
-    // BOTTOM: Luck name with 2-line wrapping for long names
-    const words = luckName.split(' ');
-    let lines = [];
+    // Fortune number in the center
+    const numStr = fortuneNumber.toString();
+    ctx.font = (numStr.length === 3 ? '900 62px "Yu Mincho", serif' : '900 78px "Yu Mincho", serif');
+    ctx.fillText(numStr, cx, cy - 5);
 
-    if (words.length >= 2) {
-        // Split into 2 lines: all words except last, then last word
-        lines = [words.slice(0, -1).join(' '), words[words.length - 1]];
+    // Luck text at the bottom (supports KR/JP/EN)
+    const words = luckName.split(' ');
+    let lines;
+    if (words.length === 3) {
+        lines = [words[0] + ' ' + words[1], words[2]];
+    } else if (words.length === 2) {
+        lines = [words[0], words[1]];
     } else {
         lines = [luckName];
     }
 
-    const luckBaseY = userName && userName.trim() ? centerY + 40 : centerY + 30;
-
     if (lines.length === 2) {
-        // Two-line layout
-        ctx.font = 'bold 14px sans-serif';
-        ctx.fillText(lines[0], centerX, luckBaseY);
-        ctx.font = 'bold 12px sans-serif';
-        ctx.fillText(lines[1], centerX, luckBaseY + 16);
+        ctx.font = 'bold 15px sans-serif';
+        ctx.fillText(lines[0], cx, cy + 54);
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillText(lines[1], cx, cy + 72);
     } else {
-        // Single line with dynamic scaling
-        let luckFontSize = 18;
-        ctx.font = `bold ${luckFontSize}px sans-serif`;
-        let luckWidth = ctx.measureText(lines[0]).width;
-
-        while (luckWidth > 110 && luckFontSize > 10) {
-            luckFontSize -= 0.5;
-            ctx.font = `bold ${luckFontSize}px sans-serif`;
-            luckWidth = ctx.measureText(lines[0]).width;
+        ctx.font = 'bold 20px sans-serif';
+        while (ctx.measureText(lines[0]).width > 110) {
+            const parts = ctx.font.split(' ');
+            const sizePart = parts[1] || '20px';
+            const numeric = parseFloat(sizePart);
+            const newSize = numeric - 0.5;
+            ctx.font = 'bold ' + newSize + 'px sans-serif';
         }
-
-        ctx.fillText(lines[0], centerX, luckBaseY + 8);
+        ctx.fillText(lines[0], cx, cy + 60);
     }
 
-    // Add ink bleed/erosion effect for authentic weathered look
+    // Roughen the stamp
     ctx.globalCompositeOperation = 'destination-out';
-
-    // General paper texture erosion (90 particles for larger stamp)
     for (let i = 0; i < 90; i++) {
-        const x = Math.random() * size;
-        const y = Math.random() * size;
-        const radius = Math.random() * 1.5;
-        const alpha = Math.random() * 0.3;
-
-        ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
         ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.arc(Math.random() * size, Math.random() * size, Math.random() * 1.5, 0, Math.PI * 2);
         ctx.fill();
     }
-
-    // Border-specific erosion (30 particles targeting circles)
-    for (let i = 0; i < 30; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const dist = (size / 2 - 10) + (Math.random() - 0.5) * 12;
-        const x = centerX + Math.cos(angle) * dist;
-        const y = centerY + Math.sin(angle) * dist;
-        const radius = Math.random() * 4;
-        const alpha = Math.random() * 0.6 + 0.2;
-
-        ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    // Reset composite operation
     ctx.globalCompositeOperation = 'source-over';
 
-    // Create stamp element
     const stampDiv = document.createElement('div');
     stampDiv.id = 'seal-stamp-overlay';
-    stampDiv.style.cssText = `
-        position: absolute;
-        bottom: 100px;
-        right: 20px;
-        width: ${size}px;
-        height: ${size}px;
-        transform: rotate(-8deg);
-        z-index: 1000;
-        pointer-events: none;
-    `;
+    stampDiv.style.cssText =
+        'position:absolute; bottom:100px; right:25px; width:' +
+        size +
+        'px; height:' +
+        size +
+        'px; transform:rotate(-6deg); z-index:1000; pointer-events:none;';
     stampDiv.appendChild(canvas);
-
     return stampDiv;
 }
 
-// "Save as image" button event listener
-const saveFortuneBtn = document.getElementById('save-fortune-btn');
+// Build a DOM version of the omikuji paper (for desktop export)
+function buildExportPaper(fortune, fortuneNumber) {
+    const wrapper = document.createElement('div');
+
+    const unsei = fortune.sections.unsei;
+    const unseiLines = unsei ? (unsei.jp_parts || [unsei.jp]) : [''];
+
+    const sectionOrder = [
+        'ganbou',
+        'tabi_dachi',
+        'shobai',
+        'kin_un',
+        'en_dan',
+        'byoki',
+        'arasai_goto',
+        'hogaku',
+        'sns',
+        'advice'
+    ];
+
+    const sectionLabels = {
+        ganbou: '願望',
+        tabi_dachi: '旅立ち',
+        shobai: '商売',
+        kin_un: '金運',
+        en_dan: '縁談',
+        byoki: '病気',
+        arasai_goto: '争い事',
+        hogaku: '方角',
+        sns: 'ＳＮＳ',
+        advice: '助言'
+    };
+
+    const topIds = sectionOrder.slice(0, 5);
+    const bottomIds = sectionOrder.slice(5, 10);
+
+    function buildItemsHtml(ids) {
+        return ids
+            .map(function (id) {
+                const s = fortune.sections[id];
+                if (!s) return '';
+                const label = sectionLabels[id] || '';
+                return '<span class="item-line"><b>' + label + '</b>　　' + s.jp + '</span>';
+            })
+            .join('');
+    }
+
+    const topItemsHtml = buildItemsHtml(topIds);
+    const bottomItemsHtml = buildItemsHtml(bottomIds);
+    const unseiHtml = unseiLines.join('<br>');
+
+    wrapper.innerHTML =
+        '<div class="omikuji-paper export-paper">' +
+        '  <div class="frame">' +
+        '    <div class="header-row">' +
+        '      <div class="h-cell v-text center-content bold header-text">' +
+        fortune.fortune_jp +
+        '      </div>' +
+        '      <div class="h-cell v-text center-content header-text">' +
+        '        <div class="title-container">' +
+        '          <ruby>電<rt>でん</rt></ruby><ruby>脳<rt>のう</rt></ruby><ruby>本<rt>ほん</rt></ruby><ruby>宮<rt>ぐう</rt></ruby><br>' +
+        '          <ruby>振<rt>ぶり</rt></ruby><ruby>楠<rt>くす</rt></ruby><ruby>神<rt>じん</rt></ruby><ruby>社<rt>じゃ</rt></ruby><ruby>籤<rt>くじ</rt></ruby>' +
+        '        </div>' +
+        '      </div>' +
+        '      <div class="h-cell v-text center-content bold header-text">' +
+        numberToKanji(fortuneNumber) +
+        '番' +
+        '      </div>' +
+        '    </div>' +
+        '    <div class="body-row">' +
+        '      <div class="body-left-col">' +
+        '        <div class="items-stack">' +
+        '          <div class="items-half items-top">' +
+        '            <div class="v-text text-cell items-text">' +
+        topItemsHtml +
+        '            </div>' +
+        '          </div>' +
+        '          <div class="items-half">' +
+        '            <div class="v-text text-cell items-text">' +
+        bottomItemsHtml +
+        '            </div>' +
+        '          </div>' +
+        '        </div>' +
+        '      </div>' +
+        '      <div class="body-right-col">' +
+        '        <div class="v-text text-cell main-fortune-text center-content">' +
+        '          <div>' +
+        unseiHtml +
+        '</div>' +
+        '        </div>' +
+        '      </div>' +
+        '    </div>' +
+        '  </div>' +
+        '  <div class="footer">' +
+        '    振楠神社社務所（<a href="https://brixton.zip">brixton.zip</a>）' +
+        '  </div>' +
+        '</div>';
+
+    return wrapper.firstElementChild;
+}
+
+// --- 2. SAVE LOGIC (desktop export + mobile screenshot mode) ---
+const saveFortuneBtn = document.getElementById('save-fortune-btn')
+const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
 if (saveFortuneBtn) {
-    saveFortuneBtn.addEventListener('click', async () => {
-        const paper = document.querySelector('.omikuji-paper');
-        if (!paper) return;
+  saveFortuneBtn.addEventListener('click', async function () {
+    const userName = prompt(translations[currentLanguage].namePrompt) || ''
 
-        // Prompt for user's name (12 character limit) in current language
-        let userName = prompt(translations[currentLanguage].namePrompt);
-        if (userName) {
-            userName = userName.substring(0, 12); // Enforce 12 character limit
+    
+
+// MOBILE FLOW: show live stamp for screenshot over cream background
+if (isMobileDevice) {
+  const overlay = document.getElementById('fortune-modal-overlay')
+  const paper = document.querySelector('#fortune-modal-overlay .omikuji-paper')
+
+  if (overlay && paper) {
+    // Remove any existing live stamp
+    const existing = document.getElementById('seal-stamp-overlay')
+    if (existing && existing.parentNode) {
+      existing.parentNode.removeChild(existing)
+    }
+
+    const stampDiv = createSealStamp(fortuneNumber, userName)
+    if (stampDiv) {
+      const rect = paper.getBoundingClientRect()
+
+      // Compute position so it is near top left of the paper
+      // but never fully off screen
+      const top = Math.max(rect.top - 16, 8)
+      const left = Math.max(rect.left - 80, -40)
+
+      // Attach to body so it sits above everything
+      stampDiv.style.position = 'absolute'
+      stampDiv.style.top = top + 'px'
+      stampDiv.style.left = left + 'px'
+      stampDiv.style.bottom = 'auto'
+      stampDiv.style.right = 'auto'
+      stampDiv.style.transformOrigin = 'top left'
+      stampDiv.style.transform = 'scale(0.8) rotate(-6deg)'
+      stampDiv.style.zIndex = '99999'
+      stampDiv.style.pointerEvents = 'none'
+
+      document.body.appendChild(stampDiv)
+    }
+
+    // Turn modal background cream for screenshot
+    overlay.classList.add('screenshot-mode')
+
+    // Hide the button itself in the screenshot
+    saveFortuneBtn.style.display = 'none'
+  }
+
+  // User now takes a normal OS screenshot
+  return
+}
+
+
+
+
+
+
+
+    // DESKTOP FLOW: export PNG via dom-to-image
+    try {
+      saveFortuneBtn.style.display = 'none'
+
+      const fortune = getFortuneByNumber(fortuneNumber)
+      if (!fortune) {
+        console.error('No fortune for number', fortuneNumber)
+        return
+      }
+
+      // Hidden sandbox container
+      const sandbox = document.createElement('div')
+      sandbox.style.cssText = 'position:fixed; top:0; left:-9999px; width:400px; background:white;'
+      document.body.appendChild(sandbox)
+
+      // Build export DOM paper
+      const exportPaper = buildExportPaper(fortune, fortuneNumber)
+      sandbox.appendChild(exportPaper)
+
+      // Add stamp onto the export-only paper
+      const sealStamp = createSealStamp(fortuneNumber, userName)
+      if (sealStamp) {
+        exportPaper.appendChild(sealStamp)
+      }
+
+      // Wait for fonts and layout
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready
+      }
+      await new Promise(function (r) {
+        setTimeout(r, 150)
+      })
+
+      const scale = 2
+      const width = 400
+      const height = exportPaper.scrollHeight
+
+      const dataUrl = await domtoimage.toPng(exportPaper, {
+        width: width * scale,
+        height: height * scale,
+        style: {
+          transform: 'scale(' + scale + ')',
+          transformOrigin: 'top left',
+          width: width + 'px',
+          height: height + 'px',
+          visibility: 'visible'
         }
+      })
 
+      document.body.removeChild(sandbox)
+
+      // Try Web Share first
+      if (navigator.share) {
         try {
-            // Temporarily hide the save button while capturing
-            saveFortuneBtn.style.display = 'none';
-
-            // Store original overflow style
-            const originalOverflow = paper.style.overflow;
-            paper.style.overflow = 'visible';
-
-            // Add seal stamp overlay with user's name
-            const sealStamp = createSealStamp(fortuneNumber, userName);
-            if (sealStamp) {
-                paper.appendChild(sealStamp);
-            }
-
-            // Force virtual desktop render at fixed 400px width with 2x scale for high-DPI
-            // This prevents mobile browsers from using their narrow viewport width
-            const virtualWidth = 400;
-            const scaleFactor = 2;
-            const captureWidth = virtualWidth * scaleFactor;
-            const captureHeight = paper.scrollHeight * scaleFactor;
-
-            const dataUrl = await domtoimage.toPng(paper, {
-                quality: 1.0,
-                bgcolor: '#ffffff',
-                width: captureWidth,
-                height: captureHeight,
-                style: {
-                    width: `${virtualWidth}px`,
-                    transform: `scale(${scaleFactor})`,
-                    transformOrigin: 'top left',
-                    overflow: 'visible'
-                },
-                filter: (node) => node.id !== 'save-fortune-btn'
-            });
-
-            // Remove stamp and restore UI
-            if (sealStamp) {
-                paper.removeChild(sealStamp);
-            }
-            paper.style.overflow = originalOverflow;
-            saveFortuneBtn.style.display = 'block';
-
-            // Check if we're on mobile and have native share API
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-            if (isMobile && navigator.share && navigator.canShare) {
-                // Convert data URL to blob for sharing
-                const blob = await (await fetch(dataUrl)).blob();
-                const file = new File([blob], `omikuji-fortune-${fortuneNumber}.png`, { type: 'image/png' });
-
-                // Check if we can share files
-                if (navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: 'My Omikuji Fortune',
-                        text: 'My fortune from the digital omikuji'
-                    });
-                } else {
-                    // Fallback to download if file sharing not supported
-                    const link = document.createElement('a');
-                    link.download = `omikuji-fortune-${fortuneNumber}.png`;
-                    link.href = dataUrl;
-                    link.click();
-                }
-            } else {
-                // Desktop: trigger download
-                const link = document.createElement('a');
-                link.download = `omikuji-fortune-${fortuneNumber}.png`;
-                link.href = dataUrl;
-                link.click();
-            }
-        } catch (error) {
-            console.error('Error saving fortune:', error);
-            // Make sure to remove stamp and show button even on error
-            const existingStamp = document.getElementById('seal-stamp-overlay');
-            if (existingStamp) {
-                paper.removeChild(existingStamp);
-            }
-            saveFortuneBtn.style.display = 'block';
+          const blob = await (await fetch(dataUrl)).blob()
+          const file = new File([blob], 'omikuji.png', { type: 'image/png' })
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: 'My Omikuji' })
+            saveFortuneBtn.style.display = 'block'
+            return
+          }
+        } catch (err) {
+          console.log('Web Share failed, falling back to download', err)
         }
-    });
+      }
+
+      // Fallback download
+      const link = document.createElement('a')
+      link.download = 'omikuji-fortune-' + fortuneNumber + '.png'
+      link.href = dataUrl
+      link.click()
+    } catch (e) {
+      console.error('Export template save failed', e)
+    } finally {
+      saveFortuneBtn.style.display = 'block'
+    }
+  })
+}
+
+// Helper to clear screenshot mode
+function clearScreenshotMode() {
+    const overlay = document.getElementById('fortune-modal-overlay');
+    if (overlay) {
+        overlay.classList.remove('screenshot-mode');
+    }
+    const liveStamp = document.getElementById('seal-stamp-overlay');
+    if (liveStamp && liveStamp.parentNode) {
+        liveStamp.parentNode.removeChild(liveStamp);
+    }
+    const saveBtnEl = document.getElementById('save-fortune-btn');
+    if (saveBtnEl) {
+        saveBtnEl.style.display = 'inline-block';
+    }
 }
 
 // Close modal on overlay click
 const modalOverlay = document.getElementById('fortune-modal-overlay');
 if (modalOverlay) {
-    modalOverlay.addEventListener('click', (e) => {
+    modalOverlay.addEventListener('click', function (e) {
         if (e.target === modalOverlay) {
             modalOverlay.classList.remove('active');
+            clearScreenshotMode();
         }
     });
 }
@@ -1781,10 +1890,11 @@ if (modalOverlay) {
 // Close modal button (mobile)
 const closeModalBtn = document.getElementById('close-modal-btn');
 if (closeModalBtn) {
-    closeModalBtn.addEventListener('click', () => {
+    closeModalBtn.addEventListener('click', function () {
         if (modalOverlay) {
             modalOverlay.classList.remove('active');
         }
+        clearScreenshotMode();
     });
 }
 
@@ -1792,7 +1902,7 @@ if (closeModalBtn) {
 const instructionCloseBtn = document.getElementById('instruction-close-btn');
 const instructionModal = document.getElementById('mobile-instruction-modal');
 if (instructionCloseBtn && instructionModal) {
-    instructionCloseBtn.addEventListener('click', () => {
+    instructionCloseBtn.addEventListener('click', function () {
         instructionModal.style.display = 'none';
     });
 }
@@ -1800,8 +1910,8 @@ if (instructionCloseBtn && instructionModal) {
 // "Start over" link event listener
 const startOverLink = document.getElementById('start-over-link');
 if (startOverLink) {
-    startOverLink.addEventListener('click', () => {
-        // Reset to IDLE state
+    startOverLink.addEventListener('click', function () {
+        // Reset state
         currentState = State.IDLE;
         hasShaken = false;
         shakeCount = 0;
@@ -1812,7 +1922,7 @@ if (startOverLink) {
         isZoomedIn = false;
         zoomProgress = 0;
 
-        // Reset container position and rotation
+        // Reset container
         omikujiContainer.position.y = 0;
         omikujiContainer.rotation.x = 0;
         omikujiContainer.rotation.y = 0;
@@ -1823,12 +1933,14 @@ if (startOverLink) {
         fortuneStick.userData.hasText = false;
 
         // Remove fortune number text if it exists
-        const textMesh = fortuneStick.children.find(child => child.name === 'fortuneNumber');
+        const textMesh = fortuneStick.children.find(function (child) {
+            return child.name === 'fortuneNumber';
+        });
         if (textMesh) {
             fortuneStick.remove(textMesh);
         }
 
-        // Reset UI with current language
+        // Reset UI text with current language
         const bottomText = document.getElementById('bottom-text');
         const takeBtn = document.getElementById('take-omikuji-btn');
         const readBtn = document.getElementById('read-fortune-btn');
@@ -1845,11 +1957,11 @@ if (startOverLink) {
         if (shakeCountEl) shakeCountEl.style.display = 'none';
         if (shakeValueEl) shakeValueEl.textContent = '0';
 
-        // Close modal if open
-        const modalOverlay = document.getElementById('fortune-modal-overlay');
+        // Close modal and clear screenshot mode
         if (modalOverlay) {
             modalOverlay.classList.remove('active');
         }
+        clearScreenshotMode();
 
         console.log('Reset to initial state');
     });
@@ -1857,13 +1969,12 @@ if (startOverLink) {
     // Initialize no-tooltips class on page load if language is Japanese
     if (typeof document !== 'undefined') {
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('DOMContentLoaded', function () {
                 if (currentLanguage === 'jp') {
                     document.body.classList.add('no-tooltips');
                 }
             });
         } else {
-            // DOM is already ready
             if (currentLanguage === 'jp') {
                 document.body.classList.add('no-tooltips');
             }
