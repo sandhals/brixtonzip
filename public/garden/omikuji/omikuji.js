@@ -1763,101 +1763,114 @@ if (isMobileDevice) {
 
       document.body.appendChild(stampDiv)
     }
+ // Turn modal background cream for screenshot
+                overlay.classList.add('screenshot-mode');
 
-    // Turn modal background cream for screenshot
-    overlay.classList.add('screenshot-mode')
+                // Add brixton.zip footer with border for screenshot
+                let screenshotFooter = document.getElementById('screenshot-footer');
+                if (!screenshotFooter) {
+                    screenshotFooter = document.createElement('div');
+                    screenshotFooter.id = 'screenshot-footer';
+                    screenshotFooter.textContent = 'brixton.zip';
 
-    // Hide the button itself in the screenshot
-    saveFortuneBtn.style.display = 'none'
-  }
+                    screenshotFooter.style.position = 'fixed';
+                    screenshotFooter.style.left = '0';
+                    screenshotFooter.style.right = '0';
+                    screenshotFooter.style.bottom = '0';
+                    screenshotFooter.style.padding = '6px 0';
+                    screenshotFooter.style.textAlign = 'center';
+                    screenshotFooter.style.background = '#ffffff';
+                    screenshotFooter.style.color = '#000000';
+                    screenshotFooter.style.fontSize = '12px';
+                    screenshotFooter.style.letterSpacing = '0.12em';
+                    screenshotFooter.style.borderTop = '1px solid #000000';
+                    screenshotFooter.style.zIndex = '9999';
+                    screenshotFooter.style.pointerEvents = 'none';
 
-  // User now takes a normal OS screenshot
-  return
-}
+                    overlay.appendChild(screenshotFooter);
+                }
 
+                // Hide the button itself in the screenshot
+                saveFortuneBtn.style.display = 'none';
+            }
 
-
-
-
-
-
-    // DESKTOP FLOW: export PNG via dom-to-image
-    try {
-      saveFortuneBtn.style.display = 'none'
-
-      const fortune = getFortuneByNumber(fortuneNumber)
-      if (!fortune) {
-        console.error('No fortune for number', fortuneNumber)
-        return
-      }
-
-      // Hidden sandbox container
-      const sandbox = document.createElement('div')
-      sandbox.style.cssText = 'position:fixed; top:0; left:-9999px; width:400px; background:white;'
-      document.body.appendChild(sandbox)
-
-      // Build export DOM paper
-      const exportPaper = buildExportPaper(fortune, fortuneNumber)
-      sandbox.appendChild(exportPaper)
-
-      // Add stamp onto the export-only paper
-      const sealStamp = createSealStamp(fortuneNumber, userName)
-      if (sealStamp) {
-        exportPaper.appendChild(sealStamp)
-      }
-
-      // Wait for fonts and layout
-      if (document.fonts && document.fonts.ready) {
-        await document.fonts.ready
-      }
-      await new Promise(function (r) {
-        setTimeout(r, 150)
-      })
-
-      const scale = 2
-      const width = 400
-      const height = exportPaper.scrollHeight
-
-      const dataUrl = await domtoimage.toPng(exportPaper, {
-        width: width * scale,
-        height: height * scale,
-        style: {
-          transform: 'scale(' + scale + ')',
-          transformOrigin: 'top left',
-          width: width + 'px',
-          height: height + 'px',
-          visibility: 'visible'
+            // User now takes a normal OS screenshot
+            return;
         }
-      })
 
-      document.body.removeChild(sandbox)
-
-      // Try Web Share first
-      if (navigator.share) {
+        // DESKTOP: export PNG via dom-to-image
         try {
-          const blob = await (await fetch(dataUrl)).blob()
-          const file = new File([blob], 'omikuji.png', { type: 'image/png' })
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'My Omikuji' })
-            saveFortuneBtn.style.display = 'block'
-            return
-          }
-        } catch (err) {
-          console.log('Web Share failed, falling back to download', err)
-        }
-      }
+            saveFortuneBtn.style.display = 'none';
 
-      // Fallback download
-      const link = document.createElement('a')
-      link.download = 'omikuji-fortune-' + fortuneNumber + '.png'
-      link.href = dataUrl
-      link.click()
-    } catch (e) {
-      console.error('Export template save failed', e)
-    } finally {
-      saveFortuneBtn.style.display = 'block'
-    }
-  })
+            const fortune = getFortuneByNumber(fortuneNumber);
+            if (!fortune) {
+                console.error('No fortune for number', fortuneNumber);
+                return;
+            }
+
+            // Hidden sandbox
+            const sandbox = document.createElement('div');
+            sandbox.style.cssText = 'position:fixed; top:0; left:-9999px; width:400px; background:white;';
+            document.body.appendChild(sandbox);
+
+            // Build export paper and stamp
+            const exportPaper = buildExportPaper(fortune, fortuneNumber);
+            sandbox.appendChild(exportPaper);
+
+            const sealStamp = createSealStamp(fortuneNumber, userName);
+            if (sealStamp) {
+                exportPaper.appendChild(sealStamp);
+            }
+
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready;
+            }
+            await new Promise(function (r) {
+                setTimeout(r, 150);
+            });
+
+            const scale = 2;
+            const width = 400;
+            const height = exportPaper.scrollHeight;
+
+            const dataUrl = await domtoimage.toPng(exportPaper, {
+                width: width * scale,
+                height: height * scale,
+                style: {
+                    transform: 'scale(' + scale + ')',
+                    transformOrigin: 'top left',
+                    width: width + 'px',
+                    height: height + 'px',
+                    visibility: 'visible'
+                }
+            });
+
+            document.body.removeChild(sandbox);
+
+            if (navigator.share) {
+                try {
+                    const blob = await (await fetch(dataUrl)).blob();
+                    const file = new File([blob], 'omikuji.png', { type: 'image/png' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({ files: [file], title: 'My Omikuji' });
+                        saveFortuneBtn.style.display = 'block';
+                        return;
+                    }
+                } catch (err) {
+                    console.log('Web Share failed, falling back to download', err);
+                }
+            }
+
+            const link = document.createElement('a');
+            link.download = 'omikuji-fortune-' + fortuneNumber + '.png';
+            link.href = dataUrl;
+            link.click();
+        } catch (e) {
+            console.error('Export template save failed', e);
+        } finally {
+            saveFortuneBtn.style.display = 'block';
+        }
+    });
 }
 
 // Helper to clear screenshot mode
@@ -1866,15 +1879,28 @@ function clearScreenshotMode() {
     if (overlay) {
         overlay.classList.remove('screenshot-mode');
     }
+
     const liveStamp = document.getElementById('seal-stamp-overlay');
     if (liveStamp && liveStamp.parentNode) {
         liveStamp.parentNode.removeChild(liveStamp);
     }
+
+    const footer = document.getElementById('screenshot-footer');
+    if (footer && footer.parentNode) {
+        footer.parentNode.removeChild(footer);
+    }
+
     const saveBtnEl = document.getElementById('save-fortune-btn');
     if (saveBtnEl) {
         saveBtnEl.style.display = 'inline-block';
     }
 }
+
+
+
+
+
+
 
 // Close modal on overlay click
 const modalOverlay = document.getElementById('fortune-modal-overlay');

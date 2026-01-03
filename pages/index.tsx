@@ -31,6 +31,9 @@ export default function HomePage() {
       <UnzipBox />
       <div className="box">
         <p className="hometext">
+              <span className="pill opener" style={{borderRadius:"0"}}>NEW!!</span>
+              Try out my digital <a href="/garden/omikuji/index.html">omikuji</a> for 2026!</p>
+        <p className="hometext">
           <span className="pill opener">PROFILE</span>
           Hi, I'm Brixton! I was born in Canada, relocated to the Japanese countryside in 2016, and since 2021 have been living in Korea. I spend most of my free time learning languages, working out, <a href="/garden">building websites</a>, reading, writing, and <a href="sketchbook">sketching</a>. Welcome to my online zip folder.
         </p>
