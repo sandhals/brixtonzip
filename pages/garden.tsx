@@ -22,7 +22,7 @@ export default function GardenPage() {
                 <a href="/garden/omikuji/index.html">Omikuji</a>
               </td>
               <td className="desc-cell">
-                A digital omikuji for those who can't make it to a shrine but want to know their fortune.
+                A digital omikuji for 2026 for those who can't visit a shrine.
               </td>
             </tr>
             <tr></tr>

@@ -5,7 +5,7 @@ console.log('Omikuji script loading...');
 console.log('THREE version:', THREE.REVISION);
 
 // Language system
-let currentLanguage = 'jp'; // Default to Japanese
+let currentLanguage = 'en'; // Default to English
 
 const translations = {
     jp: {
@@ -1274,22 +1274,40 @@ function initializeTooltips() {
                 const tipText = t.getAttribute('data-tip');
                 if (!tipText) return; // nothing to show
                 e.stopPropagation();
-                tooltip.innerHTML = tipText;
-                tooltip.classList.add('mobile-active');
-                tooltip.style.opacity = '1';
+                e.preventDefault();
 
-                setTimeout(() => {
+                // Check if tooltip is already visible for this element
+                const isCurrentlyActive = tooltip.classList.contains('mobile-active') &&
+                                         tooltip.innerHTML === tipText;
+
+                if (isCurrentlyActive) {
+                    // If clicking the same element again, hide it
                     tooltip.style.opacity = '0';
                     tooltip.classList.remove('mobile-active');
-                }, 5000);
+                } else {
+                    // Show tooltip and keep it visible until another click
+                    tooltip.innerHTML = tipText;
+                    tooltip.classList.add('mobile-active');
+                    tooltip.style.opacity = '1';
+
+                    // Position the tooltip below the tapped element
+                    const rect = t.getBoundingClientRect();
+                    tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+                    tooltip.style.top = (rect.bottom + 10) + 'px';
+                }
             }
         });
     });
 
-    document.addEventListener('click', () => {
+    // Close tooltip when clicking outside of any .tip element
+    document.addEventListener('click', (e) => {
         if (isMobile && tooltip) {
-            tooltip.style.opacity = '0';
-            tooltip.classList.remove('mobile-active');
+            // Check if the click was on a .tip element
+            const clickedTip = e.target.closest('.tip');
+            if (!clickedTip) {
+                tooltip.style.opacity = '0';
+                tooltip.classList.remove('mobile-active');
+            }
         }
     });
 }
