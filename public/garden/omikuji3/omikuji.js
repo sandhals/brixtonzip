@@ -1460,11 +1460,9 @@ if (viewFortuneBtn && fortuneNumberInput) {
 
 
 
-// "Save as image" button event listener
-const saveFortuneBtn = document.getElementById('save-fortune-btn');
-if (saveFortuneBtn) {
+/// DELETED. ADDING NEW HERE
 
-// --- 1. FINAL PERSONALIZED HANKO LOGIC (Place this ABOVE the if(saveFortuneBtn) block) ---
+// --- 1. SEAL STAMP LOGIC ---
 function createSealStamp(fortuneNumber, userName = '') {
     const fortune = getFortuneByNumber(fortuneNumber);
     if (!fortune) return null;
@@ -1536,74 +1534,95 @@ function createSealStamp(fortuneNumber, userName = '') {
     return stampDiv;
 }
 
-// --- 2. UNIVERSAL IMAGE SAVE LOGIC (This part goes INSIDE the if(saveFortuneBtn) block) ---
-saveFortuneBtn.addEventListener('click', async () => {
-    const paper = document.querySelector('.omikuji-paper');
-    if (!paper) return;
+// --- 2. HEADLESS SANDBOX SAVE LOGIC ---
+const saveFortuneBtn = document.getElementById('save-fortune-btn');
+if (saveFortuneBtn) {
+    saveFortuneBtn.addEventListener('click', async () => {
+        const paper = document.querySelector('.omikuji-paper');
+        if (!paper) return;
 
-    let userName = prompt(translations[currentLanguage].namePrompt) || "";
-    
-    try {
-        saveFortuneBtn.style.display = 'none';
+        let userName = prompt(translations[currentLanguage].namePrompt) || "";
 
-        const originalStyle = paper.style.cssText;
-        const originalOverflow = paper.style.overflow;
+        try {
+            saveFortuneBtn.style.display = 'none';
 
-        const sealStamp = createSealStamp(fortuneNumber, userName);
-        if (sealStamp) paper.appendChild(sealStamp);
+            // CREATE HEADLESS SANDBOX
+            const sandbox = document.createElement('div');
+            // Fixed 400px width forces desktop layout rules
+            sandbox.style.cssText = 'position:fixed; top:0; left:-9999px; width:400px; background:white;';
+            document.body.appendChild(sandbox);
 
-        const virtualWidth = 400; 
-        const scale = 2; 
-        
-        paper.style.width = virtualWidth + 'px';
-        paper.style.maxWidth = 'none';
-        paper.style.height = 'auto';
-        paper.style.margin = '0';
-        paper.style.overflow = 'visible';
+            // CLONE PAPER INTO SANDBOX
+            const clone = paper.cloneNode(true);
+            clone.style.width = '400px';
+            clone.style.maxWidth = 'none';
+            clone.style.height = 'auto';
+            clone.style.margin = '0';
+            clone.style.padding = '40px'; 
+            clone.style.transform = 'none';
+            clone.style.visibility = 'visible';
+            sandbox.appendChild(clone);
 
-        const captureWidth = virtualWidth * scale;
-        const captureHeight = paper.scrollHeight * scale;
-
-        const dataUrl = await domtoimage.toPng(paper, {
-            width: captureWidth,
-            height: captureHeight,
-            style: {
-                transform: `scale(${scale})`,
-                transformOrigin: 'top left',
-                width: virtualWidth + 'px',
-                height: paper.scrollHeight + 'px',
-                overflow: 'visible'
-            },
-            filter: (node) => node.id !== 'save-fortune-btn'
-        });
-
-        if (sealStamp) paper.removeChild(sealStamp);
-        paper.style.cssText = originalStyle;
-        paper.style.overflow = originalOverflow;
-        saveFortuneBtn.style.display = 'block';
-
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        if (isMobile && navigator.share) {
-            const blob = await (await fetch(dataUrl)).blob();
-            const file = new File([blob], `omikuji.png`, { type: 'image/png' });
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({ files: [file], title: 'My Omikuji' });
-                return;
-            }
-        }
-        
-        const link = document.createElement('a');
-        link.download = `omikuji-fortune-${fortuneNumber}.png`;
-        link.href = dataUrl;
-        link.click();
-
-    } catch (e) {
-        console.error("Save failed", e);
-        saveFortuneBtn.style.display = 'block';
-    }
-});
-
+            // tighten unsei section only for the export image
+const unseiForExport = clone.querySelector('#main-fortune-content');
+if (unseiForExport) {
+    unseiForExport.style.fontSize = '13px';    // smaller text in image
+    unseiForExport.style.lineHeight = '1.2';   // tighter line spacing in image
 }
+
+
+            // INJECT STAMP INTO CLONE
+            const sealStamp = createSealStamp(fortuneNumber, userName);
+            if (sealStamp) clone.appendChild(sealStamp);
+
+            // WAIT FOR FONT RENDERING
+            await new Promise(r => setTimeout(r, 150));
+
+            const scale = 2;
+            const width = 400;
+            const height = clone.scrollHeight;
+
+            // CAPTURE CLONE
+            const dataUrl = await domtoimage.toPng(clone, {
+                width: width * scale,
+                height: height * scale,
+                style: {
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'top left',
+                    width: width + 'px',
+                    height: height + 'px',
+                    visibility: 'visible'
+                }
+            });
+
+            // CLEANUP
+            document.body.removeChild(sandbox);
+            saveFortuneBtn.style.display = 'block';
+
+            // SHARE OR DOWNLOAD
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile && navigator.share) {
+                const blob = await (await fetch(dataUrl)).blob();
+                const file = new File([blob], `omikuji.png`, { type: 'image/png' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], title: 'My Omikuji' });
+                    return;
+                }
+            }
+            
+            const link = document.createElement('a');
+            link.download = `omikuji-fortune-${fortuneNumber}.png`;
+            link.href = dataUrl;
+            link.click();
+
+        } catch (e) {
+            console.error("Headless Save failed", e);
+            saveFortuneBtn.style.display = 'block';
+        }
+    });
+}
+
+/// ENDED DELETED AND APPENDED.
 
 
 
