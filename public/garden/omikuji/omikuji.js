@@ -21,7 +21,7 @@ const translations = {
         viewBtn: '表示',
         closeBtn: '閉じる',
         instructionText: 'セクションをタップして翻訳を表示',
-        instructionBtn: 'わかった',
+        instructionBtn: 'OK',
         pickerTitle: '番号を選択',
         namePrompt: '印鑑に入れる名前を入力してください（任意、最大12文字）:'
     },
@@ -38,7 +38,7 @@ const translations = {
         viewBtn: 'View',
         closeBtn: 'Close',
         instructionText: 'Tap any section to see translation',
-        instructionBtn: 'Got it',
+        instructionBtn: 'OK',
         pickerTitle: 'Select Fortune Number',
         namePrompt: 'Enter your name for the seal (optional, max 12 characters):'
     },
@@ -55,7 +55,7 @@ const translations = {
         viewBtn: '보기',
         closeBtn: '닫기',
         instructionText: '섹션을 탭하여 번역 보기',
-        instructionBtn: '알겠습니다',
+        instructionBtn: 'OK',
         pickerTitle: '번호 선택',
         namePrompt: '도장에 넣을 이름을 입력하세요 (선택사항, 최대 12자):'
     }
@@ -1695,30 +1695,14 @@ if (saveFortuneBtn) {
                 paper.appendChild(sealStamp);
             }
 
-            // Store original styles
-            const originalStyle = paper.style.cssText;
-
-            // Use scrollWidth/scrollHeight for tight crop (prevents extra space with vertical text)
-            const width = paper.scrollWidth;
-            const height = paper.scrollHeight;
-
-            // Use dom-to-image with exact dimensions to prevent extra space
+            // Use dom-to-image with natural dimensions
             const dataUrl = await domtoimage.toPng(paper, {
                 quality: 1.0,
                 bgcolor: '#ffffff',
-                width: width,
-                height: height,
-                style: {
-                    transform: 'scale(1)',
-                    transformOrigin: 'top left',
-                    margin: '0',
-                    padding: '0'
-                },
                 filter: (node) => node.id !== 'save-fortune-btn'
             });
 
-            // Restore original styles and remove stamp
-            paper.style.cssText = originalStyle;
+            // Remove stamp and restore UI
             if (sealStamp) {
                 paper.removeChild(sealStamp);
             }
