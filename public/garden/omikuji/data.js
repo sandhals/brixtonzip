@@ -1238,7 +1238,6 @@ export const fortunes = [
 ];
 
 
-// Hard mapping: every number 1-100 -> a fortune id (randomly dispersed, exact weights)
 export const luckNumberMap = {
   1:"chukichi",
   2:"kichi",
@@ -1342,7 +1341,6 @@ export const luckNumberMap = {
   100:"kichi"
 };
 
-// Helpers
 export const getFortuneIdByNumber = (n) => luckNumberMap[n] || null;
 
 export const getFortuneByNumber = (n) => {
