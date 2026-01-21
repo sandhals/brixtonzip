@@ -76,14 +76,17 @@ export default async function handler(
     <meta name="cache-timestamp" content="${timestamp}">`
           content = content.replace('<head>', `<head>${cacheBustingMeta}`)
           
-          // Also add cache-busting query params to script and link tags
-          content = content.replace(/src="([^"]+\.(js|css))"/g, (match, src) => {
+          // Convert relative paths to absolute paths for static file serving on Vercel
+          // and add cache-busting query params
+          content = content.replace(/src="([^"]+\.(js))"/g, (match, src) => {
+            if (src.startsWith('http') || src.startsWith('/')) return match
             const separator = src.includes('?') ? '&' : '?'
-            return `src="${src}${separator}v=${timestamp}"`
+            return `src="/garden/${pathString}/${src}${separator}v=${timestamp}"`
           })
-          content = content.replace(/href="([^"]+\.(js|css))"/g, (match, href) => {
+          content = content.replace(/href="([^"]+\.(css))"/g, (match, href) => {
+            if (href.startsWith('http') || href.startsWith('/')) return match
             const separator = href.includes('?') ? '&' : '?'
-            return `href="${href}${separator}v=${timestamp}"`
+            return `href="/garden/${pathString}/${href}${separator}v=${timestamp}"`
           })
         }
       }

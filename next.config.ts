@@ -6,8 +6,12 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/garden/:path*",
-        destination: "/api/garden/:path*"
+        source: "/garden/:project",
+        destination: "/api/garden/:project"
+      },
+      {
+        source: "/garden/:project/",
+        destination: "/api/garden/:project"
       }
     ]
   }
