@@ -45,8 +45,8 @@ export default async function handler(
       }
       contentType = contentTypes[ext || ''] || 'application/octet-stream'
     } else {
-      // Requesting a directory, serve index.html
-      filePath = join(publicGardenPath, 'index.html')
+      // Requesting a directory, serve page.html (not index.html to avoid Vercel static serving)
+      filePath = join(publicGardenPath, 'page.html')
     }
 
     try {
