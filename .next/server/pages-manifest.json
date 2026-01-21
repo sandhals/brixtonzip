@@ -3,7 +3,8 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
+  "/api/curius": "pages/api/curius.js",
   "/unzip": "pages/unzip.js",
   "/garden": "pages/garden.js",
-  "/api/curius": "pages/api/curius.js"
+  "/api/garden/[...path]": "pages/api/garden/[...path].js"
 }

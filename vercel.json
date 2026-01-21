@@ -1,6 +1,18 @@
 {
   "rewrites": [
     {
+      "source": "/garden/:path*.css",
+      "destination": "/garden/:path*.css"
+    },
+    {
+      "source": "/garden/:path*.js",
+      "destination": "/garden/:path*.js"
+    },
+    {
+      "source": "/garden/:path*.html",
+      "destination": "/garden/:path*.html"
+    },
+    {
       "source": "/garden/:path*",
       "destination": "/api/garden/:path*"
     }
