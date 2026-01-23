@@ -22,7 +22,7 @@ export default function GardenPage() {
                 <a href="/garden/hi">Sit With Me</a>
               </td>
               <td className="desc-cell">
-                A hyperminimal game written with only 787 characters. Come find me in the forest and sit with me. And finally, view the source!
+                A hyperminimal game coded with only 777 characters. Come find me in the forest and sit with me. View the source!
               </td>
             </tr>
             <tr>
