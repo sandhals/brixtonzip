@@ -19,6 +19,14 @@ export default function GardenPage() {
           <tbody>
             <tr>
               <td className="link-cell">
+                <a href="/garden/hi">Sit With Me</a>
+              </td>
+              <td className="desc-cell">
+                A hyperminimal game written with only 787 characters. Come find me in the forest and sit with me. And finally, view the source!
+              </td>
+            </tr>
+            <tr>
+              <td className="link-cell">
                 <a href="/garden/omikuji/index.html">Omikuji</a>
               </td>
               <td className="desc-cell">

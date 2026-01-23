@@ -1,0 +1,25 @@
+<html>
+<style>
+body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font:1.2em/1.5 'Menlo',monospace}
+</style>
+
+<pre id=g></pre>
+
+<script>
+R=Math.random,T='木木木木林林林森森樹',M='ｔｈａｎｋ　ｙｏｕ',G=[],W=40,H=20
+for(y=0;y<H;y++)for(G[y]=[],x=0;x<W;x++)G[y][x]=(y|x)%2||R()>.4?'　':T[R()*7|0]
+do hx=(R()*(W-M.length)/2|0)*2,hy=(1+(R()*(H-2)/2|0))*2;while(G[hy][hx]==='　')
+G[hy][hx]='介'
+do px=(R()*W/2|0)*2,py=(R()*H/2|0)*2;while(G[py][px]!=='　')
+draw=_=>{
+  for(s=px===hx&&py===hy,o='',y=0;y<H;y++,o+='\n')for(x=0;x<W;x++)
+    o+=s&&y===hy-1&&x>hx&&x<hx+M.length?M[x-hx-1]:x===px&&y===py?{木:'休',介:'众'}[G[y][x]]||'人':G[y][x]
+  g.textContent=o
+}
+onkeydown=e=>{
+  d={U:[0,-2],D:[0,2],L:[-2,0],R:[2,0]}[e.key[5]]
+  if(d&&'　木介'.includes(G[py+d[1]]?.[px+d[0]])){px+=d[0];py+=d[1];draw()}
+}
+draw()
+</script>
+</html>
