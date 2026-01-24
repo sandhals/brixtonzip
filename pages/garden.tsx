@@ -27,6 +27,14 @@ export default function GardenPage() {
             </tr>
             <tr>
               <td className="link-cell">
+                <a href="/garden/bookshot">Bookshot</a>
+              </td>
+              <td className="desc-cell">
+                Generate a phone-sized graphic of your monthly reading. Search books by ISBN, title or author, customize the message, and screenshot to upload!
+              </td>
+            </tr>
+            <tr>
+              <td className="link-cell">
                 <a href="/garden/omikuji/index.html">Omikuji</a>
               </td>
               <td className="desc-cell">

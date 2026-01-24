@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book Shelf</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f5f5f5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+}
+
+.container {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+h1 {
+  font-size: 1rem;
+  font-weight: 400;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.input-section {
+  background: white;
+  border: 1px solid black;
+  padding: 1rem;
+}
+
+.input-section label {
+  display: block;
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.input-section input,
+.input-section textarea {
+  width: 100%;
+  border: 1px solid black;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  margin-bottom: 0.75rem;
+}
+
+.input-section textarea {
+  resize: none;
+  height: 4rem;
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.color-pair {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.color-pair label {
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.color-pair input[type="color"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid black;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 2px;
+  background: none;
+}
+
+.color-pair input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-pair input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 1px;
+}
+
+.color-pair input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 1px;
+}
+
+.btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: black;
+  color: white;
+  border: none;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #333;
+}
+
+.btn-secondary {
+  background: white;
+  color: black;
+  border: 1px solid black;
+}
+
+.btn-secondary:hover {
+  background: #f0f0f0;
+}
+
+.phone-frame {
+  background: white;
+  border: 1px solid black;
+  aspect-ratio: 9/16;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.book-grid {
+  flex: 1;
+  display: grid;
+  gap: 0;
+  position: relative;
+  height: 100%;
+}
+
+.book-cell {
+  position: relative;
+  overflow: hidden;
+  border: 0.5px solid black;
+}
+
+.book-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  min-width: 100%;
+  min-height: 100%;
+}
+
+.message-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.message-overlay {
+  position: absolute;
+  padding: 0.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  word-break: break-word;
+  white-space: pre-wrap;
+  cursor: move;
+  user-select: none;
+  max-width: 80%;
+}
+
+.book-list-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.book-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex: 1;
+  min-height: 2rem;
+}
+
+.clear-all-btn {
+  background: none;
+  border: none;
+  font-size: 0.7rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  white-space: nowrap;
+}
+
+.clear-all-btn:hover {
+  color: red;
+}
+
+.upload-btn {
+  background: none;
+  border: none;
+  font-size: 0.7rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  margin-top: -0.5rem;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.upload-btn:hover {
+  color: black;
+}
+
+.book-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #f0f0f0;
+  border: 1px solid black;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.book-tag button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.book-cell.draggable {
+  cursor: grab;
+}
+
+.book-cell.dragging {
+  opacity: 0.5;
+}
+
+.book-cell.drag-over {
+  outline: 3px solid white;
+  outline-offset: -3px;
+}
+
+.message-cell.draggable {
+  cursor: grab;
+}
+
+.loading {
+  opacity: 0.5;
+}
+
+.error {
+  color: red;
+  font-size: 0.75rem;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.search-results {
+  position: relative;
+  background: white;
+  border: 1px solid black;
+  margin-top: -0.75rem;
+  margin-bottom: 0.75rem;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.search-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2px;
+  padding: 2px;
+}
+
+.search-cover {
+  aspect-ratio: 2/3;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.search-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.search-cover:hover {
+  opacity: 0.7;
+}
+
+.search-loading {
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  body {
+    padding: 2rem;
+  }
+
+  .container {
+    flex-direction: row;
+    max-width: 800px;
+    align-items: flex-start;
+  }
+
+  .input-section {
+    flex: 1;
+    position: sticky;
+    top: 2rem;
+  }
+
+  .phone-frame {
+    width: 300px;
+    flex-shrink: 0;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="input-section">
+    <h1>Book Shelf</h1>
+
+    <label for="search">Add a book</label>
+    <input type="text" id="search" placeholder="Title, author, or ISBN">
+    <div id="searchResults" class="search-results" style="display:none"></div>
+    <div id="error" class="error" style="display:none"></div>
+    <input type="file" id="uploadCover" accept="image/*" style="display:none">
+    <button class="upload-btn" onclick="document.getElementById('uploadCover').click()">or upload cover image</button>
+
+    <div class="book-list-header">
+      <div id="bookList" class="book-list"></div>
+      <button id="clearAllBtn" class="clear-all-btn" onclick="clearAll()" style="display:none">clear all</button>
+    </div>
+
+    <label for="message">Message</label>
+    <textarea id="message"></textarea>
+
+    <div class="color-row">
+      <div class="color-pair">
+        <label for="bgColor">Background</label>
+        <input type="color" id="bgColor" value="#000000">
+      </div>
+      <div class="color-pair">
+        <label for="textColor">Text</label>
+        <input type="color" id="textColor" value="#ffffff">
+      </div>
+    </div>
+
+    <button class="btn" onclick="generateShelf()">Generate</button>
+  </div>
+
+  <div class="phone-frame" id="phoneFrame">
+    <div class="book-grid" id="bookGrid"></div>
+  </div>
+</div>
+
+<script>
+const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December']
+
+// Load from localStorage
+let books = JSON.parse(localStorage.getItem('bookshot-books') || '[]')
+
+function saveBooks() {
+  localStorage.setItem('bookshot-books', JSON.stringify(books))
+}
+
+function clearAll() {
+  books = []
+  saveBooks()
+  renderBookList()
+  generateShelf()
+}
+
+document.getElementById('message').value = localStorage.getItem('bookshot-message') || `What I read in ${monthNames[new Date().getMonth()]}`
+document.getElementById('bgColor').value = localStorage.getItem('bookshot-bg') || '#000000'
+document.getElementById('textColor').value = localStorage.getItem('bookshot-text') || '#ffffff'
+
+// Overlay position (percentage-based)
+let overlayPos = JSON.parse(localStorage.getItem('bookshot-overlay-pos') || '{"x": 0, "y": 0}')
+
+// Handle cover image upload
+document.getElementById('uploadCover').addEventListener('change', (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+
+  const title = prompt('Enter the book title:') || 'Uploaded Book'
+
+  const reader = new FileReader()
+  reader.onload = (evt) => {
+    const dataUrl = evt.target.result
+    books.push({ title: title, cover: dataUrl })
+    saveBooks()
+    renderBookList()
+    generateShelf()
+  }
+  reader.readAsDataURL(file)
+  e.target.value = '' // Reset for next upload
+})
+
+document.getElementById('search').addEventListener('keydown', async (e) => {
+  if (e.key === 'Enter') {
+    const query = e.target.value.trim()
+    if (!query) return
+
+    const resultsEl = document.getElementById('searchResults')
+    const errorEl = document.getElementById('error')
+    errorEl.style.display = 'none'
+
+    // Check if it looks like an ISBN (10-13 digits, possibly with dashes)
+    const isbnClean = query.replace(/[-\s]/g, '')
+    const looksLikeIsbn = /^\d{10,13}$/.test(isbnClean)
+
+    if (looksLikeIsbn) {
+      // Direct ISBN lookup
+      if (books.find(b => b.isbn === isbnClean)) {
+        showError('ISBN already added')
+        return
+      }
+
+      resultsEl.style.display = 'block'
+      resultsEl.innerHTML = '<div class="search-loading">Looking up ISBN...</div>'
+
+      try {
+        const bookData = await fetchCover(isbnClean)
+        books.push(bookData)
+        saveBooks()
+        renderBookList()
+        generateShelf()
+        resultsEl.style.display = 'none'
+        e.target.value = ''
+      } catch (err) {
+        resultsEl.style.display = 'none'
+        showError('Could not find book cover for this ISBN')
+      }
+      return
+    }
+
+    // Title/author search
+    resultsEl.style.display = 'block'
+    resultsEl.innerHTML = '<div class="search-loading">Searching...</div>'
+
+    try {
+      // Search Google Books API (better English coverage) and Open Library
+      const [googleRes, olRes] = await Promise.all([
+        fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=20`),
+        fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=30&fields=title,author_name,cover_i`)
+      ])
+      const [googleData, olData] = await Promise.all([googleRes.json(), olRes.json()])
+
+      const seen = new Set()
+      const covers = []
+
+      // Add Google Books results - filter for actual book covers
+      for (const item of (googleData.items || [])) {
+        if (covers.length >= 16) break
+        const info = item.volumeInfo
+        const links = info?.imageLinks
+
+        // Skip items without proper book info or covers
+        if (!links?.thumbnail || !info?.title) continue
+
+        // Skip if it looks like a scan/preview (no proper thumbnail)
+        const img = links.thumbnail
+        let url = img.replace('http://', 'https://')
+        // Remove edge curl and use zoom=1 for cleaner covers
+        url = url.replace('&edge=curl', '').replace(/zoom=\d/, 'zoom=1')
+
+        if (!seen.has(info.title)) {
+          seen.add(info.title)
+          covers.push({
+            coverUrl: url,
+            title: info.title,
+            author: info.authors?.[0] || ''
+          })
+        }
+      }
+
+      // Add Open Library results - use L (large) size
+      for (const doc of (olData.docs || [])) {
+        if (covers.length >= 16) break
+        if (doc.cover_i && doc.title) {
+          const url = `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
+          if (!seen.has(doc.title)) {
+            seen.add(doc.title)
+            covers.push({
+              coverUrl: url,
+              title: doc.title,
+              author: doc.author_name?.[0] || ''
+            })
+          }
+        }
+      }
+
+      if (covers.length === 0) {
+        resultsEl.innerHTML = '<div class="search-loading">No covers found</div>'
+        return
+      }
+
+      resultsEl.innerHTML = `<div class="search-grid">${covers.map(c => `
+        <div class="search-cover" data-cover-url="${c.coverUrl}" data-title="${c.title.replace(/"/g, '&quot;')}">
+          <img src="${c.coverUrl}" alt="${c.title.replace(/"/g, '&quot;')}">
+        </div>
+      `).join('')}</div>`
+
+      resultsEl.querySelectorAll('.search-cover').forEach(el => {
+        el.addEventListener('click', () => {
+          const coverUrl = el.dataset.coverUrl
+          const title = el.dataset.title
+
+          if (!books.find(b => b.cover === coverUrl)) {
+            books.push({ title: title, cover: coverUrl })
+            saveBooks()
+            renderBookList()
+            generateShelf()
+          }
+
+          resultsEl.style.display = 'none'
+          document.getElementById('search').value = ''
+        })
+      })
+    } catch (err) {
+      resultsEl.innerHTML = '<div class="search-loading">Search failed</div>'
+    }
+  }
+})
+
+async function fetchCover(isbn) {
+  // Try to get book info from Open Library
+  try {
+    const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`)
+    const data = await res.json()
+    const bookData = data[`ISBN:${isbn}`]
+
+    if (bookData && bookData.cover) {
+      return {
+        title: bookData.title || isbn,
+        cover: bookData.cover.large || bookData.cover.medium || bookData.cover.small
+      }
+    }
+  } catch (e) {}
+
+  // Fallback to just the cover image
+  const url = `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg?default=false`
+
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      if (img.width < 10) reject()
+      else resolve({ title: isbn, cover: url })
+    }
+    img.onerror = () => reject()
+    img.src = url
+  })
+}
+
+function showError(msg) {
+  const el = document.getElementById('error')
+  el.textContent = msg
+  el.style.display = 'block'
+}
+
+function renderBookList() {
+  const list = document.getElementById('bookList')
+  const clearBtn = document.getElementById('clearAllBtn')
+  list.innerHTML = books.map((b, i) => `
+    <div class="book-tag">
+      <span>${b.title || b.isbn || 'Untitled'}</span>
+      <button onclick="removeBook(${i})">&times;</button>
+    </div>
+  `).join('')
+  clearBtn.style.display = books.length > 0 ? 'block' : 'none'
+}
+
+function removeBook(index) {
+  books.splice(index, 1)
+  saveBooks()
+  renderBookList()
+  generateShelf()
+}
+
+function generateShelf() {
+  const grid = document.getElementById('bookGrid')
+  const message = document.getElementById('message').value
+  const bgColor = document.getElementById('bgColor').value
+  const textColor = document.getElementById('textColor').value
+  const count = books.length
+
+  // Save preferences
+  localStorage.setItem('bookshot-message', message)
+  localStorage.setItem('bookshot-bg', bgColor)
+  localStorage.setItem('bookshot-text', textColor)
+
+  // Layouts: [cols, rows, messagePosition, messageColSpan]
+  // msgPos -1 = overlay on first book (top left), otherwise = cell index for text block
+  // messageColSpan is optional, defaults to 1
+  const layouts = {
+    0: [1, 1, 0],           // just message
+    1: [1, 1, -1],          // full screen, overlay top left
+    2: [2, 1, -1],          // side by side, overlay top left
+    3: [2, 2, 3],           // 2x2, text in bottom right cell
+    4: [2, 2, -1],          // 2x2, overlay top left
+    5: [2, 3, 5],           // 2x3, text in bottom right cell
+    6: [2, 3, -1],          // 2x3, overlay top left
+    7: [3, 3, 7, 2],        // 3x3, text spans 2 cols in bottom row
+    8: [3, 3, 8],           // 3x3, text in bottom right cell
+    9: [3, 3, -1],          // 3x3, overlay top left
+    10: [3, 4, 10, 2],      // 3x4, text spans 2 cols in bottom row
+    11: [3, 4, 11],         // 3x4, text in bottom right
+    12: [3, 4, -1],         // 3x4, overlay
+    13: [4, 4, 13, 3],         // 4x4, text in bottom right
+    14: [4, 4, 14, 2],         // 4x4, text in bottom right
+    15: [4, 4, 15],         // 4x4, text in bottom right
+    16: [4, 4, -1],         // 4x4, overlay top left
+    17: [4, 5, 17, 3],         // 3x6, text in bottom right
+    18: [4, 5, 18, 2],         // 3x6, overlay top left
+    19: [4, 5, 19],         // 4x5, text in bottom right
+    20: [4, 5, -1],         // 4x5, overlay top left
+    21: [5, 5, 21, 4],
+    22: [5, 5, 22, 3],
+    23: [5, 5, 23, 2],
+    24: [5, 5, 24],
+    25: [5, 5, -1],
+    26: [5, 6, 26, 4],
+    27: [5, 6, 27, 3],
+    28: [5, 6, 28, 2],
+    29: [5, 6, 29],
+    30: [5, 6, -1],
+    31: [6, 6, 31, 5],
+    32: [6, 6, 32, 4],
+    33: [6, 6, 33, 3],
+    34: [6, 6, 34, 2],
+    35: [6, 6, 35],
+    36: [6, 6, 36 -1],
+    37: [6, 7, 37, 5],
+
+  }
+
+  let cols, rows, msgPos, msgColSpan = 1
+
+  if (layouts[count]) {
+    [cols, rows, msgPos, msgColSpan] = layouts[count]
+    msgColSpan = msgColSpan || 1
+  } else {
+    // For larger counts, find best grid that fits count or count+1
+    for (let c = 3; c <= 5; c++) {
+      const r = Math.ceil(count / c)
+      if (c * r === count) {
+        cols = c; rows = r; msgPos = -1
+        break
+      }
+      const r2 = Math.ceil((count + 1) / c)
+      if (c * r2 === count + 1) {
+        cols = c; rows = r2; msgPos = c * r2 - 1
+        break
+      }
+    }
+    if (!cols) {
+      cols = 4
+      rows = Math.ceil((count + 1) / cols)
+      msgPos = cols * rows - 1
+    }
+  }
+
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`
+  grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`
+
+  let html = ''
+  const totalCells = cols * rows
+
+  if (count === 0) {
+    html = `<div class="book-cell message-cell" style="background:${bgColor};color:${textColor}">${message}</div>`
+  } else if (msgPos === -1) {
+    // Overlay mode - draggable message overlay on the grid
+    for (let i = 0; i < count; i++) {
+      html += `<div class="book-cell draggable" data-book-index="${i}"><img src="${books[i].cover}" alt="Book cover"></div>`
+    }
+    // Add overlay as a separate element on the grid
+    html += `<div class="message-overlay" id="dragOverlay" style="background:${bgColor};color:${textColor};left:${overlayPos.x}%;top:${overlayPos.y}%">${message}</div>`
+  } else {
+    // Message in dedicated cell
+    // For spanning messages, valid positions are those that don't overflow the row
+    // e.g. for 3 cols with span 2: valid = 0,1,3,4,6,7 (not 2,5,8 which are last col)
+    let actualMsgPos = parseInt(localStorage.getItem('bookshot-msg-pos-' + count))
+    if (isNaN(actualMsgPos)) actualMsgPos = msgPos
+
+    // Validate position for spanning messages
+    if (msgColSpan > 1) {
+      const colIndex = actualMsgPos % cols
+      // If message would overflow row, reset to default
+      if (colIndex + msgColSpan > cols) {
+        actualMsgPos = msgPos
+      }
+    }
+    if (actualMsgPos >= totalCells) actualMsgPos = msgPos
+
+    // Generate grid using CSS grid placement for spanning cells
+    // First, place all book cells
+    let bookIdx = 0
+    const bookPositions = []
+
+    for (let i = 0; i < totalCells; i++) {
+      // Skip positions occupied by the spanning message
+      const msgEndPos = actualMsgPos + msgColSpan
+      if (i >= actualMsgPos && i < msgEndPos) continue
+      if (bookIdx < count) {
+        bookPositions.push({ pos: i, idx: bookIdx })
+        bookIdx++
+      }
+    }
+
+    // Generate HTML - use explicit grid-column/grid-row positioning
+    bookPositions.forEach(({ pos, idx }) => {
+      const row = Math.floor(pos / cols) + 1
+      const col = (pos % cols) + 1
+      html += `<div class="book-cell draggable" data-book-index="${idx}" data-cell-index="${pos}" style="grid-column:${col};grid-row:${row}"><img src="${books[idx].cover}" alt="Book cover"></div>`
+    })
+
+    // Add message cell with explicit positioning
+    const msgRow = Math.floor(actualMsgPos / cols) + 1
+    const msgCol = (actualMsgPos % cols) + 1
+    const spanStyle = msgColSpan > 1 ? `grid-column:${msgCol}/span ${msgColSpan};` : `grid-column:${msgCol};`
+    html += `<div class="book-cell message-cell draggable" data-cell-index="${actualMsgPos}" data-msg-span="${msgColSpan}" style="${spanStyle}grid-row:${msgRow};background:${bgColor};color:${textColor}">${message}</div>`
+  }
+
+  grid.innerHTML = html
+  setupGridDragDrop()
+}
+
+let dragFromCell = null
+let dragFromIsMessage = false
+let dragFromSpan = 1
+let currentCols = 3
+
+function setupGridDragDrop() {
+  const grid = document.getElementById('bookGrid')
+  const cells = grid.querySelectorAll('.book-cell.draggable')
+
+  // Get current grid columns from style
+  const colsMatch = grid.style.gridTemplateColumns.match(/repeat\((\d+)/)
+  currentCols = colsMatch ? parseInt(colsMatch[1]) : 3
+
+  cells.forEach(cell => {
+    cell.addEventListener('mousedown', (e) => {
+      if (e.target.id === 'dragOverlay' || e.target.closest('#dragOverlay')) return
+      dragFromCell = parseInt(cell.dataset.cellIndex)
+      dragFromIsMessage = cell.classList.contains('message-cell')
+      dragFromSpan = parseInt(cell.dataset.msgSpan) || 1
+      cell.classList.add('dragging')
+      e.preventDefault()
+    })
+
+    cell.addEventListener('mouseenter', () => {
+      if (dragFromCell !== null) {
+        const toCell = parseInt(cell.dataset.cellIndex)
+        if (toCell !== dragFromCell) {
+          const toIsMessage = cell.classList.contains('message-cell')
+
+          // When dragging message to a book, validate the target position
+          if (dragFromIsMessage && dragFromSpan > 1) {
+            const newCol = toCell % currentCols
+            if (newCol + dragFromSpan <= currentCols) {
+              cell.classList.add('drag-over')
+            }
+          } else {
+            // Dragging book to message or book to book - always valid
+            cell.classList.add('drag-over')
+          }
+        }
+      }
+    })
+
+    cell.addEventListener('mouseleave', () => {
+      cell.classList.remove('drag-over')
+    })
+
+    cell.addEventListener('mouseup', () => {
+      if (dragFromCell !== null) {
+        const toCell = parseInt(cell.dataset.cellIndex)
+        const toIsMessage = cell.classList.contains('message-cell')
+
+        if (toCell !== dragFromCell) {
+          if (dragFromIsMessage || toIsMessage) {
+            // Get the message span and current position
+            const msgSpan = dragFromIsMessage ? dragFromSpan : (parseInt(cell.dataset.msgSpan) || 1)
+            const currentMsgPos = dragFromIsMessage ? dragFromCell : toCell
+
+            // Calculate new message position
+            let newMsgPos
+            if (dragFromIsMessage) {
+              // Dragging message to a book position
+              newMsgPos = toCell
+            } else {
+              // Dragging book onto message - book wants to take message's spot
+              // Message should shift to accommodate, staying in same row if possible
+              const bookPos = dragFromCell
+              const bookRow = Math.floor(bookPos / currentCols)
+              const msgRow = Math.floor(currentMsgPos / currentCols)
+
+              if (bookRow === msgRow) {
+                // Same row - message shifts to book's position
+                newMsgPos = bookPos
+              } else {
+                // Different row - message shifts within its row based on direction
+                const bookCol = bookPos % currentCols
+                const msgCol = currentMsgPos % currentCols
+                if (bookCol < msgCol || bookRow < msgRow) {
+                  // Book is to the left or above - shift message right in its row
+                  newMsgPos = msgRow * currentCols + 1
+                } else {
+                  // Book is to the right or below - shift message left in its row
+                  newMsgPos = msgRow * currentCols
+                }
+              }
+            }
+
+            // Validate position for spanning messages
+            const newCol = newMsgPos % currentCols
+            if (msgSpan > 1 && newCol + msgSpan > currentCols) {
+              // Would overflow - try shifting left within the row
+              const row = Math.floor(newMsgPos / currentCols)
+              newMsgPos = row * currentCols + (currentCols - msgSpan)
+            }
+
+            localStorage.setItem('bookshot-msg-pos-' + books.length, newMsgPos)
+            generateShelf()
+          } else {
+            // Swapping two books
+            const fromBookIdx = parseInt(document.querySelector(`[data-cell-index="${dragFromCell}"]`).dataset.bookIndex)
+            const toBookIdx = parseInt(cell.dataset.bookIndex)
+            const [moved] = books.splice(fromBookIdx, 1)
+            books.splice(toBookIdx, 0, moved)
+            saveBooks()
+            renderBookList()
+            generateShelf()
+          }
+        }
+      }
+    })
+  })
+}
+
+document.addEventListener('mouseup', () => {
+  if (dragFromCell !== null) {
+    document.querySelectorAll('.book-cell').forEach(c => c.classList.remove('dragging', 'drag-over'))
+    dragFromCell = null
+    dragFromIsMessage = false
+    dragFromSpan = 1
+  }
+})
+
+renderBookList()
+generateShelf()
+
+// Drag functionality for overlay
+let isDragging = false
+let dragStartX, dragStartY, startLeft, startTop
+
+document.getElementById('bookGrid').addEventListener('mousedown', (e) => {
+  if (e.target.id === 'dragOverlay' || e.target.closest('#dragOverlay')) {
+    isDragging = true
+    const overlay = document.getElementById('dragOverlay')
+    const grid = document.getElementById('bookGrid')
+    const gridRect = grid.getBoundingClientRect()
+
+    dragStartX = e.clientX
+    dragStartY = e.clientY
+    startLeft = (parseFloat(overlay.style.left) / 100) * gridRect.width
+    startTop = (parseFloat(overlay.style.top) / 100) * gridRect.height
+
+    e.preventDefault()
+  }
+})
+
+document.addEventListener('mousemove', (e) => {
+  if (!isDragging) return
+
+  const overlay = document.getElementById('dragOverlay')
+  const grid = document.getElementById('bookGrid')
+  const gridRect = grid.getBoundingClientRect()
+
+  let newLeft = startLeft + (e.clientX - dragStartX)
+  let newTop = startTop + (e.clientY - dragStartY)
+
+  // Clamp to grid bounds
+  const overlayRect = overlay.getBoundingClientRect()
+  newLeft = Math.max(0, Math.min(newLeft, gridRect.width - overlayRect.width))
+  newTop = Math.max(0, Math.min(newTop, gridRect.height - overlayRect.height))
+
+  // Convert to percentage
+  overlayPos.x = (newLeft / gridRect.width) * 100
+  overlayPos.y = (newTop / gridRect.height) * 100
+
+  overlay.style.left = overlayPos.x + '%'
+  overlay.style.top = overlayPos.y + '%'
+})
+
+document.addEventListener('mouseup', () => {
+  if (isDragging) {
+    isDragging = false
+    localStorage.setItem('bookshot-overlay-pos', JSON.stringify(overlayPos))
+  }
+})
+
+// Touch support for mobile
+document.getElementById('bookGrid').addEventListener('touchstart', (e) => {
+  if (e.target.id === 'dragOverlay' || e.target.closest('#dragOverlay')) {
+    isDragging = true
+    const overlay = document.getElementById('dragOverlay')
+    const grid = document.getElementById('bookGrid')
+    const gridRect = grid.getBoundingClientRect()
+    const touch = e.touches[0]
+
+    dragStartX = touch.clientX
+    dragStartY = touch.clientY
+    startLeft = (parseFloat(overlay.style.left) / 100) * gridRect.width
+    startTop = (parseFloat(overlay.style.top) / 100) * gridRect.height
+
+    e.preventDefault()
+  }
+}, { passive: false })
+
+document.addEventListener('touchmove', (e) => {
+  if (!isDragging) return
+
+  const overlay = document.getElementById('dragOverlay')
+  const grid = document.getElementById('bookGrid')
+  const gridRect = grid.getBoundingClientRect()
+  const touch = e.touches[0]
+
+  let newLeft = startLeft + (touch.clientX - dragStartX)
+  let newTop = startTop + (touch.clientY - dragStartY)
+
+  const overlayRect = overlay.getBoundingClientRect()
+  newLeft = Math.max(0, Math.min(newLeft, gridRect.width - overlayRect.width))
+  newTop = Math.max(0, Math.min(newTop, gridRect.height - overlayRect.height))
+
+  overlayPos.x = (newLeft / gridRect.width) * 100
+  overlayPos.y = (newTop / gridRect.height) * 100
+
+  overlay.style.left = overlayPos.x + '%'
+  overlay.style.top = overlayPos.y + '%'
+}, { passive: false })
+
+document.addEventListener('touchend', () => {
+  if (isDragging) {
+    isDragging = false
+    localStorage.setItem('bookshot-overlay-pos', JSON.stringify(overlayPos))
+  }
+})
+</script>
+
+</body>
+</html>
