@@ -53,7 +53,7 @@ h1 {
   width: 100%;
   border: 1px solid black;
   padding: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 16px; /* Prevents iOS zoom on focus */
   font-family: inherit;
   margin-bottom: 0.75rem;
 }
@@ -160,6 +160,10 @@ h1 {
   position: relative;
   overflow: hidden;
   border: 0.5px solid black;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
 }
 
 .book-cell img {
@@ -1697,6 +1701,73 @@ function setupGridDragDrop() {
       dragState.mouseDownPos = null
       dragState.holdTriggered = false
     })
+
+    // Touch start - same logic as mouse down
+    cell.addEventListener('touchstart', (e) => {
+      if (e.target.id === 'dragOverlay' || e.target.closest('#dragOverlay')) return
+
+      const touch = e.touches[0]
+      const bookIndex = cell.dataset.bookIndex !== undefined ? parseInt(cell.dataset.bookIndex) : null
+
+      // If in position edit mode for a different cell, exit it
+      if (positionEditor.active && positionEditor.cell !== cell) {
+        exitPositionEditor()
+      }
+
+      // Store initial state for tap/drag/hold detection
+      dragState.mouseDownPos = { x: touch.clientX, y: touch.clientY }
+      dragState.fromIndex = visualIndex
+      dragState.fromCellIndex = parseInt(cell.dataset.cellIndex) || 0
+      dragState.fromSpan = parseInt(cell.dataset.msgSpan) || 1
+      dragState.isFromMessage = cell.classList.contains('message-cell')
+      dragState.cells = allCells
+      dragState.gridRect = grid.getBoundingClientRect()
+      dragState.isDragging = false
+      dragState.holdTriggered = false
+
+      // If in position edit mode for THIS cell, prepare for position drag
+      if (positionEditor.active && positionEditor.cell === cell) {
+        e.preventDefault()
+        return
+      }
+
+      // Start hold timer - if held for 300ms without moving, start rearrange mode
+      dragState.holdTimer = setTimeout(() => {
+        if (dragState.mouseDownPos && !dragState.isDragging) {
+          dragState.holdTriggered = true
+          // Create a fake event with touch coordinates for startDrag
+          startDrag({ clientX: touch.clientX, clientY: touch.clientY })
+        }
+      }, 300)
+
+      e.preventDefault()
+    }, { passive: false })
+
+    // Touch end - same logic as mouse up
+    cell.addEventListener('touchend', (e) => {
+      // Clear hold timer
+      if (dragState.holdTimer) {
+        clearTimeout(dragState.holdTimer)
+        dragState.holdTimer = null
+      }
+
+      const bookIndex = cell.dataset.bookIndex !== undefined ? parseInt(cell.dataset.bookIndex) : null
+
+      if (dragState.isDragging) {
+        commitDrag()
+      } else if (positionEditor.active && positionEditor.cell === cell) {
+        if (positionEditor.startMousePos !== null) {
+          positionEditor.startMousePos = null
+          saveBooks()
+        } else if (dragState.mouseDownPos) {
+          exitPositionEditor()
+        }
+      } else if (dragState.mouseDownPos && !dragState.holdTriggered && !cell.classList.contains('message-cell') && bookIndex !== null) {
+        enterPositionEditor(cell, bookIndex)
+      }
+      dragState.mouseDownPos = null
+      dragState.holdTriggered = false
+    })
   })
 }
 
@@ -1865,6 +1936,15 @@ document.addEventListener('mousemove', (e) => {
   }
 })
 
+// Global touch move - same logic as mouse move
+document.addEventListener('touchmove', (e) => {
+  if (dragState.mouseDownPos || dragState.isDragging || positionEditor.active) {
+    const touch = e.touches[0]
+    handleDragMove({ clientX: touch.clientX, clientY: touch.clientY })
+    e.preventDefault()
+  }
+}, { passive: false })
+
 // Global mouse up
 document.addEventListener('mouseup', (e) => {
   // Clear hold timer
@@ -1890,8 +1970,42 @@ document.addEventListener('mouseup', (e) => {
   dragState.holdTriggered = false
 })
 
+// Global touch end - same logic as mouse up
+document.addEventListener('touchend', (e) => {
+  // Clear hold timer
+  if (dragState.holdTimer) {
+    clearTimeout(dragState.holdTimer)
+    dragState.holdTimer = null
+  }
+
+  // Handle position editor
+  if (positionEditor.active && positionEditor.startMousePos !== null) {
+    positionEditor.startMousePos = null
+    saveBooks()
+  }
+
+  // Handle drag reorder
+  if (dragState.isDragging) {
+    commitDrag()
+  }
+
+  // Clear mousedown state
+  dragState.mouseDownPos = null
+  dragState.holdTriggered = false
+})
+
 // Click outside to exit position editor
 document.addEventListener('mousedown', (e) => {
+  if (positionEditor.active) {
+    const cell = positionEditor.cell
+    if (cell && !cell.contains(e.target)) {
+      exitPositionEditor()
+    }
+  }
+})
+
+// Touch outside to exit position editor
+document.addEventListener('touchstart', (e) => {
   if (positionEditor.active) {
     const cell = positionEditor.cell
     if (cell && !cell.contains(e.target)) {
