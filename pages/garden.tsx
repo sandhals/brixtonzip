@@ -19,18 +19,18 @@ export default function GardenPage() {
           <tbody>
             <tr>
               <td className="link-cell">
-                <a href="/garden/hi">Sit With Me</a>
-              </td>
-              <td className="desc-cell">
-                A hyperminimal game coded with only 777 characters. Come find me in the forest and sit with me. View the source!
-              </td>
-            </tr>
-            <tr>
-              <td className="link-cell">
                 <a href="/garden/bookshot">Bookshot</a>
               </td>
               <td className="desc-cell">
                 Generate a phone-sized graphic of your monthly reading. Search books by ISBN, title or author, customize the message, and screenshot to upload!
+              </td>
+            </tr>
+            <tr>
+              <td className="link-cell">
+                <a href="/garden/hi">Sit With Me</a>
+              </td>
+              <td className="desc-cell">
+                A hyperminimal game coded with only 777 characters. Come find me in the forest and sit with me. View the source!
               </td>
             </tr>
             <tr>

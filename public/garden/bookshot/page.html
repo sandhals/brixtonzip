@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Book Shelf</title>
+<title>Bookshot</title>
 <style>
 * {
   margin: 0;
@@ -79,19 +79,24 @@ h1 {
 .color-pair label {
   font-size: 0.75rem;
   margin: 0;
+  order: 2;
+  line-height: 1;
 }
 
 .color-pair input[type="color"] {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: 1px solid black;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid #ccc;
   padding: 0;
+  margin: 0;
   cursor: pointer;
-  border-radius: 2px;
+  border-radius: 50%;
   background: none;
+  order: 1;
+  vertical-align: middle;
 }
 
 .color-pair input[type="color"]::-webkit-color-swatch-wrapper {
@@ -100,12 +105,12 @@ h1 {
 
 .color-pair input[type="color"]::-webkit-color-swatch {
   border: none;
-  border-radius: 1px;
+  border-radius: 50%;
 }
 
 .color-pair input[type="color"]::-moz-color-swatch {
   border: none;
-  border-radius: 1px;
+  border-radius: 50%;
 }
 
 .btn {
@@ -254,21 +259,104 @@ h1 {
   line-height: 1;
 }
 
+/* Ghost image that follows cursor during drag */
+.drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.9;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  border-radius: 3px;
+}
+
+.drag-ghost img {
+  display: block;
+  width: 100px;
+  height: 150px;
+  object-fit: cover;
+}
+
+/* Grabbing cursor when dragging */
 .book-cell.draggable {
   cursor: grab;
 }
 
-.book-cell.dragging {
-  opacity: 0.5;
+body.is-dragging,
+body.is-dragging .book-cell.draggable {
+  cursor: grabbing !important;
 }
 
-.book-cell.drag-over {
-  outline: 3px solid white;
-  outline-offset: -3px;
+/* Empty slot where we grabbed from / where book will drop */
+.book-cell.empty-slot {
+  background: rgba(0,0,0,0.15);
+  position: relative;
 }
 
-.message-cell.draggable {
-  cursor: grab;
+.book-cell.empty-slot::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 2px dashed rgba(255,255,255,0.3);
+  border-radius: 2px;
+}
+
+.book-cell.empty-slot img {
+  visibility: hidden;
+}
+
+
+/* Hover indicator before shuffle triggers */
+.book-cell.drag-hover {
+  outline: 2px solid rgba(255,255,255,0.5);
+  outline-offset: -2px;
+}
+
+.book-cell.drag-target {
+  outline: 2px solid rgba(255,255,255,0.8);
+  outline-offset: -2px;
+}
+
+/* Flex mode for drag reordering */
+.book-grid.drag-reordering {
+  display: flex !important;
+  flex-wrap: wrap;
+}
+
+.book-grid.drag-reordering .book-cell {
+  flex: none;
+}
+
+/* Position editor mode */
+.book-cell.editing-position {
+  outline: 2px solid white;
+  outline-offset: -2px;
+}
+
+.book-cell.editing-vertical {
+  cursor: ns-resize;
+}
+
+.book-cell.editing-horizontal {
+  cursor: ew-resize;
+}
+
+.book-cell.editing-position img {
+  pointer-events: none;
+}
+
+.position-hint {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7);
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 .loading {
@@ -288,13 +376,13 @@ h1 {
   border: 1px solid black;
   margin-top: -0.75rem;
   margin-bottom: 0.75rem;
-  max-height: 250px;
+  max-height: 500px;
   overflow-y: auto;
 }
 
 .search-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 2px;
   padding: 2px;
 }
@@ -319,6 +407,43 @@ h1 {
   padding: 1rem;
   text-align: center;
   font-size: 0.75rem;
+}
+
+/* Fullscreen mode for mobile screenshot */
+body.fullscreen-mode {
+  padding: 0;
+  background: black;
+}
+
+body.fullscreen-mode .container {
+  max-width: none;
+  width: 100vw;
+  height: 100vh;
+  gap: 0;
+}
+
+body.fullscreen-mode .input-section {
+  display: none;
+}
+
+body.fullscreen-mode .phone-frame {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  border: none;
+}
+
+body.fullscreen-mode .book-grid {
+  pointer-events: none;
+}
+
+body.fullscreen-mode .fullscreen-tap-target {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
 }
 
 @media (min-width: 768px) {
@@ -349,7 +474,7 @@ h1 {
 
 <div class="container">
   <div class="input-section">
-    <h1>Book Shelf</h1>
+    <h1>Bookshot</h1>
 
     <label for="search">Add a book</label>
     <input type="text" id="search" placeholder="Title, author, or ISBN">
@@ -378,6 +503,7 @@ h1 {
     </div>
 
     <button class="btn" onclick="generateShelf()">Generate</button>
+    <button class="btn btn-secondary" id="saveBtn" onclick="saveBookshot()" style="margin-top: 0.5rem">Save your bookshot</button>
   </div>
 
   <div class="phone-frame" id="phoneFrame">
@@ -388,6 +514,60 @@ h1 {
 <script>
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                     'July', 'August', 'September', 'October', 'November', 'December']
+
+// Detect mobile
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768
+
+// Update button text based on device
+const saveBtn = document.getElementById('saveBtn')
+if (isMobile) {
+  saveBtn.textContent = 'Take a bookshot'
+}
+
+// Save/screenshot functionality
+function saveBookshot() {
+  if (isMobile) {
+    // Mobile: Enter fullscreen mode for screenshot
+    document.body.classList.add('fullscreen-mode')
+
+    // Create tap target to exit fullscreen
+    const tapTarget = document.createElement('div')
+    tapTarget.className = 'fullscreen-tap-target'
+    tapTarget.addEventListener('click', () => {
+      document.body.classList.remove('fullscreen-mode')
+      tapTarget.remove()
+    })
+    document.body.appendChild(tapTarget)
+  } else {
+    // Desktop: Save as image using html2canvas
+    const frame = document.getElementById('phoneFrame')
+
+    // Dynamically load html2canvas if not already loaded
+    if (typeof html2canvas === 'undefined') {
+      const script = document.createElement('script')
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+      script.onload = () => captureAndDownload(frame)
+      document.head.appendChild(script)
+    } else {
+      captureAndDownload(frame)
+    }
+  }
+}
+
+function captureAndDownload(element) {
+  html2canvas(element, {
+    useCORS: true,
+    allowTaint: true,
+    scale: 2
+  }).then(canvas => {
+    const link = document.createElement('a')
+    link.download = 'bookshot.png'
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+  }).catch(err => {
+    alert('Could not save image. Some book covers may block saving due to cross-origin restrictions. Try uploading covers manually.')
+  })
+}
 
 // Load from localStorage
 let books = JSON.parse(localStorage.getItem('bookshot-books') || '[]')
@@ -467,89 +647,295 @@ document.getElementById('search').addEventListener('keydown', async (e) => {
       return
     }
 
-    // Title/author search
+    // Title/author search - Google Books primary
     resultsEl.style.display = 'block'
     resultsEl.innerHTML = '<div class="search-loading">Searching...</div>'
 
     try {
-      // Search Google Books API (better English coverage) and Open Library
-      const [googleRes, olRes] = await Promise.all([
-        fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=20`),
-        fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=30&fields=title,author_name,cover_i`)
-      ])
-      const [googleData, olData] = await Promise.all([googleRes.json(), olRes.json()])
+      // Parse query to separate title and author
+      const queryLower = query.toLowerCase()
+      let titleQuery = query
+      let authorQuery = ''
 
-      const seen = new Set()
-      const covers = []
-
-      // Add Google Books results - filter for actual book covers
-      for (const item of (googleData.items || [])) {
-        if (covers.length >= 16) break
-        const info = item.volumeInfo
-        const links = info?.imageLinks
-
-        // Skip items without proper book info or covers
-        if (!links?.thumbnail || !info?.title) continue
-
-        // Skip if it looks like a scan/preview (no proper thumbnail)
-        const img = links.thumbnail
-        let url = img.replace('http://', 'https://')
-        // Remove edge curl and use zoom=1 for cleaner covers
-        url = url.replace('&edge=curl', '').replace(/zoom=\d/, 'zoom=1')
-
-        if (!seen.has(info.title)) {
-          seen.add(info.title)
-          covers.push({
-            coverUrl: url,
-            title: info.title,
-            author: info.authors?.[0] || ''
-          })
-        }
-      }
-
-      // Add Open Library results - use L (large) size
-      for (const doc of (olData.docs || [])) {
-        if (covers.length >= 16) break
-        if (doc.cover_i && doc.title) {
-          const url = `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
-          if (!seen.has(doc.title)) {
-            seen.add(doc.title)
-            covers.push({
-              coverUrl: url,
-              title: doc.title,
-              author: doc.author_name?.[0] || ''
-            })
+      // Check for "by" separator
+      const byIndex = queryLower.indexOf(' by ')
+      if (byIndex > 0) {
+        titleQuery = query.slice(0, byIndex).trim()
+        authorQuery = query.slice(byIndex + 4).trim()
+      } else {
+        // Try to detect author name (last word if it looks like a name)
+        const words = query.trim().split(/\s+/)
+        if (words.length >= 2) {
+          const lastWord = words[words.length - 1]
+          // Only treat as author if it's capitalized or a common surname pattern
+          if (lastWord[0] === lastWord[0].toUpperCase() && lastWord.length > 2) {
+            authorQuery = lastWord
+            titleQuery = words.slice(0, -1).join(' ')
           }
         }
       }
 
-      if (covers.length === 0) {
-        resultsEl.innerHTML = '<div class="search-loading">No covers found</div>'
-        return
-      }
+      const seenUrls = new Set()
+      let gridEl = null
 
-      resultsEl.innerHTML = `<div class="search-grid">${covers.map(c => `
-        <div class="search-cover" data-cover-url="${c.coverUrl}" data-title="${c.title.replace(/"/g, '&quot;')}">
-          <img src="${c.coverUrl}" alt="${c.title.replace(/"/g, '&quot;')}">
-        </div>
-      `).join('')}</div>`
+      // Helper to create a cover element with click handler
+      function createCoverEl(c) {
+        const div = document.createElement('div')
+        div.className = 'search-cover'
+        div.dataset.coverUrl = c.coverUrl
+        div.dataset.title = c.title
+        div.dataset.author = c.author || ''
 
-      resultsEl.querySelectorAll('.search-cover').forEach(el => {
-        el.addEventListener('click', () => {
-          const coverUrl = el.dataset.coverUrl
-          const title = el.dataset.title
+        const img = document.createElement('img')
+        img.src = c.coverUrl
+        img.alt = c.title
+        img.loading = 'lazy'
+        img.onerror = () => div.style.display = 'none'
+        img.onload = function() {
+          const w = this.naturalWidth
+          const h = this.naturalHeight
+          const r = w / h
 
-          if (!books.find(b => b.cover === coverUrl)) {
-            books.push({ title: title, cover: coverUrl })
+          // Basic size/ratio filter
+          if (w < 100 || h < 100 || r > 0.9 || r < 0.4) {
+            div.style.display = 'none'
+            return
+          }
+
+          // Check for Google's gray "image not available" placeholder
+          // by sampling the image colors using canvas
+          try {
+            const canvas = document.createElement('canvas')
+            const ctx = canvas.getContext('2d')
+            canvas.width = w
+            canvas.height = h
+            ctx.drawImage(this, 0, 0)
+
+            // Sample a few pixels from the center
+            const centerX = Math.floor(w / 2)
+            const centerY = Math.floor(h / 2)
+            const pixel = ctx.getImageData(centerX, centerY, 1, 1).data
+
+            // Google's placeholder is gray (#E8E8E8 or similar)
+            // Check if RGB values are all close together (gray) and in the light gray range
+            const isGray = Math.abs(pixel[0] - pixel[1]) < 10 &&
+                           Math.abs(pixel[1] - pixel[2]) < 10 &&
+                           pixel[0] > 180 && pixel[0] < 250
+
+            if (isGray) {
+              // Sample more pixels to confirm it's a solid placeholder
+              const samples = [
+                ctx.getImageData(w * 0.25, h * 0.25, 1, 1).data,
+                ctx.getImageData(w * 0.75, h * 0.25, 1, 1).data,
+                ctx.getImageData(w * 0.25, h * 0.75, 1, 1).data,
+                ctx.getImageData(w * 0.75, h * 0.75, 1, 1).data
+              ]
+
+              // If all samples are similar gray, it's a placeholder
+              const allGray = samples.every(p =>
+                Math.abs(p[0] - pixel[0]) < 20 &&
+                Math.abs(p[1] - pixel[1]) < 20 &&
+                Math.abs(p[2] - pixel[2]) < 20
+              )
+
+              if (allGray) {
+                div.style.display = 'none'
+              }
+            }
+          } catch (e) {
+            // Canvas operations may fail due to CORS - keep the image
+          }
+        }
+
+        div.appendChild(img)
+        div.addEventListener('click', () => {
+          if (!books.find(b => b.cover === c.coverUrl)) {
+            books.push({ title: c.title, cover: c.coverUrl })
             saveBooks()
             renderBookList()
             generateShelf()
           }
-
           resultsEl.style.display = 'none'
           document.getElementById('search').value = ''
         })
+
+        return div
+      }
+
+      // Helper to add covers to grid (deduped)
+      function addCoversToGrid(covers) {
+        if (!gridEl) return
+        let added = 0
+        for (const c of covers) {
+          if (seenUrls.has(c.coverUrl)) continue
+          seenUrls.add(c.coverUrl)
+          gridEl.appendChild(createCoverEl(c))
+          added++
+        }
+        return added
+      }
+
+      // Initialize grid with loading indicator
+      resultsEl.innerHTML = '<div class="search-grid"></div><div class="search-loading" id="loadMore" style="font-size:0.65rem;padding:0.5rem">Loading...</div>'
+      gridEl = resultsEl.querySelector('.search-grid')
+      const loadMoreEl = document.getElementById('loadMore')
+
+      const olQuery = authorQuery
+        ? `${titleQuery} ${authorQuery}`
+        : titleQuery
+
+      const titleLower = titleQuery.toLowerCase()
+      const authorLower = authorQuery.toLowerCase()
+
+      // Score function
+      function scoreResult(itemTitle, itemAuthors) {
+        let score = 0
+        const title = (itemTitle || '').toLowerCase()
+        const authors = (itemAuthors || []).map(a => a.toLowerCase())
+
+        if (title === titleLower) score += 100
+        else if (title.startsWith(titleLower)) score += 80
+        else if (title.includes(titleLower)) score += 50
+
+        if (authorQuery && authors.some(a => a.includes(authorLower))) score += 60
+        if (/study guide|summary|analysis|sparknotes|cliffsnotes/i.test(title)) score -= 200
+
+        return score
+      }
+
+      // State for pagination
+      let googleStartIndex = 0
+      let olOffset = 0
+      let isLoadingMore = false
+      let hasMoreResults = true
+      const seenGoogleIds = new Set()
+      const pendingIsbns = []
+
+      // Function to fetch a batch of results
+      async function fetchBatch() {
+        if (isLoadingMore || !hasMoreResults) return
+        isLoadingMore = true
+        loadMoreEl.style.display = 'block'
+        loadMoreEl.textContent = 'Loading more...'
+
+        const batchCovers = []
+
+        try {
+          // Fetch Google Books with pagination
+          const googleRes = await fetch(
+            `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(authorQuery ? `intitle:${titleQuery}+inauthor:${authorQuery}` : titleQuery)}&maxResults=40&startIndex=${googleStartIndex}&printType=books`
+          )
+          const googleData = await googleRes.json()
+
+          if (!googleData.items || googleData.items.length === 0) {
+            hasMoreResults = false
+          } else {
+            googleStartIndex += googleData.items.length
+
+            for (const item of googleData.items) {
+              if (seenGoogleIds.has(item.id)) continue
+              const info = item.volumeInfo || {}
+              const score = scoreResult(info.title, info.authors || [])
+              if (score < 0) continue
+
+              seenGoogleIds.add(item.id)
+              batchCovers.push({
+                coverUrl: `https://books.google.com/books/publisher/content/images/frontcover/${item.id}?fife=w800-h1200`,
+                title: info.title,
+                author: info.authors?.[0] || '',
+                score: score + 20
+              })
+            }
+          }
+
+          // Also fetch Open Library for more ISBNs (first batch only fetches 50, can go higher)
+          if (olOffset === 0 || pendingIsbns.length < 20) {
+            const olRes = await fetch(
+              `https://openlibrary.org/search.json?q=${encodeURIComponent(olQuery)}&limit=50&offset=${olOffset}&fields=title,author_name,cover_i,isbn`
+            )
+            const olData = await olRes.json()
+            olOffset += 50
+
+            for (const doc of (olData.docs || [])) {
+              const score = scoreResult(doc.title, doc.author_name)
+              if (score < 0) continue
+
+              if (doc.cover_i) {
+                batchCovers.push({
+                  coverUrl: `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg?default=false`,
+                  title: doc.title,
+                  author: doc.author_name?.[0] || '',
+                  score
+                })
+              }
+
+              // Collect ISBNs for later
+              const isbns = doc.isbn || []
+              for (const isbn of isbns.slice(0, 3)) {
+                pendingIsbns.push({ isbn, title: doc.title, author: doc.author_name?.[0] || '', score })
+              }
+            }
+          }
+
+          // Process some pending ISBNs via Google Books
+          const isbnBatch = pendingIsbns.splice(0, 10)
+          const isbnResults = await Promise.all(
+            isbnBatch.map(async ({ isbn, title, author, score }) => {
+              try {
+                const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`)
+                const data = await res.json()
+                const item = data.items?.[0]
+                if (item && !seenGoogleIds.has(item.id)) {
+                  seenGoogleIds.add(item.id)
+                  return {
+                    coverUrl: `https://books.google.com/books/publisher/content/images/frontcover/${item.id}?fife=w800-h1200`,
+                    title: item.volumeInfo?.title || title,
+                    author: item.volumeInfo?.authors?.[0] || author,
+                    score: score + 15
+                  }
+                }
+              } catch (e) {}
+              return null
+            })
+          )
+
+          for (const result of isbnResults) {
+            if (result) batchCovers.push(result)
+          }
+
+          // Sort and add to grid
+          batchCovers.sort((a, b) => b.score - a.score)
+          addCoversToGrid(batchCovers)
+
+          // Check if we should stop
+          if (googleStartIndex >= 200 || (!hasMoreResults && pendingIsbns.length === 0)) {
+            loadMoreEl.style.display = 'none'
+            hasMoreResults = false
+          } else {
+            loadMoreEl.textContent = 'Scroll for more...'
+          }
+        } catch (e) {
+          loadMoreEl.textContent = 'Error loading more'
+        }
+
+        isLoadingMore = false
+      }
+
+      // Initial fetch
+      await fetchBatch()
+
+      // Set up infinite scroll
+      resultsEl.addEventListener('scroll', () => {
+        if (isLoadingMore || !hasMoreResults) return
+        const { scrollTop, scrollHeight, clientHeight } = resultsEl
+        if (scrollTop + clientHeight >= scrollHeight - 100) {
+          fetchBatch()
+        }
       })
+
+      if (gridEl.children.length === 0) {
+        resultsEl.innerHTML = '<div class="search-loading">No covers found. Try a different search or upload a cover image.</div>'
+      }
     } catch (err) {
       resultsEl.innerHTML = '<div class="search-loading">Search failed</div>'
     }
@@ -557,7 +943,27 @@ document.getElementById('search').addEventListener('keydown', async (e) => {
 })
 
 async function fetchCover(isbn) {
-  // Try to get book info from Open Library
+  // Try bookcover API first (aggregates Amazon, Google, Open Library)
+  try {
+    const res = await fetch(`https://bookcover.longitood.com/bookcover/${isbn}`)
+    if (res.ok) {
+      const data = await res.json()
+      if (data.url) {
+        // Get title from Open Library
+        let title = isbn
+        try {
+          const olRes = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`)
+          const olData = await olRes.json()
+          if (olData[`ISBN:${isbn}`]?.title) {
+            title = olData[`ISBN:${isbn}`].title
+          }
+        } catch (e) {}
+        return { title, cover: data.url }
+      }
+    }
+  } catch (e) {}
+
+  // Fallback: Try Open Library directly
   try {
     const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`)
     const data = await res.json()
@@ -571,7 +977,7 @@ async function fetchCover(isbn) {
     }
   } catch (e) {}
 
-  // Fallback to just the cover image
+  // Last fallback: Open Library cover image directly
   const url = `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg?default=false`
 
   return new Promise((resolve, reject) => {
@@ -663,9 +1069,39 @@ function generateShelf() {
     33: [6, 6, 33, 3],
     34: [6, 6, 34, 2],
     35: [6, 6, 35],
-    36: [6, 6, 36 -1],
+    36: [6, 6, -1],
+    // 6x7 = 42 cells
     37: [6, 7, 37, 5],
-
+    38: [6, 7, 38, 4],
+    39: [6, 7, 39, 3],
+    40: [6, 7, 40, 2],
+    41: [6, 7, 41],
+    42: [6, 7, -1],
+    // 7x7 = 49 cells
+    43: [7, 7, 43, 6],
+    44: [7, 7, 44, 5],
+    45: [7, 7, 45, 4],
+    46: [7, 7, 46, 3],
+    47: [7, 7, 47, 2],
+    48: [7, 7, 48],
+    49: [7, 7, -1],
+    // 7x8 = 56 cells
+    50: [7, 8, 50, 6],
+    51: [7, 8, 51, 5],
+    52: [7, 8, 52, 4],
+    53: [7, 8, 53, 3],
+    54: [7, 8, 54, 2],
+    55: [7, 8, 55],
+    56: [7, 8, -1],
+    // 8x8 = 64 cells
+    57: [8, 8, 57, 7],
+    58: [8, 8, 58, 6],
+    59: [8, 8, 59, 5],
+    60: [8, 8, 60, 4],
+    61: [8, 8, 61, 3],
+    62: [8, 8, 62, 2],
+    63: [8, 8, 63],
+    64: [8, 8, -1],
   }
 
   let cols, rows, msgPos, msgColSpan = 1
@@ -705,7 +1141,9 @@ function generateShelf() {
   } else if (msgPos === -1) {
     // Overlay mode - draggable message overlay on the grid
     for (let i = 0; i < count; i++) {
-      html += `<div class="book-cell draggable" data-book-index="${i}"><img src="${books[i].cover}" alt="Book cover"></div>`
+      const posX = books[i].objectPositionX ?? 50
+      const posY = books[i].objectPositionY ?? 50
+      html += `<div class="book-cell draggable" data-book-index="${i}"><img src="${books[i].cover}" alt="Book cover" style="object-position: ${posX}% ${posY}%"></div>`
     }
     // Add overlay as a separate element on the grid
     html += `<div class="message-overlay" id="dragOverlay" style="background:${bgColor};color:${textColor};left:${overlayPos.x}%;top:${overlayPos.y}%">${message}</div>`
@@ -745,7 +1183,9 @@ function generateShelf() {
     bookPositions.forEach(({ pos, idx }) => {
       const row = Math.floor(pos / cols) + 1
       const col = (pos % cols) + 1
-      html += `<div class="book-cell draggable" data-book-index="${idx}" data-cell-index="${pos}" style="grid-column:${col};grid-row:${row}"><img src="${books[idx].cover}" alt="Book cover"></div>`
+      const posX = books[idx].objectPositionX ?? 50
+      const posY = books[idx].objectPositionY ?? 50
+      html += `<div class="book-cell draggable" data-book-index="${idx}" data-cell-index="${pos}" style="grid-column:${col};grid-row:${row}"><img src="${books[idx].cover}" alt="Book cover" style="object-position: ${posX}% ${posY}%"></div>`
     })
 
     // Add message cell with explicit positioning
@@ -759,125 +1199,704 @@ function generateShelf() {
   setupGridDragDrop()
 }
 
-let dragFromCell = null
-let dragFromIsMessage = false
-let dragFromSpan = 1
-let currentCols = 3
+let dragState = {
+  active: false,
+  fromIndex: null,       // Original array index of dragged cell
+  fromCellIndex: null,   // Original grid position (from data-cell-index)
+  fromSpan: 1,           // Span of the dragged cell (for spanning messages)
+  currentIndex: null,    // Current position in the visual order (where empty slot is)
+  isFromMessage: false,
+  ghost: null,
+  cols: 3,
+  rows: 3,
+  hoverTimer: null,
+  hoveredIndex: null,    // Which grid position mouse is over (by coordinates)
+  gridRect: null,        // Grid bounding rect for coordinate calculations
+  cells: [],             // Reference to all cells for reordering
+  mouseDownPos: null,    // Track initial mouse position to detect click vs drag
+  isDragging: false,     // True once we've moved enough to be a drag
+  holdTimer: null,       // Timer for press-and-hold detection
+  holdTriggered: false,  // True if hold timer fired
+  hasSpanningMessage: false  // True if there's a multi-column message
+}
+
+// Position editor state
+let positionEditor = {
+  active: false,
+  bookIndex: null,
+  startMousePos: null,   // Starting mouse position (x or y depending on direction)
+  startPosition: 50,     // Current object-position percentage
+  direction: 'vertical', // 'vertical' or 'horizontal'
+  cell: null,
+  img: null
+}
+
+function createDragGhost(cell) {
+  const ghost = document.createElement('div')
+  ghost.className = 'drag-ghost'
+
+  if (cell.classList.contains('message-cell')) {
+    // Get the actual cell dimensions to match the ghost shape
+    const cellRect = cell.getBoundingClientRect()
+    const scale = 0.4 // Scale down the ghost
+    const width = cellRect.width * scale
+    const height = cellRect.height * scale
+
+    ghost.innerHTML = `<div style="background:${document.getElementById('bgColor').value};color:${document.getElementById('textColor').value};padding:8px 12px;font-size:10px;width:${width}px;height:${height}px;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;text-overflow:ellipsis">${document.getElementById('message').value.slice(0, 30)}...</div>`
+  } else {
+    const img = cell.querySelector('img')
+    if (img) {
+      const clonedImg = document.createElement('img')
+      clonedImg.src = img.src
+      ghost.appendChild(clonedImg)
+    }
+  }
+
+  ghost.style.display = 'none'
+  document.body.appendChild(ghost)
+  return ghost
+}
+
+function updateGhostPosition(ghost, e) {
+  ghost.style.left = e.clientX + 'px'
+  ghost.style.top = e.clientY + 'px'
+  ghost.style.display = 'block'
+}
+
+// Calculate which grid position the mouse is over based on coordinates
+function getGridPositionFromMouse(e) {
+  if (!dragState.gridRect) return -1
+
+  const x = e.clientX - dragState.gridRect.left
+  const y = e.clientY - dragState.gridRect.top
+
+  if (x < 0 || y < 0 || x > dragState.gridRect.width || y > dragState.gridRect.height) {
+    return -1 // Outside grid
+  }
+
+  const cellWidth = dragState.gridRect.width / dragState.cols
+  const cellHeight = dragState.gridRect.height / dragState.rows
+
+  const col = Math.floor(x / cellWidth)
+  const row = Math.floor(y / cellHeight)
+
+  const index = row * dragState.cols + col
+  const totalCells = dragState.cols * dragState.rows
+
+  return Math.min(index, totalCells - 1)
+}
+
+// Show drop indicator at a grid position (for spanning message mode)
+function showDropIndicator(gridIndex) {
+  removeDropIndicator()
+
+  const grid = document.getElementById('bookGrid')
+  const cellWidth = dragState.gridRect.width / dragState.cols
+  const cellHeight = dragState.gridRect.height / dragState.rows
+
+  const col = gridIndex % dragState.cols
+  const row = Math.floor(gridIndex / dragState.cols)
+
+  // For spanning messages being dragged, show indicator matching the span
+  const span = dragState.isFromMessage ? dragState.fromSpan : 1
+
+  // Check if position is valid for spanning message (doesn't overflow row)
+  const isValid = col + span <= dragState.cols
+
+  const indicator = document.createElement('div')
+  indicator.id = 'dropIndicator'
+  indicator.style.cssText = `
+    position: absolute;
+    left: ${col * cellWidth}px;
+    top: ${row * cellHeight}px;
+    width: ${cellWidth * Math.min(span, dragState.cols - col)}px;
+    height: ${cellHeight}px;
+    border: 2px dashed ${isValid ? 'rgba(255,255,255,0.8)' : 'rgba(255,100,100,0.8)'};
+    background: ${isValid ? 'rgba(255,255,255,0.1)' : 'rgba(255,0,0,0.1)'};
+    pointer-events: none;
+    box-sizing: border-box;
+    z-index: 100;
+  `
+
+  grid.appendChild(indicator)
+}
+
+function removeDropIndicator() {
+  const indicator = document.getElementById('dropIndicator')
+  if (indicator) indicator.remove()
+}
+
+// Reorder cells visually using CSS order - no DOM changes
+function reorderCells(emptyAtIndex) {
+  const fromIdx = dragState.fromIndex
+  const cells = dragState.cells
+
+  cells.forEach((cell, originalIdx) => {
+    let visualOrder
+
+    if (originalIdx === fromIdx) {
+      // The dragged cell appears at the empty slot position
+      visualOrder = emptyAtIndex
+    } else if (fromIdx < emptyAtIndex) {
+      // Dragging forward: cells between from and target shift left
+      if (originalIdx > fromIdx && originalIdx <= emptyAtIndex) {
+        visualOrder = originalIdx - 1
+      } else {
+        visualOrder = originalIdx
+      }
+    } else {
+      // Dragging backward: cells between target and from shift right
+      if (originalIdx >= emptyAtIndex && originalIdx < fromIdx) {
+        visualOrder = originalIdx + 1
+      } else {
+        visualOrder = originalIdx
+      }
+    }
+
+    cell.style.order = visualOrder
+
+    // Update empty-slot class
+    cell.classList.remove('empty-slot')
+    if (originalIdx === fromIdx) {
+      cell.classList.add('empty-slot')
+    }
+  })
+
+  dragState.currentIndex = emptyAtIndex
+}
+
+// Handle mouse move - start drag after threshold, or handle position editing
+function handleDragMove(e) {
+  // Handle position editor - start position drag if moving with mouse down
+  if (positionEditor.active && dragState.mouseDownPos && positionEditor.cell) {
+    // Start position dragging if not already
+    if (positionEditor.startMousePos === null) {
+      const bookIndex = positionEditor.bookIndex
+      const isHorizontal = positionEditor.direction === 'horizontal'
+      positionEditor.startMousePos = isHorizontal ? dragState.mouseDownPos.x : dragState.mouseDownPos.y
+      const posKey = isHorizontal ? 'objectPositionX' : 'objectPositionY'
+      positionEditor.startPosition = books[bookIndex][posKey] ?? 50
+    }
+    handlePositionDrag(e)
+    return
+  }
+
+  // Check if we should start a drag (moved enough from mousedown)
+  if (dragState.mouseDownPos && !dragState.isDragging) {
+    const dx = e.clientX - dragState.mouseDownPos.x
+    const dy = e.clientY - dragState.mouseDownPos.y
+    const distance = Math.sqrt(dx * dx + dy * dy)
+
+    if (distance > 8) {
+      // Cancel hold timer - movement means drag, not hold
+      if (dragState.holdTimer) {
+        clearTimeout(dragState.holdTimer)
+        dragState.holdTimer = null
+      }
+      // Start the actual drag
+      startDrag(e)
+    }
+    return
+  }
+
+  if (!dragState.isDragging) return
+
+  // Update ghost position
+  if (dragState.ghost) {
+    updateGhostPosition(dragState.ghost, e)
+  }
+
+  // Calculate which grid position we're over
+  const gridIndex = getGridPositionFromMouse(e)
+
+  if (gridIndex === -1 || gridIndex === dragState.hoveredIndex) return
+
+  // New grid position - clear old timer and start new one
+  if (dragState.hoverTimer) {
+    clearTimeout(dragState.hoverTimer)
+    dragState.hoverTimer = null
+  }
+
+  dragState.hoveredIndex = gridIndex
+
+  // Clear all hover/target indicators
+  dragState.cells.forEach(c => c.classList.remove('drag-hover', 'drag-target'))
+
+  // For spanning messages, just show drop target indicator (no live reorder)
+  if (dragState.hasSpanningMessage) {
+    // Don't show hover on the dragged cell's position (accounting for its span)
+    const fromStart = dragState.fromCellIndex
+    const fromEnd = fromStart + dragState.fromSpan
+    if (gridIndex >= fromStart && gridIndex < fromEnd) {
+      removeDropIndicator()
+      return
+    }
+
+    // Show drop indicator at the grid position
+    showDropIndicator(gridIndex)
+    dragState.currentIndex = gridIndex
+    return
+  }
+
+  // Normal mode - compare array indices (which match grid positions)
+  // Don't show hover on current empty slot position
+  if (gridIndex === dragState.fromIndex) return
+
+  // Normal mode: show hover then schedule reorder
+  // Don't show hover on current empty slot position
+  if (gridIndex === dragState.currentIndex) return
+
+  // Find which cell is visually at this position and show hover
+  dragState.cells.forEach(cell => {
+    if (parseInt(cell.style.order) === gridIndex) {
+      cell.classList.add('drag-hover')
+    }
+  })
+
+  // Schedule reorder after delay
+  dragState.hoverTimer = setTimeout(() => {
+    dragState.cells.forEach(c => c.classList.remove('drag-hover'))
+    if (gridIndex !== dragState.currentIndex) {
+      reorderCells(gridIndex)
+    }
+  }, 250)
+}
+
+// Actually start the drag operation
+function startDrag(e) {
+  const grid = document.getElementById('bookGrid')
+  const cell = dragState.cells[dragState.fromIndex]
+
+  // Exit position editor if active
+  if (positionEditor.active) {
+    exitPositionEditor()
+  }
+
+  // Check if there's a spanning message - flex reordering doesn't work with spans
+  dragState.hasSpanningMessage = dragState.cells.some(c => {
+    const span = parseInt(c.dataset.msgSpan) || 1
+    return span > 1
+  })
+
+  dragState.isDragging = true
+  dragState.currentIndex = dragState.fromIndex
+  dragState.hoveredIndex = dragState.fromIndex
+
+  // Add grabbing cursor
+  document.body.classList.add('is-dragging')
+
+  // Only use flex mode if no spanning messages (flex doesn't work with spans)
+  if (!dragState.hasSpanningMessage) {
+    grid.classList.add('drag-reordering')
+
+    // Set explicit sizes to maintain grid appearance
+    const cellWidth = 100 / dragState.cols
+    const cellHeight = 100 / dragState.rows
+    dragState.cells.forEach((c, i) => {
+      c.style.width = `${cellWidth}%`
+      c.style.height = `${cellHeight}%`
+      c.style.order = i
+    })
+  }
+
+  // Create and position ghost
+  dragState.ghost = createDragGhost(cell)
+  updateGhostPosition(dragState.ghost, e)
+
+  // Mark this cell as the empty slot
+  cell.classList.add('empty-slot')
+}
+
+// Position editor functions
+function enterPositionEditor(cell, bookIndex) {
+  const img = cell.querySelector('img')
+  if (!img || bookIndex === null || bookIndex >= books.length) return
+
+  // Exit any existing editor first
+  if (positionEditor.active) {
+    exitPositionEditor()
+  }
+
+  // Determine slide direction based on aspect ratios
+  const cellRect = cell.getBoundingClientRect()
+  const cellAspect = cellRect.width / cellRect.height
+  const imgAspect = img.naturalWidth / img.naturalHeight
+
+  // If image is wider than cell (relative to height), slide horizontally
+  // If image is taller than cell (relative to width), slide vertically
+  let direction = 'vertical'
+  let posKey = 'objectPositionY'
+
+  if (imgAspect > cellAspect) {
+    // Image is wider - horizontal sliding
+    direction = 'horizontal'
+    posKey = 'objectPositionX'
+  }
+
+  // Get current position from book data
+  const currentPos = books[bookIndex][posKey] ?? 50
+
+  positionEditor.active = true
+  positionEditor.bookIndex = bookIndex
+  positionEditor.startPosition = currentPos
+  positionEditor.direction = direction
+  positionEditor.cell = cell
+  positionEditor.img = img
+  positionEditor.startMousePos = null
+
+  cell.classList.add('editing-position')
+  cell.classList.add(direction === 'horizontal' ? 'editing-horizontal' : 'editing-vertical')
+
+  // Add hint
+  const hint = document.createElement('div')
+  hint.className = 'position-hint'
+  hint.textContent = direction === 'horizontal' ? 'Drag left/right' : 'Drag up/down'
+  cell.appendChild(hint)
+
+  // Remove hint after a moment
+  setTimeout(() => {
+    if (hint.parentNode) hint.remove()
+  }, 2000)
+}
+
+function exitPositionEditor() {
+  if (!positionEditor.active) return
+
+  positionEditor.cell.classList.remove('editing-position', 'editing-horizontal', 'editing-vertical')
+  const hint = positionEditor.cell.querySelector('.position-hint')
+  if (hint) hint.remove()
+
+  // Save the position
+  if (positionEditor.bookIndex !== null) {
+    saveBooks()
+  }
+
+  positionEditor.active = false
+  positionEditor.bookIndex = null
+  positionEditor.cell = null
+  positionEditor.img = null
+  positionEditor.startMousePos = null
+  positionEditor.direction = 'vertical'
+}
+
+function handlePositionDrag(e) {
+  if (!positionEditor.active || !positionEditor.img) return
+
+  const isHorizontal = positionEditor.direction === 'horizontal'
+  const mousePos = isHorizontal ? e.clientX : e.clientY
+  const posKey = isHorizontal ? 'objectPositionX' : 'objectPositionY'
+
+  // Start tracking if not already
+  if (positionEditor.startMousePos === null) {
+    positionEditor.startMousePos = mousePos
+    positionEditor.startPosition = books[positionEditor.bookIndex][posKey] ?? 50
+    return
+  }
+
+  // Calculate new position based on drag distance
+  // Invert delta: dragging right/down should move the image left/up (reveal right/bottom)
+  const delta = positionEditor.startMousePos - mousePos
+  const cellSize = isHorizontal
+    ? positionEditor.cell.getBoundingClientRect().width
+    : positionEditor.cell.getBoundingClientRect().height
+
+  // Sensitivity: moving cellSize pixels = 100% change
+  const sensitivity = 100 / cellSize
+  let newPos = positionEditor.startPosition + (delta * sensitivity)
+
+  // Clamp to valid range (0-100%)
+  newPos = Math.max(0, Math.min(100, newPos))
+
+  // Apply to image
+  const xPos = isHorizontal ? `${newPos}%` : 'center'
+  const yPos = isHorizontal ? 'center' : `${newPos}%`
+  positionEditor.img.style.objectPosition = `${xPos} ${yPos}`
+
+  // Store in book data
+  books[positionEditor.bookIndex][posKey] = Math.round(newPos)
+}
 
 function setupGridDragDrop() {
   const grid = document.getElementById('bookGrid')
-  const cells = grid.querySelectorAll('.book-cell.draggable')
+  const allCells = Array.from(grid.querySelectorAll('.book-cell.draggable'))
 
-  // Get current grid columns from style
+  // Get current grid dimensions from style
   const colsMatch = grid.style.gridTemplateColumns.match(/repeat\((\d+)/)
-  currentCols = colsMatch ? parseInt(colsMatch[1]) : 3
+  const rowsMatch = grid.style.gridTemplateRows.match(/repeat\((\d+)/)
+  dragState.cols = colsMatch ? parseInt(colsMatch[1]) : 3
+  dragState.rows = rowsMatch ? parseInt(rowsMatch[1]) : 3
 
-  cells.forEach(cell => {
+  allCells.forEach((cell, visualIndex) => {
+    // Mouse down - prepare for potential hold (rearrange), tap (position edit toggle), or position drag
     cell.addEventListener('mousedown', (e) => {
       if (e.target.id === 'dragOverlay' || e.target.closest('#dragOverlay')) return
-      dragFromCell = parseInt(cell.dataset.cellIndex)
-      dragFromIsMessage = cell.classList.contains('message-cell')
-      dragFromSpan = parseInt(cell.dataset.msgSpan) || 1
-      cell.classList.add('dragging')
+
+      const bookIndex = cell.dataset.bookIndex !== undefined ? parseInt(cell.dataset.bookIndex) : null
+
+      // If in position edit mode for a different cell, exit it
+      if (positionEditor.active && positionEditor.cell !== cell) {
+        exitPositionEditor()
+      }
+
+      // Store initial state for tap/drag/hold detection
+      dragState.mouseDownPos = { x: e.clientX, y: e.clientY }
+      dragState.fromIndex = visualIndex
+      dragState.fromCellIndex = parseInt(cell.dataset.cellIndex) || 0
+      dragState.fromSpan = parseInt(cell.dataset.msgSpan) || 1
+      dragState.isFromMessage = cell.classList.contains('message-cell')
+      dragState.cells = allCells
+      dragState.gridRect = grid.getBoundingClientRect()
+      dragState.isDragging = false
+      dragState.holdTriggered = false
+
+      // If in position edit mode for THIS cell, prepare for position drag
+      // (but don't start yet - wait for movement)
+      if (positionEditor.active && positionEditor.cell === cell) {
+        // No hold timer - in edit mode, hold doesn't start rearrange
+        e.preventDefault()
+        return
+      }
+
+      // Start hold timer - if held for 300ms without moving, start rearrange mode
+      dragState.holdTimer = setTimeout(() => {
+        if (dragState.mouseDownPos && !dragState.isDragging) {
+          dragState.holdTriggered = true
+          startDrag(e)
+        }
+      }, 300)
+
       e.preventDefault()
     })
 
-    cell.addEventListener('mouseenter', () => {
-      if (dragFromCell !== null) {
-        const toCell = parseInt(cell.dataset.cellIndex)
-        if (toCell !== dragFromCell) {
-          const toIsMessage = cell.classList.contains('message-cell')
-
-          // When dragging message to a book, validate the target position
-          if (dragFromIsMessage && dragFromSpan > 1) {
-            const newCol = toCell % currentCols
-            if (newCol + dragFromSpan <= currentCols) {
-              cell.classList.add('drag-over')
-            }
-          } else {
-            // Dragging book to message or book to book - always valid
-            cell.classList.add('drag-over')
-          }
-        }
+    // Mouse up - complete drag, position drag, or handle as tap
+    cell.addEventListener('mouseup', (e) => {
+      // Clear hold timer
+      if (dragState.holdTimer) {
+        clearTimeout(dragState.holdTimer)
+        dragState.holdTimer = null
       }
-    })
 
-    cell.addEventListener('mouseleave', () => {
-      cell.classList.remove('drag-over')
-    })
+      const bookIndex = cell.dataset.bookIndex !== undefined ? parseInt(cell.dataset.bookIndex) : null
 
-    cell.addEventListener('mouseup', () => {
-      if (dragFromCell !== null) {
-        const toCell = parseInt(cell.dataset.cellIndex)
-        const toIsMessage = cell.classList.contains('message-cell')
-
-        if (toCell !== dragFromCell) {
-          if (dragFromIsMessage || toIsMessage) {
-            // Get the message span and current position
-            const msgSpan = dragFromIsMessage ? dragFromSpan : (parseInt(cell.dataset.msgSpan) || 1)
-            const currentMsgPos = dragFromIsMessage ? dragFromCell : toCell
-
-            // Calculate new message position
-            let newMsgPos
-            if (dragFromIsMessage) {
-              // Dragging message to a book position
-              newMsgPos = toCell
-            } else {
-              // Dragging book onto message - book wants to take message's spot
-              // Message should shift to accommodate, staying in same row if possible
-              const bookPos = dragFromCell
-              const bookRow = Math.floor(bookPos / currentCols)
-              const msgRow = Math.floor(currentMsgPos / currentCols)
-
-              if (bookRow === msgRow) {
-                // Same row - message shifts to book's position
-                newMsgPos = bookPos
-              } else {
-                // Different row - message shifts within its row based on direction
-                const bookCol = bookPos % currentCols
-                const msgCol = currentMsgPos % currentCols
-                if (bookCol < msgCol || bookRow < msgRow) {
-                  // Book is to the left or above - shift message right in its row
-                  newMsgPos = msgRow * currentCols + 1
-                } else {
-                  // Book is to the right or below - shift message left in its row
-                  newMsgPos = msgRow * currentCols
-                }
-              }
-            }
-
-            // Validate position for spanning messages
-            const newCol = newMsgPos % currentCols
-            if (msgSpan > 1 && newCol + msgSpan > currentCols) {
-              // Would overflow - try shifting left within the row
-              const row = Math.floor(newMsgPos / currentCols)
-              newMsgPos = row * currentCols + (currentCols - msgSpan)
-            }
-
-            localStorage.setItem('bookshot-msg-pos-' + books.length, newMsgPos)
-            generateShelf()
-          } else {
-            // Swapping two books
-            const fromBookIdx = parseInt(document.querySelector(`[data-cell-index="${dragFromCell}"]`).dataset.bookIndex)
-            const toBookIdx = parseInt(cell.dataset.bookIndex)
-            const [moved] = books.splice(fromBookIdx, 1)
-            books.splice(toBookIdx, 0, moved)
-            saveBooks()
-            renderBookList()
-            generateShelf()
-          }
+      if (dragState.isDragging) {
+        commitDrag()
+      } else if (positionEditor.active && positionEditor.cell === cell) {
+        // In position edit mode for this cell
+        if (positionEditor.startMousePos !== null) {
+          // Was dragging position - save and stay in edit mode
+          positionEditor.startMousePos = null
+          saveBooks()
+        } else if (dragState.mouseDownPos) {
+          // Was a tap - exit edit mode
+          exitPositionEditor()
         }
+      } else if (dragState.mouseDownPos && !dragState.holdTriggered && !cell.classList.contains('message-cell') && bookIndex !== null) {
+        // It was a tap on a non-editing cell - enter position edit mode
+        enterPositionEditor(cell, bookIndex)
       }
+      dragState.mouseDownPos = null
+      dragState.holdTriggered = false
     })
   })
 }
 
-document.addEventListener('mouseup', () => {
-  if (dragFromCell !== null) {
-    document.querySelectorAll('.book-cell').forEach(c => c.classList.remove('dragging', 'drag-over'))
-    dragFromCell = null
-    dragFromIsMessage = false
-    dragFromSpan = 1
+function commitDrag() {
+  if (!dragState.isDragging) return
+
+  const fromIdx = dragState.fromIndex
+  const toIdx = dragState.currentIndex
+  const cells = dragState.cells
+
+  if (fromIdx !== toIdx && fromIdx !== null && toIdx !== null) {
+
+    // For spanning message mode, use cell indices directly
+    if (dragState.hasSpanningMessage) {
+      const fromCell = cells[fromIdx]
+      const fromCellIndex = parseInt(fromCell.dataset.cellIndex)
+
+      if (dragState.isFromMessage) {
+        // Message being moved - validate position first
+        const col = toIdx % dragState.cols
+        const span = dragState.fromSpan
+        if (col + span <= dragState.cols) {
+          // Valid position - update
+          localStorage.setItem('bookshot-msg-pos-' + books.length, toIdx)
+        }
+        // If invalid, do nothing - message stays in original position
+      } else {
+        // Book being moved - find target and swap positions
+        const fromBookIdx = parseInt(fromCell.dataset.bookIndex)
+
+        // Find the target cell at toIdx (accounting for span)
+        const targetCell = cells.find(c => {
+          const cellIndex = parseInt(c.dataset.cellIndex)
+          const span = parseInt(c.dataset.msgSpan) || 1
+          return toIdx >= cellIndex && toIdx < cellIndex + span
+        })
+
+        if (targetCell) {
+          if (targetCell.classList.contains('message-cell')) {
+            // Moving book to message position - swap message to book's old position
+            // But only if that position is valid for the message's span
+            const msgSpan = parseInt(targetCell.dataset.msgSpan) || 1
+            const targetCol = fromCellIndex % dragState.cols
+            if (targetCol + msgSpan <= dragState.cols) {
+              localStorage.setItem('bookshot-msg-pos-' + books.length, fromCellIndex)
+            }
+            // If invalid, the swap doesn't happen
+          } else {
+            // Moving book to another book's position - reorder books array
+            const toBookIdx = parseInt(targetCell.dataset.bookIndex)
+            const [moved] = books.splice(fromBookIdx, 1)
+            const adjustedToIdx = fromBookIdx < toBookIdx ? toBookIdx : toBookIdx
+            books.splice(adjustedToIdx, 0, moved)
+            saveBooks()
+            renderBookList()
+          }
+        }
+      }
+    } else {
+      // Normal mode (no spanning) - use CSS order for visual positions
+      if (dragState.isFromMessage) {
+        // Calculate new cell index for message based on visual position
+        let newCellIndex = 0
+        const targetOriginalIdx = cells.findIndex((c, i) => {
+          return parseInt(c.style.order) === toIdx && i !== fromIdx
+        })
+        if (targetOriginalIdx === -1) {
+          newCellIndex = parseInt(cells[fromIdx].dataset.cellIndex)
+        } else {
+          newCellIndex = parseInt(cells[targetOriginalIdx].dataset.cellIndex)
+        }
+        localStorage.setItem('bookshot-msg-pos-' + books.length, newCellIndex)
+      } else {
+        // Reorder books array to match visual order
+        const fromBookIdx = parseInt(cells[fromIdx].dataset.bookIndex)
+        let toBookIdx = fromBookIdx
+
+        if (fromIdx < toIdx) {
+          // Moved forward
+          for (let i = 0; i < cells.length; i++) {
+            if (i !== fromIdx && !cells[i].classList.contains('message-cell')) {
+              const order = parseInt(cells[i].style.order)
+              if (order === toIdx - 1 || order === toIdx) {
+                toBookIdx = parseInt(cells[i].dataset.bookIndex)
+              }
+            }
+          }
+        } else {
+          // Moved backward
+          for (let i = 0; i < cells.length; i++) {
+            if (i !== fromIdx && !cells[i].classList.contains('message-cell')) {
+              const order = parseInt(cells[i].style.order)
+              if (order === toIdx || order === toIdx + 1) {
+                toBookIdx = parseInt(cells[i].dataset.bookIndex)
+                break
+              }
+            }
+          }
+        }
+
+        const [moved] = books.splice(fromBookIdx, 1)
+        const adjustedToIdx = fromBookIdx < toBookIdx ? toBookIdx : toBookIdx
+        books.splice(adjustedToIdx, 0, moved)
+        saveBooks()
+        renderBookList()
+      }
+    }
+  }
+
+  cleanupDrag()
+  generateShelf()
+}
+
+function cleanupDrag() {
+  // Clear timer
+  if (dragState.hoverTimer) {
+    clearTimeout(dragState.hoverTimer)
+    dragState.hoverTimer = null
+  }
+
+  // Remove ghost
+  if (dragState.ghost) {
+    dragState.ghost.remove()
+    dragState.ghost = null
+  }
+
+  // Remove drop indicator
+  removeDropIndicator()
+
+  // Remove grabbing cursor and flex mode
+  document.body.classList.remove('is-dragging')
+  document.getElementById('bookGrid').classList.remove('drag-reordering')
+
+  // Clear inline styles and classes from cells
+  document.querySelectorAll('.book-cell').forEach(c => {
+    c.classList.remove('drag-hover', 'empty-slot', 'drag-target')
+    c.style.order = ''
+    c.style.width = ''
+    c.style.height = ''
+  })
+
+  // Reset state
+  dragState.active = false
+  dragState.fromIndex = null
+  dragState.fromCellIndex = null
+  dragState.fromSpan = 1
+  dragState.currentIndex = null
+  dragState.hoveredIndex = null
+  dragState.gridRect = null
+  dragState.isFromMessage = false
+  dragState.cells = []
+  dragState.mouseDownPos = null
+  dragState.isDragging = false
+  dragState.holdTriggered = false
+  dragState.hasSpanningMessage = false
+  if (dragState.holdTimer) {
+    clearTimeout(dragState.holdTimer)
+    dragState.holdTimer = null
+  }
+}
+
+// Global mouse move - update ghost and check grid position
+document.addEventListener('mousemove', (e) => {
+  if (dragState.mouseDownPos || dragState.isDragging || positionEditor.active) {
+    handleDragMove(e)
+  }
+})
+
+// Global mouse up
+document.addEventListener('mouseup', (e) => {
+  // Clear hold timer
+  if (dragState.holdTimer) {
+    clearTimeout(dragState.holdTimer)
+    dragState.holdTimer = null
+  }
+
+  // Handle position editor
+  if (positionEditor.active && positionEditor.startMousePos !== null) {
+    // Finished dragging in position editor - save and stay in edit mode
+    positionEditor.startMousePos = null
+    saveBooks()
+  }
+
+  // Handle drag reorder
+  if (dragState.isDragging) {
+    commitDrag()
+  }
+
+  // Clear mousedown state
+  dragState.mouseDownPos = null
+  dragState.holdTriggered = false
+})
+
+// Click outside to exit position editor
+document.addEventListener('mousedown', (e) => {
+  if (positionEditor.active) {
+    const cell = positionEditor.cell
+    if (cell && !cell.contains(e.target)) {
+      exitPositionEditor()
+    }
   }
 })
 

@@ -5,5 +5,6 @@
   "/": "pages/index.js",
   "/unzip": "pages/unzip.js",
   "/api/curius": "pages/api/curius.js",
+  "/garden": "pages/garden.js",
   "/api/garden/[...path]": "pages/api/garden/[...path].js"
 }
