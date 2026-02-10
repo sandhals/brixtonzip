@@ -19,6 +19,22 @@ export default function GardenPage() {
           <tbody>
             <tr>
               <td className="link-cell">
+                <a href="/garden/creatine">Creatine</a>
+              </td>
+              <td className="desc-cell">
+                A creatine saturation calculator. Enter when you were last saturated and your dosing plan, and it tells you how many days until you're fully loaded — with a day-by-day tracker.
+              </td>
+            </tr>
+            <tr>
+              <td className="link-cell">
+                <a href="/garden/daylight">Living Daylight</a>
+              </td>
+              <td className="desc-cell">
+                I'm constantly checking weather websites in the winter to countdown how many days until the sun rises before I have to, or how may days until the sun will still be up when I'm off work, so I made a website to just figure it out for me.
+              </td>
+            </tr>
+            <tr>
+              <td className="link-cell">
                 <a href="/garden/bookshot">Bookshot</a>
               </td>
               <td className="desc-cell">

@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Living Daylight</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 300;
+  background: #f5f5f5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
+  color: #111;
+}
+
+.container {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+h1 {
+  font-size: 1rem;
+  font-weight: 400;
+  text-align: center;
+}
+
+.subtitle {
+  font-size: 0.7rem;
+  text-align: center;
+  color: #888;
+  margin-top: -1rem;
+}
+
+.input-section {
+  border: 1px solid black;
+  padding: 1rem;
+  background: white;
+}
+
+.input-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.input-row:last-child {
+  margin-bottom: 0;
+}
+
+.input-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.input-group.full {
+  flex: none;
+  width: 100%;
+}
+
+label {
+  font-size: 0.7rem;
+  color: #666;
+}
+
+input[type="text"],
+input[type="time"] {
+  width: 100%;
+  border: 1px solid black;
+  padding: 0.5rem;
+  font-size: 16px;
+  font-family: inherit;
+  font-weight: 300;
+  background: white;
+}
+
+input[type="time"] {
+  font-variant-numeric: tabular-nums;
+}
+
+.location-wrapper {
+  position: relative;
+}
+
+.location-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid black;
+  border-top: none;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  display: none;
+}
+
+.location-result {
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.location-result:last-child {
+  border-bottom: none;
+}
+
+.location-result:hover {
+  background: #f5f5f5;
+}
+
+.coords {
+  font-size: 0.6rem;
+  color: #999;
+  margin-top: 0.25rem;
+}
+
+.results {
+  display: none;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.results.visible {
+  display: flex;
+}
+
+.status-card {
+  border: 1px solid black;
+  padding: 1rem;
+  background: white;
+}
+
+.status-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  margin-bottom: 0.5rem;
+}
+
+.status-value {
+  font-size: 1.1rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.status-detail {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 0.35rem;
+  line-height: 1.5;
+}
+
+.span-section {
+  border: 1px solid black;
+  background: white;
+  padding: 1rem;
+}
+
+.span-title {
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin-bottom: 0.75rem;
+}
+
+.year-bar {
+  position: relative;
+  height: 28px;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+}
+
+.year-bar-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+}
+
+.fill-morning {
+  background: #ffeebb;
+}
+
+.fill-evening {
+  background: #ffe0cc;
+}
+
+.fill-both {
+  background: #d4edda;
+}
+
+.today-marker {
+  position: absolute;
+  top: 0;
+  width: 1.5px;
+  height: 100%;
+  background: black;
+  z-index: 2;
+}
+
+.month-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.55rem;
+  color: #999;
+  margin-bottom: 1rem;
+  padding: 0 1px;
+}
+
+.legend {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.6rem;
+  color: #666;
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border: 1px solid #ddd;
+}
+
+.sunrise-sunset-info {
+  border: 1px solid black;
+  background: white;
+  padding: 1rem;
+}
+
+.today-times {
+  display: flex;
+  gap: 1rem;
+}
+
+.time-col {
+  flex: 1;
+}
+
+.time-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  margin-bottom: 0.25rem;
+}
+
+.time-value {
+  font-size: 1rem;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.daylight-length {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #eee;
+  font-size: 0.75rem;
+  color: #666;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Living Daylight</h1>
+  <p class="subtitle">Are you waking up with the sun? Are you getting any sunlight after work?</p>
+
+  <div class="input-section">
+    <div class="input-row">
+      <div class="input-group full">
+        <label for="location">Where do you live?</label>
+        <div class="location-wrapper">
+          <input type="text" id="location" placeholder="City or town" autocomplete="off">
+          <div id="locationResults" class="location-results"></div>
+        </div>
+        <div id="coords" class="coords"></div>
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label for="wakeTime">Wake up time</label>
+        <input type="time" id="wakeTime" value="07:00">
+      </div>
+      <div class="input-group">
+        <label for="offTime">Off work time</label>
+        <input type="time" id="offTime" value="18:00">
+      </div>
+    </div>
+  </div>
+
+  <div id="results" class="results">
+    <div class="sunrise-sunset-info">
+      <div class="status-label">Today</div>
+      <div class="today-times">
+        <div class="time-col">
+          <div class="time-label">Sunrise</div>
+          <div class="time-value" id="todaySunrise">--:--</div>
+        </div>
+        <div class="time-col">
+          <div class="time-label">Sunset</div>
+          <div class="time-value" id="todaySunset">--:--</div>
+        </div>
+        <div class="time-col">
+          <div class="time-label">Daylight</div>
+          <div class="time-value" id="todayLength">--:--</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-card" id="morningStatus"></div>
+    <div class="status-card" id="eveningStatus"></div>
+
+    <div class="span-section">
+      <div class="span-title">Your year at a glance</div>
+      <div class="year-bar" id="yearBar"></div>
+      <div class="month-labels">
+        <span>J</span><span>F</span><span>M</span><span>A</span><span>M</span><span>J</span><span>J</span><span>A</span><span>S</span><span>O</span><span>N</span><span>D</span>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-swatch fill-morning"></div> Wake after sunrise</div>
+        <div class="legend-item"><div class="legend-swatch fill-evening"></div> Off before sunset</div>
+        <div class="legend-item"><div class="legend-swatch fill-both"></div> Both</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:black"></div> Today</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// NOAA Solar Calculator
+// Based on NOAA spreadsheet: https://gml.noaa.gov/grad/solcalc/calcdetails.html
+
+function julianDay(year, month, day) {
+  if (month <= 2) { year--; month += 12 }
+  const A = Math.floor(year / 100)
+  const B = 2 - A + Math.floor(A / 4)
+  return Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day + B - 1524.5
+}
+
+function solarCalc(jd) {
+  const T = (jd - 2451545) / 36525 // Julian century
+
+  const L0 = (280.46646 + T * (36000.76983 + T * 0.0003032)) % 360 // Geom mean long sun
+  const M = (357.52911 + T * (35999.05029 - T * 0.0001537)) % 360 // Geom mean anom sun
+  const e = 0.016708634 - T * (0.000042037 + T * 0.0000001267) // Eccentricity
+
+  const Mrad = M * Math.PI / 180
+  const sinM = Math.sin(Mrad)
+  const sin2M = Math.sin(2 * Mrad)
+  const sin3M = Math.sin(3 * Mrad)
+
+  const C = sinM * (1.914602 - T * (0.004817 + T * 0.000014))
+           + sin2M * (0.019993 - T * 0.000101)
+           + sin3M * 0.000289
+
+  const sunTrueLong = L0 + C
+  const omega = 125.04 - 1934.136 * T
+  const lambda = sunTrueLong - 0.00569 - 0.00478 * Math.sin(omega * Math.PI / 180) // Apparent long
+
+  const obliq0 = 23 + (26 + (21.448 - T * (46.815 + T * (0.00059 - T * 0.001813))) / 60) / 60
+  const obliqCorr = obliq0 + 0.00256 * Math.cos(omega * Math.PI / 180)
+
+  const sinLambda = Math.sin(lambda * Math.PI / 180)
+  const declin = Math.asin(Math.sin(obliqCorr * Math.PI / 180) * sinLambda) // Declination
+
+  const y = Math.tan(obliqCorr * Math.PI / 360)
+  const y2 = y * y
+  const L0rad = L0 * Math.PI / 180
+
+  const eqTime = 4 * (180 / Math.PI) * (
+    y2 * Math.sin(2 * L0rad)
+    - 2 * e * sinM
+    + 4 * e * y2 * Math.sin(Mrad) * Math.cos(2 * L0rad)
+    - 0.5 * y2 * y2 * Math.sin(4 * L0rad)
+    - 1.25 * e * e * sin2M
+  ) // Equation of time in minutes
+
+  return { declin, eqTime }
+}
+
+function sunriseSunset(year, month, day, lat, lng) {
+  const jd = julianDay(year, month, day)
+  const { declin, eqTime } = solarCalc(jd)
+
+  const latRad = lat * Math.PI / 180
+  const zenith = 90.833 * Math.PI / 180 // Official zenith for sunrise/sunset
+
+  const cosHA = (Math.cos(zenith) / (Math.cos(latRad) * Math.cos(declin)))
+               - Math.tan(latRad) * Math.tan(declin)
+
+  // Check for polar day/night
+  if (cosHA > 1) return { sunrise: null, sunset: null, polarNight: true }
+  if (cosHA < -1) return { sunrise: null, sunset: null, polarDay: true }
+
+  const HA = Math.acos(cosHA) * 180 / Math.PI // Hour angle in degrees
+
+  const solarNoon = (720 - 4 * lng - eqTime) // in minutes UTC
+  const sunriseMin = solarNoon - HA * 4
+  const sunsetMin = solarNoon + HA * 4
+
+  return {
+    sunrise: sunriseMin, // minutes from midnight UTC
+    sunset: sunsetMin,
+    polarNight: false,
+    polarDay: false
+  }
+}
+
+// Get timezone offset for a lat/lng on a given date (approximate using browser)
+function getTimezoneOffset(lat, lng) {
+  // Rough estimate: 1 hour per 15 degrees longitude
+  // This is approximate but works for the visual display
+  return Math.round(lng / 15) * 60
+}
+
+// Convert minutes-from-midnight-UTC to local HH:MM
+function minutesToLocal(minutesUTC, tzOffsetMinutes) {
+  let local = minutesUTC + tzOffsetMinutes
+  if (local < 0) local += 1440
+  if (local >= 1440) local -= 1440
+  const h = Math.floor(local / 60)
+  const m = Math.floor(local % 60)
+  return { h, m, totalMinutes: local }
+}
+
+function formatTime(h, m) {
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+function timeToMinutes(timeStr) {
+  const [h, m] = timeStr.split(':').map(Number)
+  return h * 60 + m
+}
+
+function dayOfYear(date) {
+  const start = new Date(date.getFullYear(), 0, 0)
+  const diff = date - start
+  return Math.floor(diff / 86400000)
+}
+
+function daysInYear(year) {
+  return ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) ? 366 : 365
+}
+
+// State
+let selectedLat = null
+let selectedLng = null
+let searchTimer = null
+
+// Location search using Nominatim
+const locationInput = document.getElementById('location')
+const locationResults = document.getElementById('locationResults')
+
+locationInput.addEventListener('input', () => {
+  clearTimeout(searchTimer)
+  const q = locationInput.value.trim()
+  if (q.length < 2) {
+    locationResults.style.display = 'none'
+    return
+  }
+  searchTimer = setTimeout(() => searchLocation(q), 400)
+})
+
+locationInput.addEventListener('blur', () => {
+  setTimeout(() => { locationResults.style.display = 'none' }, 200)
+})
+
+async function searchLocation(query) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`)
+    const data = await res.json()
+
+    if (data.length === 0) {
+      locationResults.style.display = 'none'
+      return
+    }
+
+    locationResults.innerHTML = ''
+    for (const place of data) {
+      const div = document.createElement('div')
+      div.className = 'location-result'
+      div.textContent = place.display_name.split(',').slice(0, 3).join(',')
+      div.addEventListener('mousedown', (e) => {
+        e.preventDefault() // Prevent blur
+        selectedLat = parseFloat(place.lat)
+        selectedLng = parseFloat(place.lon)
+        locationInput.value = div.textContent
+        document.getElementById('coords').textContent = `${selectedLat.toFixed(2)}°N, ${selectedLng.toFixed(2)}°E`
+        locationResults.style.display = 'none'
+        calculate()
+      })
+      locationResults.appendChild(div)
+    }
+    locationResults.style.display = 'block'
+  } catch (e) {
+    locationResults.style.display = 'none'
+  }
+}
+
+// Recalculate on time change
+document.getElementById('wakeTime').addEventListener('change', calculate)
+document.getElementById('offTime').addEventListener('change', calculate)
+
+function calculate() {
+  if (selectedLat === null || selectedLng === null) return
+
+  const wakeMin = timeToMinutes(document.getElementById('wakeTime').value)
+  const offMin = timeToMinutes(document.getElementById('offTime').value)
+  const now = new Date()
+  const year = now.getFullYear()
+  const today = dayOfYear(now)
+  const totalDays = daysInYear(year)
+  const tzOffset = getTimezoneOffset(selectedLat, selectedLng)
+
+  // Calculate sunrise/sunset for every day of the year
+  const days = []
+  let morningDays = [] // days where wake > sunrise (sun already up)
+  let eveningDays = [] // days where off < sunset (sun still up)
+
+  for (let d = 1; d <= totalDays; d++) {
+    const date = new Date(year, 0, d)
+    const result = sunriseSunset(date.getFullYear(), date.getMonth() + 1, date.getDate(), selectedLat, selectedLng)
+
+    let sunriseLocal = null
+    let sunsetLocal = null
+    let morningOk = false
+    let eveningOk = false
+
+    if (result.polarDay) {
+      morningOk = true
+      eveningOk = true
+      sunriseLocal = 0
+      sunsetLocal = 1440
+    } else if (result.polarNight) {
+      morningOk = false
+      eveningOk = false
+    } else {
+      const sr = minutesToLocal(result.sunrise, tzOffset)
+      const ss = minutesToLocal(result.sunset, tzOffset)
+      sunriseLocal = sr.totalMinutes
+      sunsetLocal = ss.totalMinutes
+      morningOk = wakeMin >= sunriseLocal // wake after sunrise
+      eveningOk = offMin <= sunsetLocal   // off before sunset
+    }
+
+    days.push({
+      day: d,
+      sunrise: sunriseLocal,
+      sunset: sunsetLocal,
+      morningOk,
+      eveningOk,
+      polarDay: result.polarDay,
+      polarNight: result.polarNight
+    })
+
+    if (morningOk) morningDays.push(d)
+    if (eveningOk) eveningDays.push(d)
+  }
+
+  // Today's info
+  const todayData = days[today - 1]
+  if (todayData && todayData.sunrise !== null) {
+    const srH = Math.floor(todayData.sunrise / 60)
+    const srM = Math.floor(todayData.sunrise % 60)
+    const ssH = Math.floor(todayData.sunset / 60)
+    const ssM = Math.floor(todayData.sunset % 60)
+    document.getElementById('todaySunrise').textContent = formatTime(srH, srM)
+    document.getElementById('todaySunset').textContent = formatTime(ssH, ssM)
+    const daylightMin = todayData.sunset - todayData.sunrise
+    const dlH = Math.floor(daylightMin / 60)
+    const dlM = Math.floor(daylightMin % 60)
+    document.getElementById('todayLength').textContent = `${dlH}h ${dlM}m`
+  } else if (todayData?.polarDay) {
+    document.getElementById('todaySunrise').textContent = '--'
+    document.getElementById('todaySunset').textContent = '--'
+    document.getElementById('todayLength').textContent = '24h'
+  } else {
+    document.getElementById('todaySunrise').textContent = '--'
+    document.getElementById('todaySunset').textContent = '--'
+    document.getElementById('todayLength').textContent = '0h'
+  }
+
+  // Find contiguous spans
+  function findSpans(dayList) {
+    if (dayList.length === 0) return []
+    const spans = []
+    let start = dayList[0]
+    let prev = dayList[0]
+    for (let i = 1; i < dayList.length; i++) {
+      if (dayList[i] !== prev + 1) {
+        spans.push({ start, end: prev })
+        start = dayList[i]
+      }
+      prev = dayList[i]
+    }
+    spans.push({ start, end: prev })
+
+    // Check if first and last spans wrap around the year
+    if (spans.length > 1 && spans[0].start === 1 && spans[spans.length - 1].end === totalDays) {
+      const last = spans.pop()
+      spans[0] = { start: last.start, end: spans[0].end, wraps: true }
+    }
+
+    return spans
+  }
+
+  const morningSpans = findSpans(morningDays)
+  const eveningSpans = findSpans(eveningDays)
+
+  // Morning status
+  const morningEl = document.getElementById('morningStatus')
+  const todayMorning = todayData?.morningOk
+  renderStatus(morningEl, 'Morning', todayMorning, morningSpans, morningDays, today, totalDays, wakeMin, todayData, 'sunrise')
+
+  // Evening status
+  const eveningEl = document.getElementById('eveningStatus')
+  const todayEvening = todayData?.eveningOk
+  renderStatus(eveningEl, 'Evening', todayEvening, eveningSpans, eveningDays, today, totalDays, offMin, todayData, 'sunset')
+
+  // Year bar
+  renderYearBar(days, today, totalDays)
+
+  // Show results
+  document.getElementById('results').classList.add('visible')
+}
+
+function renderStatus(el, label, isCurrently, spans, dayList, today, totalDays, userTime, todayData, sunEvent) {
+  const isMorning = label === 'Morning'
+  const statusLabel = isMorning ? 'Wake after sunrise' : 'Off before sunset'
+
+  let html = `<div class="status-label">${statusLabel}</div>`
+
+  if (isCurrently) {
+    // Find which span we're in and when it ends
+    let endsDay = null
+    for (const span of spans) {
+      if (span.wraps) {
+        if (today >= span.start || today <= span.end) {
+          endsDay = span.end
+          break
+        }
+      } else if (today >= span.start && today <= span.end) {
+        endsDay = span.end
+        break
+      }
+    }
+    const daysLeft = endsDay !== null ? ((endsDay - today + totalDays) % totalDays) || totalDays : 0
+
+    html += `<div class="status-value">Yes</div>`
+    if (isMorning) {
+      const diff = Math.round(userTime - todayData.sunrise)
+      html += `<div class="status-detail">The sun rose ${diff} minutes before your alarm today. You have ${daysLeft} more day${daysLeft !== 1 ? 's' : ''} of waking up to daylight.</div>`
+    } else {
+      const diff = Math.round(todayData.sunset - userTime)
+      html += `<div class="status-detail">The sun sets ${diff} minutes after you leave work today. You have ${daysLeft} more day${daysLeft !== 1 ? 's' : ''} of leaving in daylight.</div>`
+    }
+  } else {
+    // Find next favorable day
+    let daysUntil = 0
+    for (let d = 1; d <= totalDays; d++) {
+      const checkDay = ((today - 1 + d) % totalDays) + 1
+      if (dayList.includes(checkDay)) {
+        daysUntil = d
+        break
+      }
+    }
+
+    html += `<div class="status-value">Not yet</div>`
+    if (daysUntil > 0) {
+      if (isMorning) {
+        const diff = Math.round(todayData.sunrise - userTime)
+        html += `<div class="status-detail">The sun rises ${diff} minutes after your alarm today. ${daysUntil} day${daysUntil !== 1 ? 's' : ''} until you wake up to daylight again.</div>`
+      } else {
+        const diff = Math.round(userTime - todayData.sunset)
+        html += `<div class="status-detail">The sun sets ${diff} minutes before you leave work today. ${daysUntil} day${daysUntil !== 1 ? 's' : ''} until you leave in daylight again.</div>`
+      }
+    } else {
+      if (isMorning) {
+        html += `<div class="status-detail">The sun never rises before your alarm at this latitude.</div>`
+      } else {
+        html += `<div class="status-detail">The sun always sets before you leave work at this latitude.</div>`
+      }
+    }
+  }
+
+  // Show span dates
+  if (spans.length > 0) {
+    const monthDay = (dayNum) => {
+      const d = new Date(new Date().getFullYear(), 0, dayNum)
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      return `${months[d.getMonth()]} ${d.getDate()}`
+    }
+    const totalFavorable = dayList.length
+    const pct = Math.round((totalFavorable / totalDays) * 100)
+    let spanText = spans.map(s => `${monthDay(s.start)} \u2013 ${monthDay(s.end)}`).join(', ')
+    html += `<div class="status-detail" style="margin-top:0.5rem;border-top:1px solid #eee;padding-top:0.5rem">${totalFavorable} days/year (${pct}%): ${spanText}</div>`
+  }
+
+  el.innerHTML = html
+}
+
+function renderYearBar(days, today, totalDays) {
+  const bar = document.getElementById('yearBar')
+  bar.innerHTML = ''
+
+  // Build per-day classification
+  const classifications = days.map(d => {
+    if (d.morningOk && d.eveningOk) return 'both'
+    if (d.morningOk) return 'morning'
+    if (d.eveningOk) return 'evening'
+    return 'none'
+  })
+
+  // Render contiguous segments
+  let i = 0
+  while (i < classifications.length) {
+    const cls = classifications[i]
+    if (cls === 'none') { i++; continue }
+
+    let end = i
+    while (end < classifications.length && classifications[end] === cls) end++
+
+    const left = (i / totalDays) * 100
+    const width = ((end - i) / totalDays) * 100
+    const fill = document.createElement('div')
+    fill.className = `year-bar-fill fill-${cls}`
+    fill.style.left = left + '%'
+    fill.style.width = width + '%'
+    bar.appendChild(fill)
+
+    i = end
+  }
+
+  // Today marker
+  const marker = document.createElement('div')
+  marker.className = 'today-marker'
+  marker.style.left = ((today - 1) / totalDays * 100) + '%'
+  bar.appendChild(marker)
+}
+
+// Load saved data
+const saved = JSON.parse(localStorage.getItem('daylight-data') || '{}')
+if (saved.location) locationInput.value = saved.location
+if (saved.lat != null) {
+  selectedLat = saved.lat
+  selectedLng = saved.lng
+  document.getElementById('coords').textContent = `${selectedLat.toFixed(2)}°N, ${selectedLng.toFixed(2)}°E`
+}
+if (saved.wake) document.getElementById('wakeTime').value = saved.wake
+if (saved.off) document.getElementById('offTime').value = saved.off
+
+// Save on change
+function saveData() {
+  localStorage.setItem('daylight-data', JSON.stringify({
+    location: locationInput.value,
+    lat: selectedLat,
+    lng: selectedLng,
+    wake: document.getElementById('wakeTime').value,
+    off: document.getElementById('offTime').value
+  }))
+}
+
+locationInput.addEventListener('change', saveData)
+document.getElementById('wakeTime').addEventListener('change', () => { saveData(); calculate() })
+document.getElementById('offTime').addEventListener('change', () => { saveData(); calculate() })
+
+// Auto-calculate if we have saved data
+if (selectedLat !== null) calculate()
+</script>
+
+</body>
+</html>

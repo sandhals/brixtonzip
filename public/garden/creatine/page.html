@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creatine</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 300;
+  background: #f5f5f5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
+  color: #111;
+}
+
+.container {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+h1 { font-size: 1rem; font-weight: 400; text-align: center; }
+
+.subtitle {
+  font-size: 0.7rem;
+  text-align: center;
+  color: #888;
+  margin-top: -1rem;
+}
+
+.section {
+  border: 1px solid black;
+  padding: 1rem;
+  background: white;
+}
+
+.section-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  margin-bottom: 0.5rem;
+}
+
+label {
+  font-size: 0.7rem;
+  color: #666;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+input[type="number"] {
+  border: 1px solid black;
+  padding: 0.5rem;
+  font-size: 16px;
+  font-family: inherit;
+  font-weight: 300;
+  background: white;
+  width: 4.5rem;
+}
+
+input[type="number"]:disabled {
+  opacity: 0.3;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] { -moz-appearance: textfield; }
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.checkbox-row input[type="checkbox"] { margin: 0; }
+
+.past-note {
+  font-size: 0.6rem;
+  color: #999;
+  margin-top: 0.15rem;
+}
+
+.level-bar-wrap {
+  margin-top: 0.75rem;
+}
+
+.level-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.level-bar {
+  height: 6px;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  position: relative;
+  overflow: hidden;
+}
+
+.level-fill {
+  height: 100%;
+  background: #111;
+  transition: width 0.3s ease;
+}
+
+.plan-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.dose-control {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid black;
+}
+
+.dose-control button {
+  background: none;
+  border: none;
+  width: 2rem;
+  height: 2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dose-control button:active { background: #f0f0f0; }
+
+.dose-control span {
+  font-size: 1rem;
+  min-width: 1.5rem;
+  text-align: center;
+  font-weight: 400;
+}
+
+.daily-total {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.phase-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #eee;
+  font-size: 0.75rem;
+  color: #666;
+  flex-wrap: wrap;
+}
+
+.phase-row input[type="number"] {
+  width: 3rem;
+  padding: 0.25rem;
+  font-size: 14px;
+}
+
+.phase-row input[type="checkbox"] { margin: 0; }
+
+.projection-main {
+  font-size: 1.1rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.projection-detail {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 0.35rem;
+  line-height: 1.5;
+}
+
+.tip {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #eee;
+  line-height: 1.5;
+}
+
+.tracker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.reset-btn {
+  background: none;
+  border: none;
+  font-size: 0.65rem;
+  color: #999;
+  cursor: pointer;
+}
+
+.reset-btn:hover { color: #666; }
+
+.add-past-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.add-past-btn {
+  background: none;
+  border: 1px solid #ddd;
+  font-size: 0.65rem;
+  color: #999;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  font-family: inherit;
+}
+
+.add-past-btn:hover {
+  border-color: #999;
+  color: #666;
+}
+
+.day-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.75rem;
+}
+
+.day-row:last-child { border-bottom: none; }
+
+.day-row.future .day-label,
+.day-row.future .day-grams,
+.day-row.future .day-level,
+.day-row.future .dose-btn {
+  opacity: 0.35;
+}
+
+.day-row.future .dose-dot {
+  opacity: 0.35;
+}
+
+.day-row.future .dose-dot.green {
+  opacity: 1;
+}
+
+.day-divider {
+  border-top: 1px solid #ddd;
+  margin: 0.35rem 0;
+  position: relative;
+  height: 0;
+}
+
+.day-divider-label {
+  position: absolute;
+  right: 0;
+  top: -0.55em;
+  background: white;
+  padding: 0 0.25rem;
+  font-size: 0.55rem;
+  color: #bbb;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.day-label {
+  width: 4.5rem;
+  flex-shrink: 0;
+  color: #888;
+  font-size: 0.7rem;
+}
+
+.day-label.today {
+  color: #111;
+  font-weight: 400;
+}
+
+.day-doses {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.dose-btn {
+  background: none;
+  border: 1px solid #ddd;
+  width: 1.4rem;
+  height: 1.4rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.dose-btn:active {
+  background: #f0f0f0;
+  border-color: #999;
+}
+
+.dose-dot {
+  width: 7px;
+  height: 7px;
+  background: #111;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.dose-dot.unchecked {
+  background: transparent;
+  border: 1.5px solid #bbb;
+}
+
+.dose-dot.green {
+  background: #2e7d32;
+}
+
+.day-grams {
+  width: 2rem;
+  text-align: right;
+  color: #888;
+  flex-shrink: 0;
+  font-size: 0.65rem;
+}
+
+.day-level {
+  width: 2.5rem;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.7rem;
+}
+
+.day-level.sat { font-weight: 400; }
+
+.day-custom {
+  font-size: 0.5rem;
+  color: #c90;
+  flex-shrink: 0;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Creatine</h1>
+  <p class="subtitle">How many days until you're fully saturated?</p>
+
+  <div class="section">
+    <div class="section-label">Starting point</div>
+    <label for="daysSince">Days since last fully saturated</label>
+    <input type="number" id="daysSince" min="0" value="30">
+    <div id="pastNote" class="past-note"></div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="neverSaturated">
+      <label for="neverSaturated" style="margin:0">I've never been fully saturated</label>
+    </div>
+    <div class="level-bar-wrap">
+      <div class="level-info">
+        <span id="levelText">80g / 120g</span>
+        <span id="levelPct">67%</span>
+      </div>
+      <div class="level-bar">
+        <div class="level-fill" id="levelFill" style="width:67%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Your plan</div>
+    <div class="plan-row">
+      <div>
+        <label for="doseGrams">Per dose</label>
+        <div style="display:flex;align-items:baseline;gap:0.25rem">
+          <input type="number" id="doseGrams" min="1" max="20" value="5">
+          <span style="font-size:0.7rem;color:#666">g</span>
+        </div>
+      </div>
+      <div>
+        <label>Doses / day</label>
+        <div class="dose-control">
+          <button id="doseMinus">&minus;</button>
+          <span id="defaultDoses">3</span>
+          <button id="dosePlus">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="daily-total" id="dailyTotal">= 15g / day</div>
+    <div class="phase-row">
+      <input type="checkbox" id="hasPhase">
+      <span>After</span>
+      <input type="number" id="phaseDays" min="1" max="30" value="7">
+      <span>days, switch to</span>
+      <input type="number" id="phaseDoses" min="1" max="10" value="1">
+      <span>dose/day</span>
+    </div>
+  </div>
+
+  <div class="section" id="projection"></div>
+
+  <div class="section">
+    <div class="tracker-header">
+      <span class="section-label" style="margin:0">Day by day</span>
+      <button class="reset-btn" id="resetBtn">reset all</button>
+    </div>
+    <div id="dayTracker"></div>
+  </div>
+</div>
+
+<script>
+const CMAX = 120
+const BASELINE = 80
+const DECAY_RATE = 0.017
+const GUT_ABSORPTION = 0.95
+const SYNTHESIS = 1.5
+const SATURATION_THRESHOLD = 114
+const MAX_DAYS = 60
+const MAX_LOADING_DOSE = 20
+
+let state = {
+  daysSince: 30,
+  neverSaturated: false,
+  doseGrams: 5,
+  defaultDosesPerDay: 3,
+  hasPhase: false,
+  phaseDays: 7,
+  phaseDoses: 1,
+  customDays: {},
+  pastDays: 0,
+  checkedDoses: {}
+}
+
+const els = {
+  daysSince: document.getElementById('daysSince'),
+  neverSaturated: document.getElementById('neverSaturated'),
+  doseGrams: document.getElementById('doseGrams'),
+  defaultDoses: document.getElementById('defaultDoses'),
+  hasPhase: document.getElementById('hasPhase'),
+  phaseDays: document.getElementById('phaseDays'),
+  phaseDoses: document.getElementById('phaseDoses'),
+  levelText: document.getElementById('levelText'),
+  levelPct: document.getElementById('levelPct'),
+  levelFill: document.getElementById('levelFill'),
+  dailyTotal: document.getElementById('dailyTotal'),
+  projection: document.getElementById('projection'),
+  dayTracker: document.getElementById('dayTracker'),
+  pastNote: document.getElementById('pastNote')
+}
+
+function getStartLevel() {
+  if (state.neverSaturated) return BASELINE
+  // Pure decay days = total days since saturated minus tracked past days
+  const pureDecayDays = Math.max(0, state.daysSince - state.pastDays)
+  return Math.max(BASELINE, CMAX * Math.pow(0.983, pureDecayDays))
+}
+
+function simulateDay(level, doseGrams) {
+  const absorbed = doseGrams * GUT_ABSORPTION
+  const stored = absorbed * Math.max(0, 1 - Math.pow(level / CMAX, 2))
+  const lost = level * DECAY_RATE
+  return Math.min(CMAX, Math.max(0, level + stored - lost + SYNTHESIS))
+}
+
+function getDosesForDay(d) {
+  if (d in state.customDays) return state.customDays[d]
+  if (state.hasPhase && d >= state.phaseDays) return state.phaseDoses
+  return state.defaultDosesPerDay
+}
+
+function getDailyGrams(d) {
+  return getDosesForDay(d) * state.doseGrams
+}
+
+function simulate() {
+  const startLevel = getStartLevel()
+  let level = startLevel
+  const levels = [level]
+  let satDay = -1
+  const totalDays = state.pastDays + MAX_DAYS
+
+  for (let i = 0; i < totalDays; i++) {
+    const dayOffset = i - state.pastDays
+    let dailyGrams
+    if (dayOffset <= 0) {
+      // Past/today: use checked doses only
+      dailyGrams = (state.checkedDoses[dayOffset] || 0) * state.doseGrams
+    } else {
+      // Future: use planned doses
+      dailyGrams = getDailyGrams(dayOffset)
+    }
+    level = simulateDay(level, dailyGrams)
+    levels.push(level)
+    if (satDay === -1 && level >= SATURATION_THRESHOLD && dayOffset >= 0) satDay = dayOffset
+  }
+
+  // currentLevel = level at start of today (before today's doses)
+  const currentLevel = levels[state.pastDays]
+  return { levels, satDay, startLevel, currentLevel }
+}
+
+function simulateAt(dailyGrams, fromLevel) {
+  let level = fromLevel
+  for (let d = 0; d < MAX_DAYS; d++) {
+    level = simulateDay(level, dailyGrams)
+    if (level >= SATURATION_THRESHOLD) return d + 1
+  }
+  return -1
+}
+
+function update() {
+  state.daysSince = parseInt(els.daysSince.value) || 0
+  state.neverSaturated = els.neverSaturated.checked
+  state.doseGrams = Math.max(1, parseInt(els.doseGrams.value) || 5)
+  state.hasPhase = els.hasPhase.checked
+  state.phaseDays = Math.max(1, parseInt(els.phaseDays.value) || 7)
+  state.phaseDoses = Math.max(0, parseInt(els.phaseDoses.value) || 1)
+
+  els.daysSince.disabled = state.neverSaturated
+  els.phaseDays.disabled = !state.hasPhase
+  els.phaseDoses.disabled = !state.hasPhase
+
+  // Daily total
+  const daily = state.doseGrams * state.defaultDosesPerDay
+  els.dailyTotal.textContent = `= ${daily}g / day`
+  els.defaultDoses.textContent = state.defaultDosesPerDay
+
+  // Past note
+  if (state.pastDays > 0) {
+    els.pastNote.textContent = `includes ${state.pastDays} tracking day${state.pastDays !== 1 ? 's' : ''}`
+  } else {
+    els.pastNote.textContent = ''
+  }
+
+  // Simulate
+  const { levels, satDay, startLevel, currentLevel } = simulate()
+
+  // Level display - use currentLevel (reflects past checked doses)
+  const pct = Math.round((currentLevel / CMAX) * 100)
+  els.levelText.textContent = `${Math.round(currentLevel)}g / ${CMAX}g`
+  els.levelPct.textContent = `${pct}%`
+  els.levelFill.style.width = pct + '%'
+
+  const maxDays = simulateAt(MAX_LOADING_DOSE, currentLevel)
+  renderProjection(satDay, maxDays, levels, currentLevel)
+  renderDayTracker(levels, satDay)
+  saveState()
+}
+
+function renderProjection(satDay, maxDays, levels, currentLevel) {
+  const el = els.projection
+  let html = '<div class="section-label">Projection</div>'
+
+  if (currentLevel >= SATURATION_THRESHOLD) {
+    html += '<div class="projection-main">Already at full saturation</div>'
+    html += '<div class="projection-detail">Maintain with 3\u20135g/day to stay saturated.</div>'
+  } else if (satDay === 0) {
+    html += '<div class="projection-main">Saturated after today\u2019s doses</div>'
+    html += '<div class="projection-detail">Maintain with 3\u20135g/day to stay saturated.</div>'
+  } else if (satDay === -1) {
+    html += '<div class="projection-main">Not reached within 60 days</div>'
+    html += '<div class="projection-detail">Consider a higher dose to speed up loading.</div>'
+    if (maxDays > 0) {
+      html += `<div class="tip">At ${MAX_LOADING_DOSE}g/day (split across 4 doses), you'd reach full saturation in ~${maxDays} days.</div>`
+    }
+  } else {
+    let totalGrams = 0
+    for (let d = 1; d <= satDay; d++) totalGrams += getDailyGrams(d)
+    const avgDaily = Math.round(totalGrams / satDay)
+
+    html += `<div class="projection-main">~${satDay} day${satDay !== 1 ? 's' : ''} to full saturation</div>`
+    html += `<div class="projection-detail">At ~${avgDaily}g/day avg, starting from ${Math.round(currentLevel)}g.</div>`
+
+    if (maxDays > 0 && maxDays < satDay - 1 && avgDaily < MAX_LOADING_DOSE) {
+      const saved = satDay - maxDays
+      html += `<div class="tip">At ${MAX_LOADING_DOSE}g/day (max loading), you could get there in ~${maxDays} days \u2014 ${saved} day${saved !== 1 ? 's' : ''} sooner.</div>`
+    }
+  }
+
+  el.innerHTML = html
+}
+
+function renderDayTracker(levels, satDay) {
+  const el = els.dayTracker
+  // Show all future days until saturation + a couple extra, or all 60 if not reached
+  const futureShow = satDay > 0 ? satDay + 2 : MAX_DAYS
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const today = new Date()
+  let html = ''
+
+  // Add past day button
+  html += '<div class="add-past-row">'
+  html += '<button class="add-past-btn" id="addPastDayBtn">+ add past day</button>'
+  if (state.pastDays > 0) {
+    html += '<button class="add-past-btn" id="removePastDayBtn">\u2212 remove</button>'
+  }
+  html += '</div>'
+
+  for (let d = -state.pastDays; d < futureShow; d++) {
+    const date = new Date(today)
+    date.setDate(date.getDate() + d)
+
+    const isFuture = d > 0
+
+    let dayLabel
+    if (d === 0) dayLabel = 'Today'
+    else if (d === 1) dayLabel = 'Tomorrow'
+    else if (d === -1) dayLabel = 'Yesterday'
+    else dayLabel = `${dayNames[date.getDay()]} ${date.getDate()}`
+
+    // Level after this day from simulation
+    const levelIndex = d + state.pastDays + 1
+    const levelAfter = levels[levelIndex] !== undefined ? levels[levelIndex] : levels[levels.length - 1]
+    const isSat = levelAfter >= SATURATION_THRESHOLD
+
+    // Row classes
+    let rowClass = 'day-row'
+    if (isFuture) rowClass += ' future'
+
+    // Divider between today and future
+    if (d === 1) {
+      html += '<div class="day-divider"><span class="day-divider-label">projected</span></div>'
+    }
+
+    let dots = ''
+    let grams
+    let isCustom = false
+
+    if (!isFuture) {
+      // Past/Today: filled dots = checked, hollow dots = remaining planned
+      const planned = state.defaultDosesPerDay
+      const checked = state.checkedDoses[d] || 0
+      const maxDots = Math.max(planned, checked)
+      for (let i = 0; i < maxDots; i++) {
+        if (i < checked) {
+          dots += `<span class="dose-dot${isSat ? ' green' : ''}"></span>`
+        } else {
+          dots += '<span class="dose-dot unchecked"></span>'
+        }
+      }
+      grams = checked * state.doseGrams
+    } else {
+      // Future: show planned dots (dimmed via row class, green if saturated)
+      const doses = getDosesForDay(d)
+      grams = doses * state.doseGrams
+      isCustom = d in state.customDays
+      for (let i = 0; i < doses; i++) {
+        dots += `<span class="dose-dot${isSat ? ' green' : ''}"></span>`
+      }
+    }
+
+    html += `<div class="${rowClass}">
+      <span class="day-label${d === 0 ? ' today' : ''}">${dayLabel}</span>
+      <div class="day-doses">
+        <button class="dose-btn" data-day="${d}" data-delta="-1">\u2212</button>
+        ${dots}
+        <button class="dose-btn" data-day="${d}" data-delta="1">+</button>
+        ${isCustom ? '<span class="day-custom">\u2731</span>' : ''}
+      </div>
+      <span class="day-grams">${grams}g</span>
+      <span class="day-level${isSat ? ' sat' : ''}">${Math.round(levelAfter)}g</span>
+    </div>`
+  }
+
+  el.innerHTML = html
+}
+
+// Event delegation for day tracker buttons
+els.dayTracker.addEventListener('click', (e) => {
+  // Add past day
+  if (e.target.id === 'addPastDayBtn') {
+    state.pastDays = Math.min(30, state.pastDays + 1)
+    state.daysSince++
+    els.daysSince.value = state.daysSince
+    update()
+    return
+  }
+  // Remove past day
+  if (e.target.id === 'removePastDayBtn') {
+    if (state.pastDays > 0) {
+      delete state.checkedDoses[-state.pastDays]
+      state.pastDays--
+      state.daysSince = Math.max(0, state.daysSince - 1)
+      els.daysSince.value = state.daysSince
+      update()
+    }
+    return
+  }
+
+  const btn = e.target.closest('.dose-btn')
+  if (!btn) return
+  const day = parseInt(btn.dataset.day)
+  const delta = parseInt(btn.dataset.delta)
+
+  if (day <= 0) {
+    // Past/Today: modify checked doses
+    const current = state.checkedDoses[day] || 0
+    const newVal = Math.max(0, Math.min(10, current + delta))
+    if (newVal === 0) delete state.checkedDoses[day]
+    else state.checkedDoses[day] = newVal
+  } else {
+    // Future: modify planned doses (customDays)
+    const current = getDosesForDay(day)
+    const newVal = Math.max(0, Math.min(10, current + delta))
+
+    let defaultVal = state.defaultDosesPerDay
+    if (state.hasPhase && day >= state.phaseDays) defaultVal = state.phaseDoses
+
+    if (newVal === defaultVal) {
+      delete state.customDays[day]
+    } else {
+      state.customDays[day] = newVal
+    }
+  }
+  update()
+})
+
+// Default dose +/- buttons
+document.getElementById('doseMinus').addEventListener('click', () => {
+  state.defaultDosesPerDay = Math.max(0, state.defaultDosesPerDay - 1)
+  update()
+})
+document.getElementById('dosePlus').addEventListener('click', () => {
+  state.defaultDosesPerDay = Math.min(10, state.defaultDosesPerDay + 1)
+  update()
+})
+
+// Reset
+document.getElementById('resetBtn').addEventListener('click', () => {
+  state.daysSince = Math.max(0, state.daysSince - state.pastDays)
+  els.daysSince.value = state.daysSince
+  state.customDays = {}
+  state.checkedDoses = {}
+  state.pastDays = 0
+  update()
+})
+
+// Input listeners
+els.daysSince.addEventListener('input', () => {
+  // Manual edit of daysSince resets past tracking
+  state.pastDays = 0
+  state.checkedDoses = {}
+  update()
+})
+els.neverSaturated.addEventListener('change', () => {
+  if (els.neverSaturated.checked) {
+    state.pastDays = 0
+    state.checkedDoses = {}
+  }
+  update()
+})
+els.doseGrams.addEventListener('input', update)
+els.hasPhase.addEventListener('change', update)
+els.phaseDays.addEventListener('input', update)
+els.phaseDoses.addEventListener('input', update)
+
+// Persist
+function saveState() {
+  localStorage.setItem('creatine-state', JSON.stringify(state))
+}
+
+function loadState() {
+  const s = JSON.parse(localStorage.getItem('creatine-state') || '{}')
+  if (s.daysSince != null) state.daysSince = s.daysSince
+  if (s.neverSaturated != null) state.neverSaturated = s.neverSaturated
+  if (s.doseGrams != null) state.doseGrams = s.doseGrams
+  if (s.defaultDosesPerDay != null) state.defaultDosesPerDay = s.defaultDosesPerDay
+  if (s.hasPhase != null) state.hasPhase = s.hasPhase
+  if (s.phaseDays != null) state.phaseDays = s.phaseDays
+  if (s.phaseDoses != null) state.phaseDoses = s.phaseDoses
+  if (s.customDays) state.customDays = s.customDays
+  if (s.pastDays != null) state.pastDays = s.pastDays
+  if (s.checkedDoses) state.checkedDoses = s.checkedDoses
+
+  els.daysSince.value = state.daysSince
+  els.neverSaturated.checked = state.neverSaturated
+  els.doseGrams.value = state.doseGrams
+  els.hasPhase.checked = state.hasPhase
+  els.phaseDays.value = state.phaseDays
+  els.phaseDoses.value = state.phaseDoses
+}
+
+loadState()
+update()
+</script>
+
+</body>
+</html>
