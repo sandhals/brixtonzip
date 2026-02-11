@@ -488,6 +488,23 @@ function simulateDay(level, doseGrams) {
   return Math.min(CMAX, Math.max(0, level + stored - lost + SYNTHESIS))
 }
 
+// Per-dose simulation: returns array of booleans for whether each dose is "green"
+// (taken at or creating saturated state)
+function getDoseGreens(startLevel, numDoses, doseGrams) {
+  if (numDoses === 0) return []
+  const greens = []
+  let level = startLevel
+  for (let i = 0; i < numDoses; i++) {
+    const absorbed = doseGrams * GUT_ABSORPTION
+    const stored = absorbed * Math.max(0, 1 - Math.pow(level / CMAX, 2))
+    const lost = level * DECAY_RATE / numDoses
+    const synth = SYNTHESIS / numDoses
+    level = Math.min(CMAX, Math.max(0, level + stored - lost + synth))
+    greens.push(level >= SATURATION_THRESHOLD)
+  }
+  return greens
+}
+
 function getDosesForDay(d) {
   if (d in state.customDays) return state.customDays[d]
   if (state.hasPhase && d >= state.phaseDays) return state.phaseDoses
@@ -639,6 +656,10 @@ function renderDayTracker(levels, satDay) {
     const levelAfter = levels[levelIndex] !== undefined ? levels[levelIndex] : levels[levels.length - 1]
     const isSat = levelAfter >= SATURATION_THRESHOLD
 
+    // Level at the START of this day (before doses)
+    const startIndex = d + state.pastDays
+    const levelBefore = levels[startIndex] !== undefined ? levels[startIndex] : levels[levels.length - 1]
+
     // Row classes
     let rowClass = 'day-row'
     if (isFuture) rowClass += ' future'
@@ -657,21 +678,23 @@ function renderDayTracker(levels, satDay) {
       const planned = state.defaultDosesPerDay
       const checked = state.checkedDoses[d] || 0
       const maxDots = Math.max(planned, checked)
+      const greens = getDoseGreens(levelBefore, checked, state.doseGrams)
       for (let i = 0; i < maxDots; i++) {
         if (i < checked) {
-          dots += `<span class="dose-dot${isSat ? ' green' : ''}"></span>`
+          dots += `<span class="dose-dot${greens[i] ? ' green' : ''}"></span>`
         } else {
           dots += '<span class="dose-dot unchecked"></span>'
         }
       }
       grams = checked * state.doseGrams
     } else {
-      // Future: show planned dots (dimmed via row class, green if saturated)
+      // Future: show planned dots (dimmed via row class, green per-dose)
       const doses = getDosesForDay(d)
       grams = doses * state.doseGrams
       isCustom = d in state.customDays
+      const greens = getDoseGreens(levelBefore, doses, state.doseGrams)
       for (let i = 0; i < doses; i++) {
-        dots += `<span class="dose-dot${isSat ? ' green' : ''}"></span>`
+        dots += `<span class="dose-dot${greens[i] ? ' green' : ''}"></span>`
       }
     }
 
