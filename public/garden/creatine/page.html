@@ -444,6 +444,13 @@ const SATURATION_THRESHOLD = 114
 const MAX_DAYS = 60
 const MAX_LOADING_DOSE = 20
 
+function dateStr(offset) {
+  const d = new Date()
+  d.setDate(d.getDate() + offset)
+  return d.toISOString().split('T')[0]
+}
+function todayStr() { return dateStr(0) }
+
 let state = {
   daysSince: 30,
   neverSaturated: false,
@@ -506,7 +513,8 @@ function getDoseGreens(startLevel, numDoses, doseGrams) {
 }
 
 function getDosesForDay(d) {
-  if (d in state.customDays) return state.customDays[d]
+  const key = dateStr(d)
+  if (key in state.customDays) return state.customDays[key]
   if (state.hasPhase && d >= state.phaseDays) return state.phaseDoses
   return state.defaultDosesPerDay
 }
@@ -527,7 +535,7 @@ function simulate() {
     let dailyGrams
     if (dayOffset <= 0) {
       // Past/today: use checked doses only
-      dailyGrams = (state.checkedDoses[dayOffset] || 0) * state.doseGrams
+      dailyGrams = (state.checkedDoses[dateStr(dayOffset)] || 0) * state.doseGrams
     } else {
       // Future: use planned doses
       dailyGrams = getDailyGrams(dayOffset)
@@ -676,7 +684,7 @@ function renderDayTracker(levels, satDay) {
     if (!isFuture) {
       // Past/Today: filled dots = checked, hollow dots = remaining planned
       const planned = state.defaultDosesPerDay
-      const checked = state.checkedDoses[d] || 0
+      const checked = state.checkedDoses[dateStr(d)] || 0
       const maxDots = Math.max(planned, checked)
       const greens = getDoseGreens(levelBefore, checked, state.doseGrams)
       for (let i = 0; i < maxDots; i++) {
@@ -691,7 +699,7 @@ function renderDayTracker(levels, satDay) {
       // Future: show planned dots (dimmed via row class, green per-dose)
       const doses = getDosesForDay(d)
       grams = doses * state.doseGrams
-      isCustom = d in state.customDays
+      isCustom = dateStr(d) in state.customDays
       const greens = getDoseGreens(levelBefore, doses, state.doseGrams)
       for (let i = 0; i < doses; i++) {
         dots += `<span class="dose-dot${greens[i] ? ' green' : ''}"></span>`
@@ -727,7 +735,7 @@ els.dayTracker.addEventListener('click', (e) => {
   // Remove past day
   if (e.target.id === 'removePastDayBtn') {
     if (state.pastDays > 0) {
-      delete state.checkedDoses[-state.pastDays]
+      delete state.checkedDoses[dateStr(-state.pastDays)]
       state.pastDays--
       state.daysSince = Math.max(0, state.daysSince - 1)
       els.daysSince.value = state.daysSince
@@ -743,10 +751,11 @@ els.dayTracker.addEventListener('click', (e) => {
 
   if (day <= 0) {
     // Past/Today: modify checked doses
-    const current = state.checkedDoses[day] || 0
+    const key = dateStr(day)
+    const current = state.checkedDoses[key] || 0
     const newVal = Math.max(0, Math.min(10, current + delta))
-    if (newVal === 0) delete state.checkedDoses[day]
-    else state.checkedDoses[day] = newVal
+    if (newVal === 0) delete state.checkedDoses[key]
+    else state.checkedDoses[key] = newVal
   } else {
     // Future: modify planned doses (customDays)
     const current = getDosesForDay(day)
@@ -755,10 +764,11 @@ els.dayTracker.addEventListener('click', (e) => {
     let defaultVal = state.defaultDosesPerDay
     if (state.hasPhase && day >= state.phaseDays) defaultVal = state.phaseDoses
 
+    const key = dateStr(day)
     if (newVal === defaultVal) {
-      delete state.customDays[day]
+      delete state.customDays[key]
     } else {
-      state.customDays[day] = newVal
+      state.customDays[key] = newVal
     }
   }
   update()
@@ -805,6 +815,7 @@ els.phaseDoses.addEventListener('input', update)
 
 // Persist
 function saveState() {
+  state.anchorDate = todayStr()
   localStorage.setItem('creatine-state', JSON.stringify(state))
 }
 
@@ -820,6 +831,38 @@ function loadState() {
   if (s.customDays) state.customDays = s.customDays
   if (s.pastDays != null) state.pastDays = s.pastDays
   if (s.checkedDoses) state.checkedDoses = s.checkedDoses
+
+  // Migrate old offset-based keys to date strings
+  if (!s.anchorDate && (Object.keys(state.checkedDoses).length > 0 || Object.keys(state.customDays).length > 0)) {
+    const migrated = {}
+    for (const [offset, val] of Object.entries(state.checkedDoses)) {
+      migrated[dateStr(parseInt(offset))] = val
+    }
+    state.checkedDoses = migrated
+    const migratedCustom = {}
+    for (const [offset, val] of Object.entries(state.customDays)) {
+      migratedCustom[dateStr(parseInt(offset))] = val
+    }
+    state.customDays = migratedCustom
+  }
+
+  // Handle elapsed days since last visit
+  if (s.anchorDate) {
+    const anchor = new Date(s.anchorDate + 'T00:00:00')
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    const elapsed = Math.round((now - anchor) / 86400000)
+    if (elapsed >= 5) {
+      // Auto-reset after 5 days of no input
+      state.customDays = {}
+      state.checkedDoses = {}
+      state.pastDays = 0
+      state.daysSince += elapsed
+    } else if (elapsed > 0) {
+      state.daysSince += elapsed
+      state.pastDays += elapsed
+    }
+  }
 
   els.daysSince.value = state.daysSince
   els.neverSaturated.checked = state.neverSaturated

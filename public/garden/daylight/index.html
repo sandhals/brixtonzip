@@ -431,11 +431,36 @@ function sunriseSunset(year, month, day, lat, lng) {
   }
 }
 
-// Get timezone offset for a lat/lng on a given date (approximate using browser)
-function getTimezoneOffset(lat, lng) {
-  // Rough estimate: 1 hour per 15 degrees longitude
-  // This is approximate but works for the visual display
-  return Math.round(lng / 15) * 60
+// Get UTC offset in minutes for a specific date in the selected timezone
+function getTimezoneOffsetForDate(date) {
+  if (!selectedTimezone) return Math.round(selectedLng / 15) * 60
+  try {
+    const utcStr = date.toLocaleString('en-US', { timeZone: 'UTC' })
+    const tzStr = date.toLocaleString('en-US', { timeZone: selectedTimezone })
+    const utcDate = new Date(utcStr)
+    const tzDate = new Date(tzStr)
+    return (tzDate - utcDate) / 60000
+  } catch (e) {
+    return Math.round(selectedLng / 15) * 60
+  }
+}
+
+async function fetchTimezone(lat, lng) {
+  try {
+    const res = await fetch(`https://timeapi.io/api/timezone/coordinate?latitude=${lat}&longitude=${lng}`)
+    if (res.ok) {
+      const data = await res.json()
+      return data.timeZone || null
+    }
+  } catch (e) {}
+  try {
+    const res = await fetch(`https://secure.geonames.org/timezoneJSON?lat=${lat}&lng=${lng}&username=demo`)
+    if (res.ok) {
+      const data = await res.json()
+      return data.timezoneId || null
+    }
+  } catch (e) {}
+  return null
 }
 
 // Convert minutes-from-midnight-UTC to local HH:MM
@@ -470,6 +495,7 @@ function daysInYear(year) {
 // State
 let selectedLat = null
 let selectedLng = null
+let selectedTimezone = null
 let searchTimer = null
 
 // Location search using Nominatim
@@ -505,13 +531,15 @@ async function searchLocation(query) {
       const div = document.createElement('div')
       div.className = 'location-result'
       div.textContent = place.display_name.split(',').slice(0, 3).join(',')
-      div.addEventListener('mousedown', (e) => {
+      div.addEventListener('mousedown', async (e) => {
         e.preventDefault() // Prevent blur
         selectedLat = parseFloat(place.lat)
         selectedLng = parseFloat(place.lon)
         locationInput.value = div.textContent
         document.getElementById('coords').textContent = `${selectedLat.toFixed(2)}°N, ${selectedLng.toFixed(2)}°E`
         locationResults.style.display = 'none'
+        selectedTimezone = await fetchTimezone(selectedLat, selectedLng)
+        saveData()
         calculate()
       })
       locationResults.appendChild(div)
@@ -535,7 +563,6 @@ function calculate() {
   const year = now.getFullYear()
   const today = dayOfYear(now)
   const totalDays = daysInYear(year)
-  const tzOffset = getTimezoneOffset(selectedLat, selectedLng)
 
   // Calculate sunrise/sunset for every day of the year
   const days = []
@@ -544,6 +571,7 @@ function calculate() {
 
   for (let d = 1; d <= totalDays; d++) {
     const date = new Date(year, 0, d)
+    const tzOffset = getTimezoneOffsetForDate(date)
     const result = sunriseSunset(date.getFullYear(), date.getMonth() + 1, date.getDate(), selectedLat, selectedLng)
 
     let sunriseLocal = null
@@ -769,6 +797,7 @@ if (saved.location) locationInput.value = saved.location
 if (saved.lat != null) {
   selectedLat = saved.lat
   selectedLng = saved.lng
+  selectedTimezone = saved.timezone || null
   document.getElementById('coords').textContent = `${selectedLat.toFixed(2)}°N, ${selectedLng.toFixed(2)}°E`
 }
 if (saved.wake) document.getElementById('wakeTime').value = saved.wake
@@ -780,6 +809,7 @@ function saveData() {
     location: locationInput.value,
     lat: selectedLat,
     lng: selectedLng,
+    timezone: selectedTimezone,
     wake: document.getElementById('wakeTime').value,
     off: document.getElementById('offTime').value
   }))
