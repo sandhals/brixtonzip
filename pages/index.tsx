@@ -31,15 +31,12 @@ export default function HomePage() {
       <UnzipBox />
       <div className="box">
         <p className="hometext">
-              <span className="pill opener" style={{borderRadius:"0"}}>NEW!!</span>
-              Try out my digital <a href="/garden/omikuji/index.html">omikuji</a> for 2026!</p>
-        <p className="hometext">
-          <span className="pill opener">PROFILE</span>
+          <a href="/about" className="pill opener">PROFILE</a>
           Hi, I'm Brixton! I was born in Canada, relocated to the Japanese countryside in 2016, and since 2021 have been living in Korea. I spend most of my free time learning languages, working out, <a href="/garden">building websites</a>, reading, writing, and <a href="sketchbook">sketching</a>. Welcome to my online zip folder.
         </p>
         
         <p className="hometext">
-          <span className="pill opener">SOCIALS</span>
+          <a href="/tree" className="pill opener">SOCIALS</a>
           I mostly lurk (but occasionally tweet) at <a href="http://twitter.com/brixton">@brixton</a> on Twitter, I “post physique” at <a href="http://instagram.com/ydalir">@ydalir</a> on Insta, and I collect images, <a href="http://are.na/brixton/alexandria">PDFs,</a> and other digital bric-a-brac on <a href="http://are.na/brixton">Are.na.</a> I am also <a href="https://network.urbit.org/~sattex-ballet">~sattex-ballet</a> on Urbit.
         </p>
 
@@ -57,7 +54,7 @@ export default function HomePage() {
 
         {/* ARTICLES */}
         <div className="hometext">
-          <span className="pill opener">READING</span>
+          <a href="/archive" className="pill opener">READING</a>
           <ul>
           <LinkList limit={5} />
             <li style={{ fontStyle: 'italic', fontSize: '80%', paddingTop: '0.5em' }}>
@@ -70,7 +67,7 @@ export default function HomePage() {
 
         {/* NOW */}
         <div className="hometext">
-          <span className="pill opener">NOW</span>
+          <a href="/now" className="pill opener">NOW</a>
           <ul className="hometext">
             <li>
               Switched my site from static to dynamic! TSX is so powerful, I love it. Weekly workouts have slowed to about three or four times a week. The progressively cold weather here in Seoul threatens to slow me even further... 

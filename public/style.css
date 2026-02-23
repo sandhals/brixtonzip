@@ -107,6 +107,12 @@ body.is-showing-source .container {
   border-radius: 7px;
   padding: 0 0.6em;
   opacity: 80%;
+  color: var(--black);
+}
+
+a.pill:hover {
+  text-decoration: none;
+  color: var(--black);
 }
 
 .opener {
@@ -413,6 +419,35 @@ span {
   z-index: 1000;
   font-family: monospace;
   background: black;
+}
+
+.name-tooltip {
+  position: relative;
+  cursor: help;
+  border-bottom: 1px dotted rgba(0, 0, 0, 0.3);
+}
+
+.name-tooltip .name-tooltip-text {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  margin-left: 0.5em;
+  background: var(--black);
+  color: var(--white);
+  font-size: 0.75em;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  padding: 0.5em 0.75em;
+  border-radius: 3px;
+  width: 220px;
+  line-height: 1.4;
+  z-index: 1000;
+}
+
+.name-tooltip:hover .name-tooltip-text {
+  display: block;
 }
 
 .receipt{

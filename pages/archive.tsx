@@ -6,10 +6,10 @@ export default function ArchivePage() {
   return (
     <Layout variant="home" title="📰 reading archive">
             <HeaderImage src="/images/readingthepaper.png" alt="reading the paper" />
-      <div className="box">
+      <div className="box" style={{ paddingBottom: '4em' }}>
         <h1>Digital Reading Archive</h1>
         <br />
-        <LinkList />
+        <LinkList paginate={20} />
       </div>
     </Layout>
   );

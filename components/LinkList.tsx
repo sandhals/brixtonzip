@@ -11,6 +11,7 @@ export interface LinkData {
 interface LinkListProps {
   limit?: number;
   showHeader?: boolean;
+  paginate?: number;
 }
 
 function renderDate(createdDate: string): string {
@@ -32,8 +33,9 @@ function renderDate(createdDate: string): string {
   else return `${seconds} ${seconds === 1 ? 'second' : 'seconds'} ago`;
 }
 
-export default function LinkList({ limit, showHeader = false }: LinkListProps) {
-  const [links, setLinks] = useState<LinkData[]>([]);
+export default function LinkList({ limit, showHeader = false, paginate }: LinkListProps) {
+  const [allLinks, setAllLinks] = useState<LinkData[]>([]);
+  const [visible, setVisible] = useState(paginate || 0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,7 +44,7 @@ export default function LinkList({ limit, showHeader = false }: LinkListProps) {
         const res = await fetch('/api/curius');
         const data = await res.json();
         if (Array.isArray(data.links)) {
-          setLinks(limit ? data.links.slice(0, limit) : data.links);
+          setAllLinks(limit ? data.links.slice(0, limit) : data.links);
         } else {
           console.error('Unexpected API response', data);
         }
@@ -56,24 +58,37 @@ export default function LinkList({ limit, showHeader = false }: LinkListProps) {
     fetchLinks();
   }, [limit]);
 
+  const links = paginate ? allLinks.slice(0, visible) : allLinks;
+  const hasMore = paginate ? visible < allLinks.length : false;
+
   return (
     <div className="recentcurius" id="links-container">
       {loading ? (
         <p>Loading...</p>
-      ) : links.length === 0 ? (
+      ) : allLinks.length === 0 ? (
         <p>No links found</p>
       ) : (
-        links.map((link, i) => (
-          <div className="curiusitem" key={i}>
-            <p>
-              <a className="curiuslink" href={link.link} target="_blank" rel="noopener noreferrer">
-                {link.title}
-              </a>{' '}
-              <span className="curiusdate">{renderDate(link.createdDate)}</span>
+        <>
+          {links.map((link, i) => (
+            <div className="curiusitem" key={i}>
+              <p>
+                <a className="curiuslink" href={link.link} target="_blank" rel="noopener noreferrer">
+                  {link.title}
+                </a>{' '}
+                <span className="curiusdate">{renderDate(link.createdDate)}</span>
+              </p>
+              <hr />
+            </div>
+          ))}
+          {hasMore && (
+            <p
+              style={{ fontStyle: 'italic', fontSize: '80%', paddingTop: '0.5em', cursor: 'pointer' }}
+              onClick={() => setVisible(v => v + 50)}
+            >
+              Show more
             </p>
-            <hr />
-          </div>
-        ))
+          )}
+        </>
       )}
     </div>
   );
