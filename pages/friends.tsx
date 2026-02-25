@@ -36,6 +36,11 @@ const FriendsPage = () => {
       title: "BRYNJA",
       link: "https://brynja.xyz",
       birthday: "010601"
+    },
+    {
+      title: "NATALIE",
+      link: "https://ssd2am.github.io/",
+      birthday: "910730"
     }
   ];
 
