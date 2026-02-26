@@ -459,3 +459,56 @@ span {
 .receipttitle{
   font-size:2.5em;
 }
+
+/* Bio length slider */
+.bio-slider {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  margin-bottom: 1.5em;
+}
+
+.bio-label {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  font-size: 0.7em;
+  white-space: nowrap;
+  opacity: 0.5;
+  width: 7.5em;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.bio-range {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 1px;
+  background: var(--black);
+  outline: none;
+  opacity: 0.4;
+  transition: opacity 300ms;
+}
+
+.bio-range:hover {
+  opacity: 1;
+}
+
+.bio-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--black);
+  cursor: pointer;
+}
+
+.bio-range::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--black);
+  border: none;
+  cursor: pointer;
+}
