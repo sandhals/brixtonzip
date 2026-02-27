@@ -24,8 +24,51 @@
 import Layout from '@/components/Layout'
 import UnzipBox from '@/components/UnzipBox'
 import LinkList from '@/components/LinkList'
+import { GetStaticProps } from 'next'
+import nowData from '@/data/now.json'
 
-export default function HomePage() {
+interface StatusItem {
+  label: string;
+  value: string;
+}
+
+interface HomeProps {
+  status: StatusItem[];
+  lastUpdated: string;
+}
+
+export const getStaticProps: GetStaticProps<HomeProps> = async () => {
+  const status: StatusItem[] = [];
+  for (const item of nowData.status) {
+    if (item.label === 'reading' && !item.value) {
+      try {
+        const res = await fetch('https://www.goodreads.com/review/list_rss/6432075?shelf=currently-reading');
+        const xml = await res.text();
+        const titleMatch = xml.match(/<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/);
+        const authorMatch = xml.match(/<item>[\s\S]*?<author_name>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/author_name>/);
+        if (titleMatch) {
+          status.push({ label: 'reading', value: titleMatch[1] + (authorMatch ? ` by ${authorMatch[1]}` : '') });
+        }
+      } catch {}
+    } else if (item.value) {
+      status.push(item);
+    }
+  }
+  return { props: { status, lastUpdated: nowData.lastUpdated }, revalidate: 3600 };
+};
+
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  const dd = d.getDate().toString().padStart(2, '0');
+  const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+  const yy = d.getFullYear().toString().slice(-2);
+  const hh = d.getHours().toString().padStart(2, '0');
+  const min = d.getMinutes().toString().padStart(2, '0');
+  return `${dd}.${mm}.${yy} ${hh}:${min}`;
+};
+
+export default function HomePage({ status, lastUpdated }: HomeProps) {
+
   return (
     <Layout variant="home" title="🙋🏻‍♂️ brixton.zip">
       <UnzipBox />
@@ -69,9 +112,10 @@ export default function HomePage() {
         <div className="hometext">
           <a href="/now" className="pill opener">NOW</a>
           <ul className="hometext">
-            <li>
-              Switched my site from static to dynamic! TSX is so powerful, I love it. Weekly workouts have slowed to about three or four times a week. The progressively cold weather here in Seoul threatens to slow me even further... 
-            </li>
+            {status.map((item, i) => (
+              <li key={i}><span style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 400, fontSize: '0.88em', marginRight: '0.3em' }}>{item.label}</span> {item.value}</li>
+            ))}
+            <li><span style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 400, fontSize: '0.88em', marginRight: '0.3em' }}>last updated</span> {formatDate(lastUpdated)}</li>
           </ul>
         </div>
 

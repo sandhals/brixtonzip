@@ -6,18 +6,19 @@ export default function SketchbookPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const thumbnailsRef = useRef<HTMLDivElement>(null);
 
-  // Auto-detect available pages by checking for files
+  // Auto-detect available pages by checking for files (start from pg01, skip cover)
   useEffect(() => {
     const detectPages = async () => {
       let pageCount = 0;
       let checking = true;
-      
+
       while (checking) {
-        const pageNumber = pageCount.toString().padStart(2, '0');
+        const pageNumber = (pageCount + 1).toString().padStart(2, '0');
         const imagePath = `/images/sketchbook/pg${pageNumber}.jpg`;
-        
+
         try {
           const response = await fetch(imagePath, { method: 'HEAD' });
           if (response.ok) {
@@ -29,7 +30,7 @@ export default function SketchbookPage() {
           checking = false;
         }
       }
-      
+
       setTotalPages(pageCount);
       setLoading(false);
     };
@@ -37,8 +38,13 @@ export default function SketchbookPage() {
     detectPages();
   }, []);
 
+  // Reset loaded state when page changes
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [currentPage]);
+
   const getImagePath = (pageIndex: number) => {
-    const pageNumber = pageIndex.toString().padStart(2, '0');
+    const pageNumber = (pageIndex + 1).toString().padStart(2, '0');
     return `/images/sketchbook/pg${pageNumber}.jpg`;
   };
 
@@ -88,9 +94,12 @@ export default function SketchbookPage() {
 
   return (
     <Layout variant="home" title="✏️ sketchbook">
-      <SketchbookHeaderImage 
-        src={getImagePath(currentPage)} 
+      <SketchbookHeaderImage
+        src={getImagePath(currentPage)}
         alt={`Sketchbook page ${currentPage + 1}`}
+        placeholder={currentPage === 0 ? '/images/sketchbook/pg01-placeholder.jpg' : undefined}
+        loaded={imageLoaded}
+        onLoad={() => setImageLoaded(true)}
       />
       
       <div className="box">

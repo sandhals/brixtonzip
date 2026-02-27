@@ -202,6 +202,28 @@ details {
   position: relative;
   z-index: 2;
   margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.marquee-face {
+  flex-shrink: 0;
+  height: 100%;
+  padding-left: 0.4em;
+  padding-right: 0.5em;
+  display: flex;
+  align-items: center;
+}
+
+.marquee-face svg {
+  height: 1.6em;
+  width: auto;
+  margin-top: -0.2em;
+}
+
+.marquee-text-wrapper {
+  overflow: hidden;
+  flex: 1;
 }
 
 .status-marquee {

@@ -1,0 +1,22 @@
+{
+  "lastUpdated": "2026-02-27T15:30",
+
+  "status": [
+    { "label": "eating", "value": "hallabong with chia pudding" },
+    { "label": "reading", "value": "" },
+    { "label": "listening to", "value": "hypnotized by xg" }
+  ],
+
+  "split": ["Arms", "Chest", "Back", "Delts", "Arms", "Chest", "Rest"],
+
+  "sections": [
+    {
+      "title": "Languages",
+      "body": "For the first few months of the year I'm focusing on French, and maintaining my Japanese and Korean more passively."
+    },
+    {
+      "title": "Reading",
+      "body": "This year I'm focusing on making reading a habit again. I'm trying to read more consistently and broadly. You can follow along on [Goodreads](https://goodreads.com/lehtia)."
+    }
+  ]
+}
