@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 
 interface GitHubTreeItem {
   path: string;
@@ -57,6 +57,12 @@ export default function UnzipPage({ initialTreeData, error: initialError }: Unzi
   const [treeData] = useState<TreeNode | null>(initialTreeData);
   const [error] = useState<string | null>(initialError);
   const [currentPath, setCurrentPath] = useState<string>('');
+  const [gardenExpanded, setGardenExpanded] = useState(false);
+  const treeRef = useRef<HTMLDivElement>(null);
+
+  const toggleGarden = useCallback(() => {
+    setGardenExpanded(prev => !prev);
+  }, []);
 
   // Effect: Track current path (for navigation highlighting)
   useEffect(() => {
@@ -149,25 +155,42 @@ export default function UnzipPage({ initialTreeData, error: initialError }: Unzi
       if (gardenNode && gardenNode.children) {
         const isGardenCurrent = currentPath === '/garden';
         const gardenIndicator = isGardenCurrent ? ' <span class="arrow">←</span>' : '';
-        ascii += `└──<a href="/garden" class="tree-link" target="_top">garden/</a>${gardenIndicator}\n`;
+        const toggleIcon = gardenExpanded ? '[-]' : '[+]';
+        ascii += `└──<a href="/garden" class="tree-link" target="_top">garden/</a>${gardenIndicator} <span class="garden-toggle">${toggleIcon}</span>\n`;
 
-        const sortedGarden = sortTreeNodes(gardenNode.children, false);
+        if (gardenExpanded) {
+          const sortedGarden = sortTreeNodes(gardenNode.children, false);
 
-        sortedGarden.forEach((child, index) => {
-          const isLast = index === sortedGarden.length - 1;
-          const connector = isLast ? '    └──' : '    ├──';
+          sortedGarden.forEach((child, index) => {
+            const isLast = index === sortedGarden.length - 1;
+            const connector = isLast ? '    └──' : '    ├──';
 
-          const localUrl = child.path ? generateLocalUrl(child.path) : '';
-          const displayName = child.type === 'dir' ? `${child.name}/` : child.name;
-          const isCurrentPage = currentPath.startsWith(localUrl) && localUrl !== '/garden';
-          const currentIndicator = isCurrentPage ? ' <span class="arrow">←</span>' : '';
-          ascii += `${connector}<a href="${localUrl}" class="tree-link" target="_top">${displayName}</a>${currentIndicator}\n`;
-        });
+            const localUrl = child.path ? generateLocalUrl(child.path) : '';
+            const displayName = child.type === 'dir' ? `${child.name}/` : child.name;
+            const isCurrentPage = currentPath.startsWith(localUrl) && localUrl !== '/garden';
+            const currentIndicator = isCurrentPage ? ' <span class="arrow">←</span>' : '';
+            ascii += `${connector}<a href="${localUrl}" class="tree-link" target="_top">${displayName}</a>${currentIndicator}\n`;
+          });
+        }
       }
     }
 
     return ascii;
-  }, [treeData, currentPath]); // Memoized - only recalculates when dependencies change
+  }, [treeData, currentPath, gardenExpanded]);
+
+  useEffect(() => {
+    const el = treeRef.current;
+    if (!el) return;
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('.garden-toggle')) {
+        e.preventDefault();
+        toggleGarden();
+      }
+    };
+    el.addEventListener('click', handleClick);
+    return () => el.removeEventListener('click', handleClick);
+  }, [toggleGarden]);
 
   return (
     <>
@@ -225,12 +248,20 @@ export default function UnzipPage({ initialTreeData, error: initialError }: Unzi
         .error {
           color: red;
         }
+        :global(.garden-toggle) {
+          cursor: pointer;
+          opacity: 0.5 !important;
+          user-select: none;
+        }
+        :global(.garden-toggle:hover) {
+          opacity: 1 !important;
+        }
       `}</style>
 
       <div className="content-container">
         <div className="tree">
           {error && <span className="error">Error: {error}</span>}
-          <div dangerouslySetInnerHTML={{ __html: treeStructure }} />
+          <div ref={treeRef} dangerouslySetInnerHTML={{ __html: treeStructure }} />
         </div>
 
         <audio controls>
@@ -255,7 +286,7 @@ export async function getStaticProps() {
     const data = await response.json();
     const tree: GitHubTreeItem[] = data.tree;
 
-    const excludeFromPages = ['api', '_document', 'unzip', 'sitemap', '_app', 'garden'];
+    const excludeFromPages = ['api', '_document', 'unzip', 'sitemap', '_app', 'garden', 'lussekatter'];
 
     const filteredTree = tree.filter((item) => {
       if (item.path.startsWith('public/garden/')) return true;

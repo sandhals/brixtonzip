@@ -1,17 +1,14 @@
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode, useEffect } from 'react'
 import Header from './Header'
 import Footer from './Footer'
+import SourceBleed from './SourceBleed'
 
 interface Props {
   children: ReactNode
 }
 
 export default function MainLayout({ children }: Props) {
-  const [isMounted, setIsMounted] = useState(false)
-
   useEffect(() => {
-    setIsMounted(true)
-
     const script = document.createElement('script')
     script.src = '/script.js'
     script.async = true
@@ -28,7 +25,7 @@ export default function MainLayout({ children }: Props) {
       <div className="content">
         {children}
       </div>
-      {isMounted && <div className="sourcecode" id="sourceCodeContainer"></div>}
+      <SourceBleed />
       <Footer />
     </div>
   )

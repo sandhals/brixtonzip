@@ -1,6 +1,7 @@
 import { ReactNode } from 'react'
 import Header from './Header'
 import Footer from './Footer'
+import SourceBleed from './SourceBleed'
 
 interface Props {
   children: ReactNode
@@ -13,6 +14,7 @@ export default function ArticleLayout({ children }: Props) {
       <div className="content">
         {children}
       </div>
+      <SourceBleed />
       <Footer />
     </div>
   )

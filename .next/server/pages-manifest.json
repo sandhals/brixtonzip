@@ -2,8 +2,10 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/unzip": "pages/unzip.js",
   "/": "pages/index.js",
+  "/unzip": "pages/unzip.js",
+  "/about": "pages/about.js",
+  "/colophon": "pages/colophon.js",
   "/api/curius": "pages/api/curius.js",
-  "/about": "pages/about.js"
+  "/api/source": "pages/api/source.js"
 }

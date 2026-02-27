@@ -64,7 +64,12 @@ export default function LinkList({ limit, showHeader = false, paginate }: LinkLi
   return (
     <div className="recentcurius" id="links-container">
       {loading ? (
-        <p>Loading...</p>
+        Array.from({ length: limit || 5 }).map((_, i) => (
+          <div className="curiusitem" key={i}>
+            <p>&nbsp;</p>
+            <hr />
+          </div>
+        ))
       ) : allLinks.length === 0 ? (
         <p>No links found</p>
       ) : (

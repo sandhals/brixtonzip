@@ -86,20 +86,7 @@ if (!window.__brixtonScriptInitialized) {
 
     if (!container || !content || !wrapper || !trigger) return;
 
-    // Fetch the live GitHub code
-    fetch(
-      "https://raw.githubusercontent.com/sandhals/brixtonzip/main/pages/index.tsx",
-    )
-      .then((res) => res.text())
-      .then((code) => {
-        container.textContent = code; // preserve spacing and formatting
-      })
-      .catch((err) => {
-        console.error("Failed to fetch code:", err);
-        container.textContent = "Unable to load source code at this time.";
-      });
-
-    // Show source toggle (final version)
+    // Show source toggle
     trigger.addEventListener("click", () => {
       document.body.classList.add("is-showing-source");
 
@@ -115,20 +102,17 @@ if (!window.__brixtonScriptInitialized) {
       }
 
       hideButton.onclick = () => {
-        // remove class so layout snaps back
         document.body.classList.remove("is-showing-source");
         hideButton.remove();
 
         if (heartSpan) heartSpan.textContent = "🩶";
 
-        // scroll smoothly to the bottom
         window.scrollTo({
           top: document.body.scrollHeight,
           behavior: "smooth",
         });
       };
 
-      // always start at the top when showing source
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
   };
