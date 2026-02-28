@@ -238,6 +238,7 @@ details {
 .marquee-text-wrapper {
   overflow: hidden;
   flex: 1;
+  min-width: 0;
 }
 
 .status-marquee {

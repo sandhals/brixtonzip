@@ -104,11 +104,11 @@ export default function Header({ variant = 'article' }: HeaderProps) {
       transform: translateY(-105px);
     }
     .marquee-face:hover .eyes-open {
-      animation: hover-blink 4s steps(1) infinite;
+      animation: hover-blink 3s steps(1) infinite;
       transform: translate(0, 0);
     }
     .marquee-face:hover .eyes-half {
-      animation: hover-blink-half 4s steps(1) infinite;
+      animation: hover-blink-half 3s steps(1) infinite;
     }
     @keyframes hover-blink {
       0%   { opacity: 1; }

@@ -25,10 +25,10 @@ globalThis.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/colophon": [
+    "/archive": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/colophon.js"
+      "static/chunks/pages/archive.js"
     ],
     "/unzip": [
       "static/chunks/webpack.js",
