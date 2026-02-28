@@ -1,4 +1,5 @@
 import { ReactNode, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import Header from './Header'
 import Footer from './Footer'
 import SourceBleed from './SourceBleed'
@@ -8,6 +9,9 @@ interface Props {
 }
 
 export default function MainLayout({ children }: Props) {
+  const router = useRouter()
+  const isHome = router.pathname === '/'
+
   useEffect(() => {
     const script = document.createElement('script')
     script.src = '/script.js'
@@ -22,7 +26,7 @@ export default function MainLayout({ children }: Props) {
   return (
     <div className="container">
       <Header variant="home" />
-      <div className="content">
+      <div className={`content${isHome ? '' : ' extra-padding'}`}>
         {children}
       </div>
       <SourceBleed />

@@ -86,6 +86,10 @@ body.is-showing-source .container {
   width: 100%;
   box-sizing: border-box;
   display: block;
+  padding-bottom: 5em;
+}
+
+.content.extra-padding {
   padding-bottom: 10em;
 }
 
@@ -251,6 +255,9 @@ details {
   font-size: 1em;
   padding-left: 100%;
   width: max-content;
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .status-marquee * {
@@ -371,7 +378,7 @@ li {
   line-height: 1em;
   cursor: alias;
   position: fixed;
-  bottom: 15.2rem;
+  bottom: 10.2rem;
   left: 50%;
   transform: translateX(-50%);
   background: var(--white);
