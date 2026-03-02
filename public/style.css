@@ -243,6 +243,7 @@ details {
   overflow: hidden;
   flex: 1;
   min-width: 0;
+  container-type: inline-size;
 }
 
 .status-marquee {
@@ -253,7 +254,6 @@ details {
   font-family: monospace;
   line-height: 1.3em;
   font-size: 1em;
-  padding-left: 100%;
   width: max-content;
   will-change: transform;
   -webkit-backface-visibility: hidden;
@@ -266,7 +266,7 @@ details {
 
 @keyframes scroll-left {
   0% {
-    transform: translateX(0%);
+    transform: translateX(100cqi);
   }
   100% {
     transform: translateX(-100%);
