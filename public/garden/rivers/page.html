@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rivers</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #f5f3ef;
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: 'Courier New', Courier, monospace;
+    color: #1a1a1a;
+    cursor: default;
+    position: relative;
+  }
+
+  .coord {
+    position: absolute;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: opacity 0.8s, color 0.8s;
+    user-select: none;
+    z-index: 2;
+  }
+
+  .coord .name {
+    display: block;
+    font-size: 0.6rem;
+    margin-top: 0.3em;
+    opacity: 0;
+    transition: opacity 0.8s;
+  }
+
+  .coord:hover .name,
+  .coord.active .name {
+    opacity: 1;
+  }
+
+  .coord.dimmed {
+    opacity: 0.25;
+  }
+
+  .coord.active {
+    opacity: 1;
+  }
+
+  /* Positions — geographic intent, pulled slightly toward center */
+  .coord-skeena { top: 22%; left: 18%; }
+  .coord-han    { top: 46%; right: 22%; }
+  .coord-kamo   { top: 55%; right: 18%; }
+
+  /* Full-page river SVG */
+  .river-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .river-path {
+    fill: none;
+    stroke-width: 1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transition: opacity 0.6s;
+  }
+
+  .river-path.visible {
+    opacity: 1;
+  }
+
+  /* Fragments container */
+  .fragments {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .fragment {
+    position: absolute;
+    font-size: 0.65rem;
+    letter-spacing: 0.03em;
+    opacity: 0;
+    white-space: nowrap;
+  }
+
+  /* Skeena: flows southwest */
+  @keyframes drift-sw {
+    0%   { opacity: 0; transform: translate(0, 0); }
+    10%  { opacity: 0.7; }
+    90%  { opacity: 0.7; }
+    100% { opacity: 0; transform: translate(-15vw, 20vh); }
+  }
+
+  /* Kamo: flows south */
+  @keyframes drift-s {
+    0%   { opacity: 0; transform: translate(0, 0); }
+    10%  { opacity: 0.7; }
+    90%  { opacity: 0.7; }
+    100% { opacity: 0; transform: translate(0, 25vh); }
+  }
+
+  /* Han: flows west */
+  @keyframes drift-w {
+    0%   { opacity: 0; transform: translate(0, 0); }
+    10%  { opacity: 0.7; }
+    90%  { opacity: 0.7; }
+    100% { opacity: 0; transform: translate(-20vw, 0); }
+  }
+
+  .fragment.active-skeena {
+    animation: drift-sw 8s linear infinite;
+  }
+
+  .fragment.active-kamo {
+    animation: drift-s 8s linear infinite;
+  }
+
+  .fragment.active-han {
+    animation: drift-w 8s linear infinite;
+  }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .coord-skeena { top: 20%; left: 12%; }
+    .coord-han    { top: 44%; right: 15%; }
+    .coord-kamo   { top: 56%; right: 10%; }
+    .coord { font-size: 0.65rem; }
+    .fragment { font-size: 0.55rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="coord coord-skeena" data-river="skeena">
+  54.0°N &nbsp;128.6°W
+  <span class="name" style="color: #4a90d9">Skeena / K'syen</span>
+</div>
+
+<div class="coord coord-han" data-river="han">
+  37.6°N &nbsp;127.0°E
+  <span class="name" style="color: #4a90d9">Han / 한강</span>
+</div>
+
+<div class="coord coord-kamo" data-river="kamo">
+  35.0°N &nbsp;135.8°E
+  <span class="name" style="color: #4a90d9">Kamo / 鴨川</span>
+</div>
+
+<svg class="river-canvas" viewBox="0 0 1000 1000" preserveAspectRatio="none" style="overflow:visible">
+  <!-- Skeena: real OSM path (SW-flowing portion), from center-bottom of text -->
+  <path id="path-skeena" class="river-path" stroke="#4a90d9"
+    d="M 180.0,215.0 L 109.5,239.7 L 120.9,292.1 L 148.7,329.3 L 142.5,349.8
+       L 117.1,360.8 L 122.1,376.8 L 204.4,387.4 L 180.5,416.9 L 230.9,470.8
+       L 202.8,501.7 L 208.5,535.7 L 157.8,579.5 L 76.1,573.7 L 9.0,600.9
+       L -9.9,616.6 L -7.8,642.6 L 30.1,678.7 L -20.4,716.5 L -22.1,736.2
+       L -63.8,757.0 L -96.0,751.7 L -151.2,785.0 L -288.7,809.9 L -378.1,851.1
+       L -447.4,840.1 L -526.3,866.8" />
+
+  <!-- Kamo: real OSM path, from center-bottom of text flowing S -->
+  <path id="path-kamo" class="river-path" stroke="#4a90d9"
+    d="M 810.0,635.0 L 804.4,646.7 L 808.4,662.7 L 826.1,663.1 L 836.8,679.7
+       L 851.2,685.8 L 869.5,675.5 L 871.0,682.5 L 878.9,684.2 L 873.6,699.4
+       L 883.7,700.8 L 889.2,708.8 L 875.6,726.9 L 882.7,730.6 L 883.6,741.3
+       L 890.9,739.6 L 893.8,746.8 L 879.8,757.9 L 884.6,780.1 L 967.6,899.4
+       L 968.3,964.9 L 956.2,997.2 L 956.1,1047.1 L 922.7,1086.7 L 887.3,1110.7
+       L 880.3,1130.5 L 883.9,1144.2 L 879.5,1163.4 L 866.4,1175.0" />
+
+  <!-- Han: real OSM path, from left of text flowing W -->
+  <path id="path-han" class="river-path" stroke="#4a90d9"
+    d="M 695.0,490.0 L 686.7,504.5 L 674.9,504.3 L 667.4,490.1 L 621.0,468.3
+       L 606.4,447.6 L 584.7,430.1 L 575.2,427.6 L 510.3,449.1 L 496.3,472.0
+       L 473.1,491.1 L 451.1,490.6 L 411.2,476.6 L 374.1,502.1 L 343.9,499.3
+       L 318.3,480.2 L 294.4,475.6 L 199.1,420.6 L 177.6,402.3 L 104.1,367.9
+       L 56.2,338.6 L 48.6,325.5 L 61.1,284.7 L 57.1,257.6 L 34.4,233.1
+       L 7.4,231.9 L -14.4,248.8 L -42.9,251.5 L -68.4,232.7 L -149.9,202.0
+       L -176.3,176.8 L -205.0,169.1" />
+</svg>
+
+<div class="fragments" id="fragments"></div>
+
+<script>
+(function () {
+  var blue = '#4a90d9';
+
+  var rivers = {
+    skeena: {
+      color: blue,
+      origin: { top: 28, left: 20 },
+      offset: [60, 35],
+      words: ['4°C', 'cedar smoke', 'salmon running', 'gravel bars', 'eagle cry', 'snow on the peaks', 'the sound of nothing', 'grey sky', 'green water'],
+      points: [[180,215],[109.5,239.7],[120.9,292.1],[148.7,329.3],[142.5,349.8],[117.1,360.8],[122.1,376.8],[204.4,387.4],[180.5,416.9],[230.9,470.8],[202.8,501.7],[208.5,535.7],[157.8,579.5],[76.1,573.7],[9,600.9],[-9.9,616.6],[-7.8,642.6],[30.1,678.7],[-20.4,716.5],[-22.1,736.2],[-63.8,757],[-96,751.7],[-151.2,785],[-288.7,809.9],[-378.1,851.1],[-447.4,840.1],[-526.3,866.8]]
+    },
+    kamo: {
+      color: blue,
+      origin: { top: 60, right: 20 },
+      offset: [-50, -55],
+      words: ['stone steps', 'cherry petals on the surface', 'heron standing still', 'bicycle bells', '鴨川', '28°C in August', 'couples at equal intervals', 'water over flat stones'],
+      points: [[810,635],[804.4,646.7],[808.4,662.7],[826.1,663.1],[836.8,679.7],[851.2,685.8],[869.5,675.5],[871,682.5],[878.9,684.2],[873.6,699.4],[883.7,700.8],[889.2,708.8],[875.6,726.9],[882.7,730.6],[883.6,741.3],[890.9,739.6],[893.8,746.8],[879.8,757.9],[884.6,780.1],[967.6,899.4],[968.3,964.9],[956.2,997.2],[956.1,1047.1],[922.7,1086.7],[887.3,1110.7],[880.3,1130.5],[883.9,1144.2],[879.5,1163.4],[866.4,1175]]
+    },
+    han: {
+      color: blue,
+      origin: { top: 44, right: 26 },
+      offset: [-75, -20],
+      words: ['한강', 'chicken and beer', 'bridge lights', 'wide as a lake', 'joggers at 11pm', 'convenience store glow', 'the city reflected', 'han river wind'],
+      points: [[730,490],[721.7,504.5],[709.9,504.3],[702.4,490.1],[656,468.3],[641.4,447.6],[619.7,430.1],[610.2,427.6],[545.3,449.1],[531.3,472],[508.1,491.1],[486.1,490.6],[446.2,476.6],[409.1,502.1],[378.9,499.3],[353.3,480.2],[329.4,475.6],[234.1,420.6],[212.6,402.3],[139.1,367.9],[91.2,338.6],[83.6,325.5],[96.1,284.7],[92.1,257.6],[69.4,233.1],[42.4,231.9],[20.6,248.8],[-7.9,251.5],[-33.4,232.7],[-114.9,202],[-141.3,176.8],[-170,169.1]]
+    }
+  };
+
+  // Catmull-Rom to cubic bezier smooth path
+  function smoothPath(pts) {
+    if (pts.length < 2) return '';
+    var d = 'M ' + pts[0][0] + ',' + pts[0][1];
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[Math.max(0, i - 1)];
+      var p1 = pts[i];
+      var p2 = pts[i + 1];
+      var p3 = pts[Math.min(pts.length - 1, i + 2)];
+      var cp1x = p1[0] + (p2[0] - p0[0]) / 6;
+      var cp1y = p1[1] + (p2[1] - p0[1]) / 6;
+      var cp2x = p2[0] - (p3[0] - p1[0]) / 6;
+      var cp2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += ' C ' + cp1x.toFixed(1) + ',' + cp1y.toFixed(1) +
+           ' ' + cp2x.toFixed(1) + ',' + cp2y.toFixed(1) +
+           ' ' + p2[0] + ',' + p2[1];
+    }
+    return d;
+  }
+
+  var active = null;
+  var fragmentEls = [];
+  var container = document.getElementById('fragments');
+  var coords = document.querySelectorAll('.coord');
+  var paths = {};
+  var pathLengths = {};
+
+  // Apply smooth paths with offset, measure, and set up dash
+  ['skeena', 'kamo', 'han'].forEach(function (key) {
+    var p = document.getElementById('path-' + key);
+    var pts = rivers[key].points;
+    var off = rivers[key].offset;
+    if (off) {
+      pts = pts.map(function (pt) { return [pt[0] + off[0], pt[1] + off[1]]; });
+    }
+    p.setAttribute('d', smoothPath(pts));
+    var len = p.getTotalLength();
+    paths[key] = p;
+    pathLengths[key] = len;
+    p.style.strokeDasharray = len;
+    p.style.strokeDashoffset = len;
+  });
+
+  function clearFragments() {
+    fragmentEls.forEach(function (el) { el.remove(); });
+    fragmentEls = [];
+  }
+
+  function spawnFragments(key) {
+    var r = rivers[key];
+    r.words.forEach(function (word, i) {
+      var el = document.createElement('div');
+      el.className = 'fragment active-' + key;
+      el.textContent = word;
+      el.style.color = r.color;
+      el.style.animationDelay = (i * 1.1) + 's';
+
+      if (r.origin.left !== undefined) {
+        el.style.left = (r.origin.left + Math.random() * 8 - 4) + '%';
+      }
+      if (r.origin.right !== undefined) {
+        el.style.right = (r.origin.right + Math.random() * 8 - 4) + '%';
+      }
+      el.style.top = (r.origin.top + Math.random() * 6 - 3) + '%';
+
+      container.appendChild(el);
+      fragmentEls.push(el);
+    });
+  }
+
+  function drawPath(key) {
+    var p = paths[key];
+    var len = pathLengths[key];
+    p.classList.add('visible');
+    p.style.transition = 'none';
+    p.style.strokeDashoffset = len;
+    // Force reflow
+    p.getBoundingClientRect();
+    p.style.transition = 'stroke-dashoffset 2s ease-out, opacity 0.6s';
+    p.style.strokeDashoffset = '0';
+  }
+
+  function hidePath(key) {
+    var p = paths[key];
+    p.classList.remove('visible');
+    p.style.strokeDashoffset = pathLengths[key];
+  }
+
+  function activate(key) {
+    if (active === key) {
+      active = null;
+      clearFragments();
+      coords.forEach(function (c) { c.classList.remove('dimmed', 'active'); c.style.color = ''; });
+      hidePath(key);
+      return;
+    }
+
+    if (active) hidePath(active);
+    active = key;
+    clearFragments();
+
+    coords.forEach(function (c) {
+      if (c.dataset.river === key) {
+        c.classList.add('active');
+        c.classList.remove('dimmed');
+        c.style.color = rivers[key].color;
+      } else {
+        c.classList.add('dimmed');
+        c.classList.remove('active');
+        c.style.color = '';
+      }
+    });
+
+    drawPath(key);
+    spawnFragments(key);
+  }
+
+  coords.forEach(function (c) {
+    c.addEventListener('click', function () {
+      activate(c.dataset.river);
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>
