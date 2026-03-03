@@ -67,6 +67,13 @@ if (!window.__brixtonScriptInitialized) {
       document.getElementById("currentWeekday").innerText =
         "\u00A0" + today + "\u00A0";
       document.getElementById("myStatus").innerText = statusMessage;
+      if (statusMessage === "\u00A0SLEEPING\u00A0") {
+        document.body.classList.add("is-sleeping");
+      } else {
+        document.body.classList.remove("is-sleeping");
+        var face = document.querySelector(".marquee-face");
+        if (face) face.classList.remove("falling-asleep");
+      }
     } else {
       document.getElementById("currentStatus").innerText =
         "I\u00A0AM\u00A0ON\u00A0HOLIDAY\u00A0IN\u00A0" +
@@ -77,6 +84,25 @@ if (!window.__brixtonScriptInitialized) {
   }
 
   setInterval(updateInfo, 1000);
+
+  // Falling asleep animation after hover ends
+  window.addEventListener("load", function () {
+    var face = document.querySelector(".marquee-face");
+    if (!face) return;
+    var sleepTimer = null;
+    face.addEventListener("mouseleave", function () {
+      if (document.body.classList.contains("is-sleeping")) {
+        face.classList.add("falling-asleep");
+        sleepTimer = setTimeout(function () {
+          face.classList.remove("falling-asleep");
+        }, 3000);
+      }
+    });
+    face.addEventListener("mouseenter", function () {
+      if (sleepTimer) clearTimeout(sleepTimer);
+      face.classList.remove("falling-asleep");
+    });
+  });
 
   window.onload = function () {
     const container = document.querySelector(".sourcecode");

@@ -56,6 +56,8 @@ export default function Header({ variant = 'article' }: HeaderProps) {
             <rect x="43" y="98" width="14" height="14" />
             <path d="M50 131 L59 140 L50 149 L41 140 Z" />
             <circle cx="50" cy="175" r="8" />
+            <path d="M37 252 L63 252 L63 245 Q63 238, 50 238 Q37 238, 37 245 Z" />
+            <circle cx="50" cy="280" r="2" />
           </g>
         </g>
         {/* Glasses - shown when text is selected */}
@@ -194,6 +196,70 @@ export default function Header({ variant = 'article' }: HeaderProps) {
     body.text-selected .eyes-open,
     body.is-showing-source .eyes-open {
       animation: reading 3s ease-in-out infinite;
+    }
+    /* Sleeping state */
+    body.is-sleeping .eyes-open {
+      opacity: 0;
+      animation: none;
+    }
+    body.is-sleeping .eyes-half {
+      opacity: 1;
+    }
+    body.is-sleeping .mouth-strip {
+      animation: snore-breathe 4s steps(1) infinite;
+    }
+    @keyframes snore-breathe {
+      0%   { transform: translateY(-175px); }
+      40%  { transform: translateY(-105px); }
+      50%  { transform: translateY(-210px); }
+    }
+    /* Hover wakes it up */
+    body.is-sleeping .marquee-face:hover .eyes-open {
+      opacity: 1;
+      animation: hover-blink 3s steps(1) infinite;
+      transform: translate(0, 0);
+    }
+    body.is-sleeping .marquee-face:hover .eyes-half {
+      opacity: 0;
+      animation: hover-blink-half 3s steps(1) infinite;
+    }
+    body.is-sleeping .marquee-face:hover .mouth-strip {
+      animation: none;
+      transform: translateY(-105px);
+    }
+    /* Falling back asleep after hover */
+    body.is-sleeping .marquee-face.falling-asleep .eyes-open {
+      animation: fall-asleep-eyes 3s steps(1) forwards;
+    }
+    body.is-sleeping .marquee-face.falling-asleep .eyes-half {
+      animation: fall-asleep-half 3s steps(1) forwards;
+    }
+    body.is-sleeping .marquee-face.falling-asleep .mouth-strip {
+      animation: fall-asleep-mouth 3s steps(1) forwards;
+    }
+    @keyframes fall-asleep-eyes {
+      0%   { opacity: 1; }
+      20%  { opacity: 0; }
+      28%  { opacity: 1; }
+      48%  { opacity: 0; }
+      62%  { opacity: 1; }
+      72%  { opacity: 0; }
+      100% { opacity: 0; }
+    }
+    @keyframes fall-asleep-half {
+      0%   { opacity: 0; }
+      20%  { opacity: 1; }
+      28%  { opacity: 0; }
+      48%  { opacity: 1; }
+      62%  { opacity: 0; }
+      72%  { opacity: 1; }
+      100% { opacity: 1; }
+    }
+    @keyframes fall-asleep-mouth {
+      0%   { transform: translateY(-105px); }
+      47%  { transform: translateY(-105px); }
+      48%  { transform: translateY(0); }
+      100% { transform: translateY(0); }
     }
     @keyframes reading {
       0%   { transform: translate(6px, 3px); }
