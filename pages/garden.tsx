@@ -3,15 +3,21 @@ import Layout from '@/components/Layout'
 import GardenHeaderImage from '@/components/GardenHeaderImage'
 
 const ITEMS = [
+  { name: 'Markdown Editor', href: '/garden/markdown', cat: 'tools',
+    desc: 'A lightweight split-screen markdown editor. Write markdown on the left, see rich text on the right — or edit either side. Supports hotkeys, link tooltips, and auto-save.' },
+  { name: 'Rivers', href: '/garden/rivers', cat: 'life',
+    desc: 'A small, digital ode to three major rivers in my life.' },
+  { name: 'Polyglot Score', href: '/garden/polyglot', cat: 'tools',
+    desc: 'A calculator that scores your language repertoire based on how linguistically distant each language is from the ones you already know.' },
+  { name: 'Sit With Me', href: '/garden/hi', cat: 'play',
+    desc: 'A hyperminimal game coded with only 777 characters. Come find me in the forest and sit with me. View the source!' },
   { name: 'Creatine', href: '/garden/creatine', cat: 'life',
     desc: 'A creatine saturation calculator. Enter when you were last saturated and your dosing plan, and it tells you how many days until you\'re fully loaded — with a day-by-day tracker.' },
   { name: 'Living Daylight', href: '/garden/daylight', cat: 'life',
     desc: 'I\'m constantly checking weather websites in the winter to countdown how many days until the sun rises before I have to, or how may days until the sun will still be up when I\'m off work, so I made a website to just figure it out for me.' },
   { name: 'Bookshot', href: '/garden/bookshot', cat: 'life',
     desc: 'Generate a phone-sized graphic of your monthly reading. Search books by ISBN, title or author, customize the message, and screenshot to upload!' },
-  { name: 'Sit With Me', href: '/garden/hi', cat: 'play',
-    desc: 'A hyperminimal game coded with only 777 characters. Come find me in the forest and sit with me. View the source!' },
-  { name: 'Omikuji', href: '/garden/omikuji/index.html', cat: 'play',
+  { name: 'Omikuji', href: '/garden/omikuji', cat: 'play',
     desc: 'A digital omikuji for 2026 for those who can\'t visit a shrine.' },
   { name: 'Cyclic Calendar', href: '/garden/cyclic', cat: 'life',
     desc: <>A simple calendar tool for visualizing and customizing <a href="https://www.youtube.com/watch?v=BiY2yUwTgQc" style={{ fontSize: 'inherit' }}>cyclic calendar</a> years.</> },
@@ -19,18 +25,10 @@ const ITEMS = [
     desc: 'My very own tetris variant! Multicoloured tetrimos fill the space, but you can only clear the blocks by aligning four or more of the same colour.' },
   { name: 'Ratio Ruler', href: '/garden/ratio', cat: 'tools',
     desc: 'A simple line drawing tool for measuring objects in an image relative to each other.' },
-  { name: 'Polyglot Score', href: '/garden/polyglot', cat: 'tools',
-    desc: 'A calculator that scores your language repertoire based on how linguistically distant each language is from the ones you already know.' },
   { name: 'Sort by Length', href: '/garden/sortbylength', cat: 'tools',
     desc: 'Sometimes at work, we need to sort lines of text by their precise pixel length. I couldn\'t find a reliable tool that did this so I made one!' },
   { name: 'Sort by Vote', href: '/garden/sortbyvote', cat: 'tools',
     desc: 'Also at work, we often use ball emojis to cast votes on copy in Google Docs. I built this tool to organize those votes. Probably not useful to many others, but I keep it hosted on my site for easy access!' },
-  { name: 'Rivers', href: '/garden/rivers', cat: 'life',
-    desc: 'Three coordinates.' },
-  { name: 'The Arc', href: '/garden/rivers/arc', cat: 'life',
-    desc: 'Pacific crossing.' },
-  { name: 'Flow Direction', href: '/garden/rivers/flow', cat: 'life',
-    desc: 'Three rivers flowing.' },
 ]
 
 const BREWING = [

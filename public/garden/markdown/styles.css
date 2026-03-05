@@ -1,0 +1,426 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #fff;
+  color: #222;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ── Toolbar ── */
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  height: 44px;
+  flex-shrink: 0;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fafafa;
+  gap: 8px;
+}
+
+#toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+#toolbar button {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 5px 9px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #555;
+  font-family: inherit;
+  line-height: 1;
+}
+
+#toolbar button svg {
+  vertical-align: middle;
+}
+
+#toolbar button:hover {
+  background: #e8e8e8;
+  border-color: #ddd;
+}
+
+#toolbar button:active {
+  background: #ddd;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: #ddd;
+  margin: 0 4px;
+}
+
+#toolbar-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#word-count {
+  font-size: 11px;
+  color: #999;
+  white-space: nowrap;
+}
+
+#export-btn {
+  font-size: 11px !important;
+  padding: 4px 10px !important;
+  border: 1px solid #ccc !important;
+  border-radius: 4px;
+  color: #555;
+}
+
+#export-btn:hover {
+  border-color: #999 !important;
+  color: #222;
+}
+
+/* ── Editor Container ── */
+
+#editor-container {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  overflow: hidden;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.panel-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #aaa;
+  padding: 6px 20px 0;
+  flex-shrink: 0;
+}
+
+.mode-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding-bottom: 2px;
+}
+
+.mode-btn {
+  position: relative;
+  font-size: 14px;
+  padding: 4px 10px;
+  border: none;
+  background: none;
+  color: #ccc;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 250ms ease;
+}
+
+.mode-btn:hover {
+  color: #888;
+}
+
+.mode-btn.active {
+  color: #333;
+}
+
+.mode-btn.mode-raw {
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mode-btn.mode-styled {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+
+.mode-underline {
+  position: absolute;
+  bottom: 0;
+  height: 1.5px;
+  background: #333;
+  transition: left 250ms ease, width 250ms ease;
+  border-radius: 1px;
+}
+
+.panel-divider {
+  background: #e0e0e0;
+}
+
+/* ── Markdown Panel (textarea + overlay) ── */
+
+.editor-wrapper {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+#markdown-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 12px 20px 20px;
+  border: none;
+  resize: none;
+  background: transparent;
+  color: transparent;
+  caret-color: #333;
+  z-index: 2;
+  overflow: auto;
+  outline: none;
+  tab-size: 2;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+#markdown-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 12px 20px 20px;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: #333;
+  margin: 0;
+}
+
+/* Syntax highlight classes */
+.md-syntax { color: #bbb; }
+.md-heading-text { font-weight: 700; }
+.md-bold-text { font-weight: 700; }
+.md-em-text { font-style: italic; }
+.md-strike-text { text-decoration: line-through; }
+.md-code-text { background: #f0f0f0; border-radius: 2px; padding: 0 2px; }
+.md-link-text { color: #0066cc; }
+.md-link-url { color: #999; }
+.md-blockquote { color: #666; }
+.md-hr { color: #bbb; }
+
+/* ── Styled Editor (contenteditable) ── */
+
+#styled-editor {
+  display: none;
+  flex: 1;
+  outline: none;
+  padding: 12px 20px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  overflow: auto;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  color: #222;
+}
+
+#markdown-panel.styled-mode .editor-wrapper {
+  display: none;
+}
+
+#markdown-panel.styled-mode #styled-editor {
+  display: block;
+}
+
+/* Styled mode typography — mirrors rich text panel */
+#styled-editor .md-syntax {
+  color: #bbb;
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
+}
+
+#styled-editor .s-line-h1 { font-size: 1.8em; font-weight: 700; margin: 0.6em 0 0.4em; }
+#styled-editor .s-line-h2 { font-size: 1.4em; font-weight: 600; margin: 0.5em 0 0.3em; }
+#styled-editor .s-line-h3 { font-size: 1.15em; font-weight: 600; margin: 0.4em 0 0.3em; }
+#styled-editor .s-line-h1 .md-syntax,
+#styled-editor .s-line-h2 .md-syntax,
+#styled-editor .s-line-h3 .md-syntax {
+  font-size: 0.55em;
+  vertical-align: middle;
+}
+
+#styled-editor .s-bold { font-weight: 700; }
+#styled-editor .s-em { font-style: italic; }
+#styled-editor .s-strike { text-decoration: line-through; color: #888; }
+#styled-editor .s-code {
+  background: #f4f4f4;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.9em;
+}
+#styled-editor .s-link { color: #0066cc; }
+#styled-editor .s-url { color: #999; font-size: 0.85em; }
+#styled-editor .s-line-bq {
+  border-left: 3px solid #ddd;
+  padding-left: 16px;
+  color: #666;
+}
+#styled-editor .s-line-hr {
+  color: #bbb;
+  margin: 1.2em 0;
+}
+#styled-editor .s-empty { min-height: 1.7em; }
+
+/* Active panel indicator */
+.panel.active {
+  box-shadow: inset 3px 0 0 #0066cc;
+}
+
+/* ── Rich Text Panel ── */
+
+#richtext {
+  flex: 1;
+  outline: none;
+  padding: 12px 20px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  overflow: auto;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+#richtext h1 { font-size: 1.8em; margin: 0.6em 0 0.4em; font-weight: 700; }
+#richtext h2 { font-size: 1.4em; margin: 0.5em 0 0.3em; font-weight: 600; }
+#richtext h3 { font-size: 1.15em; margin: 0.4em 0 0.3em; font-weight: 600; }
+#richtext p { margin: 0 0 0.8em; }
+#richtext a { color: #0066cc; text-decoration: underline; }
+#richtext strong { font-weight: 700; }
+#richtext em { font-style: italic; }
+#richtext del { text-decoration: line-through; color: #888; }
+#richtext code {
+  background: #f4f4f4;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.9em;
+}
+#richtext pre {
+  background: #f4f4f4;
+  padding: 12px 16px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 0.8em 0;
+}
+#richtext pre code {
+  background: none;
+  padding: 0;
+}
+#richtext blockquote {
+  border-left: 3px solid #ddd;
+  margin: 0.8em 0;
+  padding: 0.4em 0 0.4em 16px;
+  color: #666;
+}
+#richtext ul, #richtext ol {
+  margin: 0 0 0.8em 1.5em;
+}
+#richtext li {
+  margin-bottom: 0.3em;
+}
+#richtext hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 1.2em 0;
+}
+
+/* ── Link Tooltip ── */
+
+#link-tooltip {
+  display: none;
+  position: fixed;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
+#link-tooltip.visible {
+  display: flex;
+}
+
+#link-url-input {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  width: 260px;
+  outline: none;
+}
+
+#link-url-input:focus {
+  border-color: #0066cc;
+}
+
+#link-apply {
+  background: #0066cc;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#link-apply:hover {
+  background: #0052a3;
+}
+
+#link-cancel {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #999;
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+#link-cancel:hover {
+  color: #333;
+}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown Editor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <div id="toolbar">
+      <div id="toolbar-actions">
+        <div id="mode-toggle" class="mode-toggle">
+          <button id="mode-raw" class="mode-btn mode-raw active" title="Raw markdown">#</button>
+          <button id="mode-styled" class="mode-btn mode-styled" title="Styled view">Aa</button>
+          <span class="mode-underline"></span>
+        </div>
+        <span class="toolbar-divider"></span>
+        <button data-action="h1" title="Heading 1 (Ctrl+Shift+1)">H1</button>
+        <button data-action="h2" title="Heading 2 (Ctrl+Shift+2)">H2</button>
+        <button data-action="h3" title="Heading 3 (Ctrl+Shift+3)">H3</button>
+        <span class="toolbar-divider"></span>
+        <button data-action="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button data-action="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button data-action="strikethrough" title="Strikethrough (Ctrl+Shift+S)"><s>S</s></button>
+        <span class="toolbar-divider"></span>
+        <button data-action="link" title="Link (Ctrl+K)">Link</button>
+        <button data-action="code" title="Code (Ctrl+E)">&lt;/&gt;</button>
+        <button data-action="blockquote" title="Blockquote (Ctrl+Shift+.)">&ldquo;</button>
+        <span class="toolbar-divider"></span>
+        <button data-action="ol" title="Ordered List (Ctrl+Shift+7)">1.</button>
+        <button data-action="ul" title="Unordered List (Ctrl+Shift+8)"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" stroke="currentColor"><circle cx="2" cy="3.5" r="1.5" stroke="none"/><line x1="5.5" y1="3.5" x2="15" y2="3.5" stroke-width="1.5"/><circle cx="2" cy="8" r="1.5" stroke="none"/><line x1="5.5" y1="8" x2="15" y2="8" stroke-width="1.5"/><circle cx="2" cy="12.5" r="1.5" stroke="none"/><line x1="5.5" y1="12.5" x2="15" y2="12.5" stroke-width="1.5"/></svg></button>
+        <button data-action="hr" title="Horizontal Rule">&mdash;</button>
+      </div>
+      <div id="toolbar-info">
+        <span id="word-count">0 words, 0 chars</span>
+        <button id="export-btn" title="Save as .md (Ctrl+S)">Export .md</button>
+      </div>
+    </div>
+
+    <div id="editor-container">
+      <div id="markdown-panel" class="panel">
+        <div class="panel-label">Markdown</div>
+        <div class="editor-wrapper" id="raw-editor">
+          <textarea id="markdown-input" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+          <pre id="markdown-overlay" aria-hidden="true"></pre>
+        </div>
+        <div id="styled-editor" contenteditable="true" spellcheck="false"></div>
+      </div>
+      <div class="panel-divider"></div>
+      <div id="richtext-panel" class="panel">
+        <div class="panel-label">Preview</div>
+        <div id="richtext" contenteditable="true" spellcheck="false"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="link-tooltip">
+    <input type="text" id="link-url-input" placeholder="Paste or type a URL..." />
+    <button id="link-apply">Apply</button>
+    <button id="link-cancel">&times;</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/turndown/dist/turndown.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
