@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sixteen Kingdoms - Scalable Topo-Map</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+            margin: 0;
+        }
+
+        .app-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .controls {
+            background: #333;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 10;
+            position: sticky;
+            top: 20px;
+        }
+
+        .controls input[type="range"] {
+            cursor: pointer;
+        }
+
+        .map-container {
+            background: #fff;
+            padding: 20px 40px 40px 60px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        h2 { text-align: center; color: #333; margin-top: 0; margin-bottom: 20px; }
+
+        svg {
+            display: block;
+            background: #fff;
+        }
+
+        .kingdom-poly {
+            stroke: rgba(0,0,0,0.2);
+            stroke-width: 1px;
+            stroke-linejoin: round;
+            transition: opacity 0.2s, stroke-width 0.2s;
+            cursor: pointer;
+        }
+
+        .kingdom-poly:hover {
+            opacity: 0.85;
+            stroke: #000;
+            stroke-width: 2px;
+        }
+
+        .label-zh {
+            font-size: 18px;
+            font-weight: bold;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        .label-en {
+            font-size: 11px;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        .year-text {
+            font-size: 12px;
+            fill: #777;
+            text-anchor: end;
+        }
+
+        .grid-line {
+            stroke: #eee;
+            stroke-dasharray: 4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+    <div class="controls">
+        <label for="y-slider">Time Scale (Y-Axis Zoom): <span id="scale-val">6</span>x</label>
+        <input type="range" id="y-slider" min="3" max="25" value="6" step="1">
+    </div>
+
+    <div class="map-container">
+        <h2>Era of the Sixteen Kingdoms</h2>
+        <div id="chart"></div>
+    </div>
+</div>
+
+<script>
+const data = [
+    { name: "Cao Wei", zh: "魏", color: "#E2D5B5", poly: [
+        {start: 260, end: 265, x1: 0, x2: 80}
+    ]},
+    { name: "Eastern Wu", zh: "東吳", color: "#DFA09D", poly: [
+        {start: 260, end: 280, x1: 80, x2: 100}
+    ]},
+    { name: "Western Jin", zh: "西晉", color: "#B3DFEC", poly: [
+        {start: 265, end: 280, x1: 0, x2: 80},
+        {start: 280, end: 304, x1: 0, x2: 100},
+        {start: 304, end: 316, x1: 80, x2: 100} 
+    ]},
+    { name: "Western Jin (West)", zh: "西晉", color: "#B3DFEC", hideLabel: true, poly: [
+        {start: 304, end: 314, x1: 0, x2: 20}
+    ]},
+    { name: "Cheng Han", zh: "成漢", color: "#FF0000", poly: [
+        {start: 304, end: 347, x1: 60, x2: 80}
+    ]},
+    { name: "Former Zhao", zh: "前趙", color: "#FE994A", poly: [
+        {start: 304, end: 319, x1: 20, x2: 60},
+        {start: 319, end: 329, x1: 20, x2: 40}
+    ]},
+    { name: "Later Zhao", zh: "後趙", color: "#A66329", poly: [
+        {start: 319, end: 329, x1: 40, x2: 60},
+        {start: 329, end: 337, x1: 20, x2: 60},
+        {start: 337, end: 350, x1: 20, x2: 40} 
+    ]},
+    { name: "Former Liang", zh: "前涼", color: "#F5F2E3", poly: [
+        {start: 314, end: 376, x1: 0, x2: 20}
+    ]},
+    { name: "Eastern Jin", zh: "東晉", color: "#4888D8", poly: [
+        {start: 316, end: 347, x1: 80, x2: 100},
+        {start: 347, end: 410, x1: 60, x2: 100},
+        {start: 410, end: 420, x1: 55, x2: 100}
+    ]},
+    { name: "Former Yan", zh: "前燕", color: "#C4B5E1", poly: [
+        {start: 337, end: 370, x1: 40, x2: 60}
+    ]},
+    { name: "Former Qin", zh: "前秦", color: "#979361", poly: [
+        {start: 350, end: 370, x1: 20, x2: 40},
+        {start: 370, end: 376, x1: 20, x2: 60}, 
+        {start: 376, end: 384, x1: 0,  x2: 60}, 
+        {start: 384, end: 385, x1: 20, x2: 35}, 
+        {start: 385, end: 394, x1: 30, x2: 35}
+    ]},
+    { name: "Later Qin", zh: "後秦", color: "#E18C99", poly: [
+        {start: 384, end: 394, x1: 35, x2: 45},
+        {start: 394, end: 400, x1: 30, x2: 45}, 
+        {start: 400, end: 407, x1: 20, x2: 45}, 
+        {start: 407, end: 409, x1: 20, x2: 40}, 
+        {start: 409, end: 417, x1: 30, x2: 40}
+    ]},
+    { name: "Later Yan", zh: "後燕", color: "#8863A6", poly: [
+        {start: 384, end: 398, x1: 45, x2: 60},
+        {start: 398, end: 407, x1: 45, x2: 55}
+    ]},
+    { name: "Later Liang", zh: "後涼", color: "#5E86C1", poly: [
+        {start: 384, end: 397, x1: 0, x2: 20},
+        {start: 397, end: 403, x1: 10, x2: 15}
+    ]},
+    { name: "Western Qin", zh: "西秦", color: "#A4D3EE", poly: [
+        {start: 385, end: 400, x1: 20, x2: 30}
+    ]},
+    { name: "Western Qin (Restored)", zh: "西秦", color: "#A4D3EE", poly: [
+        {start: 409, end: 414, x1: 20, x2: 30},
+        {start: 414, end: 420, x1: 15, x2: 30}
+    ]},
+    { name: "Northern Liang", zh: "北涼", color: "#92D050", poly: [
+        {start: 397, end: 400, x1: 0, x2: 10},
+        {start: 400, end: 403, x1: 5, x2: 10},
+        {start: 403, end: 420, x1: 5, x2: 15}
+    ]},
+    { name: "Southern Liang", zh: "南涼", color: "#00B050", poly: [
+        {start: 397, end: 414, x1: 15, x2: 20}
+    ]},
+    { name: "Southern Yan", zh: "南燕", color: "#FFD700", poly: [
+        {start: 398, end: 410, x1: 55, x2: 60}
+    ]},
+    { name: "Western Liang", zh: "西涼", color: "#2F5597", poly: [
+        {start: 400, end: 420, x1: 0, x2: 5}
+    ]},
+    { name: "Xia", zh: "胡夏", color: "#FFFF00", poly: [
+        {start: 407, end: 417, x1: 40, x2: 45},
+        {start: 417, end: 420, x1: 30, x2: 45} 
+    ]},
+    { name: "Northern Yan", zh: "北燕", color: "#1D3C65", poly: [
+        {start: 407, end: 420, x1: 45, x2: 55}
+    ]}
+];
+
+// Base Constants
+const BASE_YEAR = 260;
+const END_YEAR = 420;
+const SCALE_X = 10; // Width multiplier (fixed)
+const WIDTH = 100 * SCALE_X;
+
+// Dynamic State
+let scaleY = 6; 
+
+function createSVGElement(tag, attributes) {
+    const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (let key in attributes) el.setAttribute(key, attributes[key]);
+    return el;
+}
+
+function generatePath(phases) {
+    let d = "";
+    // Trace Left Edge (Top to Bottom)
+    for (let i = 0; i < phases.length; i++) {
+        let x = phases[i].x1 * SCALE_X;
+        let yTop = (phases[i].start - BASE_YEAR) * scaleY;
+        let yBot = (phases[i].end - BASE_YEAR) * scaleY;
+        
+        if (i === 0) d += `M ${x} ${yTop} `;
+        else d += `L ${x} ${yTop} `; 
+        d += `L ${x} ${yBot} `;
+    }
+    // Trace Right Edge (Bottom to Top)
+    for (let i = phases.length - 1; i >= 0; i--) {
+        let x = phases[i].x2 * SCALE_X;
+        let yTop = (phases[i].start - BASE_YEAR) * scaleY;
+        let yBot = (phases[i].end - BASE_YEAR) * scaleY;
+        
+        if (i === phases.length - 1) d += `L ${x} ${yBot} `;
+        else d += `L ${x} ${yBot} `; 
+        d += `L ${x} ${yTop} `;
+    }
+    return d + "Z";
+}
+
+function getContrast(hex) {
+    const r = parseInt(hex.substr(1,2), 16), g = parseInt(hex.substr(3,2), 16), b = parseInt(hex.substr(5,2), 16);
+    return ((r*299)+(g*587)+(b*114))/1000 >= 128 ? '#000' : '#fff';
+}
+
+function render() {
+    const chartDiv = document.getElementById('chart');
+    chartDiv.innerHTML = ''; // Clear existing map
+
+    const height = (END_YEAR - BASE_YEAR) * scaleY;
+    const svg = createSVGElement('svg', { width: WIDTH + 50, height: height, viewBox: `-40 0 ${WIDTH + 40} ${height}` });
+
+    // 1. Draw Year Grid & Axis
+    for (let y = BASE_YEAR; y <= END_YEAR; y += 10) {
+        const yPos = (y - BASE_YEAR) * scaleY;
+        svg.appendChild(createSVGElement('line', { x1: 0, y1: yPos, x2: WIDTH, y2: yPos, class: 'grid-line' }));
+        const text = createSVGElement('text', { x: -10, y: yPos + 4, class: 'year-text' });
+        text.textContent = y;
+        svg.appendChild(text);
+    }
+
+    // 2. Draw Polygons
+    data.forEach(kingdom => {
+        const pathStr = generatePath(kingdom.poly);
+        const path = createSVGElement('path', {
+            d: pathStr, fill: kingdom.color, class: 'kingdom-poly'
+        });
+        
+        const title = createSVGElement('title', {});
+        title.textContent = `${kingdom.name} (${kingdom.zh})`;
+        path.appendChild(title);
+        svg.appendChild(path);
+
+        // 3. Place Text in the "Largest" vertical area of the polygon
+        if (!kingdom.hideLabel) {
+            let largestPhase = kingdom.poly.reduce((prev, current) => 
+                ((current.end - current.start) * (current.x2 - current.x1) > (prev.end - prev.start) * (prev.x2 - prev.x1)) ? current : prev
+            );
+
+            const centerX = ((largestPhase.x1 + largestPhase.x2) / 2) * SCALE_X;
+            const centerY = (((largestPhase.start + largestPhase.end) / 2) - BASE_YEAR) * scaleY;
+            const textColor = getContrast(kingdom.color);
+
+            const zhText = createSVGElement('text', { x: centerX, y: centerY - 2, fill: textColor, class: 'label-zh' });
+            zhText.textContent = kingdom.zh;
+            
+            const enText = createSVGElement('text', { x: centerX, y: centerY + 12, fill: textColor, class: 'label-en' });
+            enText.textContent = kingdom.name;
+
+            // Only render text if the space is wide enough
+            if ((largestPhase.x2 - largestPhase.x1) * SCALE_X > 35) {
+                svg.appendChild(zhText);
+                svg.appendChild(enText);
+            }
+        }
+    });
+
+    chartDiv.appendChild(svg);
+}
+
+// Slider Logic
+const slider = document.getElementById('y-slider');
+const scaleVal = document.getElementById('scale-val');
+
+slider.addEventListener('input', (e) => {
+    scaleY = parseInt(e.target.value);
+    scaleVal.textContent = scaleY;
+    render();
+});
+
+// Initial Render
+render();
+</script>
+</body>
+</html>
