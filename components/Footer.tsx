@@ -1,5 +1,3 @@
-import JSXStyle from "styled-jsx/style"
-
 export default function Footer() {
   return (
     <div className="footer">

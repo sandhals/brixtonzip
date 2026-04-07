@@ -31,10 +31,269 @@ body {
   unicode-range: U+0250–U+02AF;
 }
 
-:root {
+:root,
+[data-theme="light"] {
   --black: rgb(24, 24, 24);
-  --white: rgba(247, 247, 247);
+  --white: rgb(247, 247, 247);
   --softwhite: rgba(247, 247, 247, 0.875);
+  --white-0: rgba(247, 247, 247, 0);
+  --link-color: blue;
+  --img-blend: multiply;
+  /* sunlit */
+  --sl-shadow: #1a1917;
+  --sl-bounce: #fffffc;
+  --sl-timing: cubic-bezier(0.455, 0.190, 0.000, 0.985);
+}
+
+[data-theme="dark"] {
+  --black: rgb(210, 210, 205);
+  --white: rgb(20, 20, 20);
+  --softwhite: rgba(22, 22, 22, 0.97);
+  --white-0: rgba(20, 20, 20, 0);
+  --link-color: #6fa3ef;
+  --img-blend: normal;
+  /* sunlit */
+  --sl-shadow: #030307;
+  --sl-bounce: #1b293f;
+}
+
+[data-theme="warm"] {
+  --black: rgb(44, 34, 22);
+  --white: rgb(245, 238, 217);
+  --softwhite: rgba(245, 238, 217, 0.875);
+  --white-0: rgba(245, 238, 217, 0);
+  --link-color: blue;
+  --img-blend: multiply;
+  /* sunlit */
+  --sl-shadow: #2c2010;
+  --sl-bounce: #fff8ec;
+}
+
+/* ========================================
+   Sunlit ambient light overlay
+   Based on github.com/jackyzha0/sunlit (jzhao.xyz)
+   Two-layer approach:
+     #sunlit-glow    — diffuse light, behind content (z-index: 0)
+     #sunlit-shadows — shadow structure, above content (z-index: 3), no blur
+   ======================================== */
+
+/* --- Layer 1: ambient glow (behind content) --- */
+
+#sunlit-glow {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+  transition: opacity 1.2s ease;
+  /* Fade glow toward center — keeps warmth on the right margin, not over content */
+  -webkit-mask-image: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 1)    0%,
+    rgba(0, 0, 0, 0.75) 22%,
+    rgba(0, 0, 0, 0.35) 42%,
+    rgba(0, 0, 0, 0.1)  58%,
+    rgba(0, 0, 0, 0)    70%
+  );
+  mask-image: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 1)    0%,
+    rgba(0, 0, 0, 0.75) 22%,
+    rgba(0, 0, 0, 0.35) 42%,
+    rgba(0, 0, 0, 0.1)  58%,
+    rgba(0, 0, 0, 0)    70%
+  );
+}
+
+body.sunlit-hidden #sunlit-glow {
+  opacity: 0;
+}
+
+body.sunlit-notransition #sunlit-glow {
+  transition: none !important;
+}
+
+#glow {
+  position: absolute;
+  background: linear-gradient(309deg, var(--sl-bounce), var(--sl-bounce) 20%, transparent);
+  transition: background 1s var(--sl-timing);
+  height: 100%;
+  width: 100%;
+  opacity: 0.35;
+  filter: blur(60px);
+}
+
+#glow-bounce {
+  position: absolute;
+  background: linear-gradient(355deg, var(--sl-bounce) 0%, transparent 30%, transparent 100%);
+  transition: background 1s var(--sl-timing);
+  opacity: 0.28;
+  height: 100%;
+  width: 100%;
+  bottom: 0;
+  filter: blur(60px);
+}
+
+/* --- Layer 2: shadow structure (above content) --- */
+
+#sunlit-shadows {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 3;
+  transition: opacity 1.2s ease;
+}
+
+body.sunlit-hidden #sunlit-shadows {
+  opacity: 0;
+}
+
+body.sunlit-notransition #sunlit-shadows,
+body.sunlit-notransition .sunlit-perspective,
+body.sunlit-notransition #blinds > .shutters,
+body.sunlit-notransition .shutter {
+  transition: none !important;
+}
+
+/* Suppresses only shutter transitions — used to snap closed before animating open */
+body.sunlit-shutters-notransition #blinds > .shutters,
+body.sunlit-shutters-notransition .shutter {
+  transition: none !important;
+}
+
+.sunlit-perspective {
+  position: absolute;
+  transition: transform 1.7s var(--sl-timing), opacity 4s ease;
+  top: -30vh;
+  right: 0;
+  width: 80vw;
+  height: 130vh;
+  opacity: 0.035;
+  background-blend-mode: darken;
+  transform-origin: top right;
+  transform-style: preserve-3d;
+  transform: matrix3d(0.75, -0.0625, 0, 0.0008, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+  /* No blur on the whole overlay — that creates a page-wide haze over content.
+     Blur lives on individual shadow children instead, keeping lines soft without
+     blurring text behind the layer. */
+  -webkit-mask-image: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 1)    0%,
+    rgba(0, 0, 0, 0.92) 12%,
+    rgba(0, 0, 0, 0.5)  28%,
+    rgba(0, 0, 0, 0.14) 44%,
+    rgba(0, 0, 0, 0.03) 55%,
+    rgba(0, 0, 0, 0)    63%
+  );
+  mask-image: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 1)    0%,
+    rgba(0, 0, 0, 0.92) 12%,
+    rgba(0, 0, 0, 0.5)  28%,
+    rgba(0, 0, 0, 0.14) 44%,
+    rgba(0, 0, 0, 0.03) 55%,
+    rgba(0, 0, 0, 0)    63%
+  );
+}
+
+/* Blur the shadow shapes themselves — gives projected-light softness
+   without turning the whole layer into a veil over text */
+#sunlit-shadows .shutters,
+#sunlit-shadows .vertical,
+#sunlit-shadows #leaves {
+  filter: blur(2px);
+}
+
+body.sunlit-dark .sunlit-perspective {
+  opacity: 0.07;
+  transform: matrix3d(0.8333, 0.0833, 0, 0.0003, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+}
+
+body.sunlit-warm .sunlit-perspective {
+  opacity: 0.05;
+}
+
+#leaves {
+  position: absolute;
+  background-size: cover;
+  background-repeat: no-repeat;
+  bottom: 0;
+  right: -600px;
+  width: 1600px;
+  height: 1400px;
+  background-image: url('/leaves.png');
+  perspective: 400px;
+  animation: sunlit-billow 8s ease-in-out infinite;
+}
+
+#blinds {
+  position: relative;
+  width: 100%;
+}
+
+#blinds .shutter,
+#blinds .bar {
+  background-color: var(--sl-shadow);
+  transition: background-color 1s var(--sl-timing);
+}
+
+#blinds > .shutters {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 60px;
+  transition: gap 1s var(--sl-timing);
+}
+
+body.sunlit-dark #blinds > .shutters {
+  gap: 20px;
+}
+
+#blinds > .vertical {
+  top: 0;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+}
+
+.vertical > .bar {
+  width: 12px;
+  height: 100%;
+}
+
+.shutter {
+  width: 100%;
+  height: 40px;
+  transition: height 1s var(--sl-timing);
+}
+
+body.sunlit-dark .shutter {
+  height: 80px;
+}
+
+/* Transient class: shutters start closed when entering warm mode, then animate open */
+body.sunlit-shutters-closed #blinds > .shutters {
+  gap: 20px;
+}
+
+body.sunlit-shutters-closed .shutter {
+  height: 80px;
+}
+
+
+@keyframes sunlit-billow {
+  0%   { transform: rotateX(0deg)  rotateY(0deg)  scale(1);    }
+  18%  { transform: rotateX(1deg)  rotateY(2deg)  scale(1.03); }
+  32%  { transform: rotateX(-4deg) rotateY(-2deg) scale(0.96); }
+  66%  { transform: rotateX(3deg)  rotateY(-1deg) scale(1.04); }
+  100% { transform: rotateX(0deg)  rotateY(0deg)  scale(1);    }
 }
 
 ::selection {
@@ -54,7 +313,7 @@ body {
 }
 
 .container {
-  background: var(--white);
+  background: transparent;
   max-width: 500px;
   margin: auto;
   position: relative;
@@ -152,7 +411,7 @@ a.opener {
 }
 
 a {
-  color: blue;
+  color: var(--link-color);
   transition: 300ms;
 }
 
@@ -292,7 +551,7 @@ a {
 
 a:hover {
   text-decoration: underline;
-  color:blue;
+  color: var(--link-color);
 }
 
 .norwegian-easter {
@@ -364,11 +623,11 @@ li {
 .showsource:hover {
   opacity: 1;
   transition: 1s;
-  color: blue;
+  color: var(--link-color);
 }
 
 .hidesource {
-  color: blue;
+  color: var(--link-color);
   width: 26em;
   padding: 2em;
   text-align: center;
@@ -408,7 +667,7 @@ li {
   font-size: 5rem;
   letter-spacing: -0.05em;
   text-align: center;
-  background: linear-gradient(0deg, var(--white) 80%, rgba(255, 255, 255, 0) 100%);
+  background: linear-gradient(0deg, var(--white) 80%, var(--white-0) 100%);
 }
 
 .titlemark > * {
@@ -429,11 +688,11 @@ li {
 
 .tooltip {
   display: none;
-  border: solid black 1px;
+  border: solid var(--black) 1px;
   height: 100px;
   width: 170px;
   position: absolute;
-  background: white;
+  background: var(--white);
   bottom: 15pt;
   left: -50%;
 }
@@ -455,11 +714,11 @@ span {
   position: absolute;
   bottom: 0;
   right: 0;
-  color: white;
+  color: var(--white);
   font-size: 8pt;
   z-index: 1000;
   font-family: monospace;
-  background: black;
+  background: var(--black);
 }
 
 .name-tooltip {
@@ -552,4 +811,15 @@ span {
   background: var(--black);
   border: none;
   cursor: pointer;
+}
+
+/* Dark mode: images shown normally via --img-blend variable (multiply is designed for light backgrounds) */
+[data-theme="dark"] img {
+  mix-blend-mode: var(--img-blend);
+  background-color: transparent !important;
+}
+
+/* Theme transition */
+body, .container, .content, .footer, .status-marquee-box {
+  transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease;
 }

@@ -60,6 +60,17 @@ export default function UnzipPage({ initialTreeData, error: initialError }: Unzi
   const [gardenExpanded, setGardenExpanded] = useState(false);
   const treeRef = useRef<HTMLDivElement>(null);
 
+  // Sync theme from parent page via localStorage
+  useEffect(() => {
+    const applyTheme = () => {
+      const t = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    };
+    applyTheme();
+    window.addEventListener('storage', applyTheme);
+    return () => window.removeEventListener('storage', applyTheme);
+  }, []);
+
   const toggleGarden = useCallback(() => {
     setGardenExpanded(prev => !prev);
   }, []);
@@ -196,6 +207,7 @@ export default function UnzipPage({ initialTreeData, error: initialError }: Unzi
     <>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="/style.css" />
       </Head>
 
       <style jsx>{`
@@ -226,11 +238,14 @@ export default function UnzipPage({ initialTreeData, error: initialError }: Unzi
         :global(.tree-link:link),
         :global(.tree-link:visited),
         :global(.tree-link:active) {
-          color: #0000FF !important;
+          color: var(--link-color) !important;
           text-decoration: none !important;
+          font-size: inherit !important;
+          font-family: monospace !important;
+          font-weight: normal !important;
         }
         :global(.tree-link:hover) {
-          color: #0000FF !important;
+          color: var(--link-color) !important;
           text-decoration: underline !important;
         }
         audio {
@@ -243,7 +258,7 @@ export default function UnzipPage({ initialTreeData, error: initialError }: Unzi
         }
         span.arrow {
           opacity: 1 !important;
-          color: blue !important;
+          color: var(--link-color) !important;
         }
         .error {
           color: red;

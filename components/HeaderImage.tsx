@@ -16,7 +16,7 @@ export default function HeaderImage({ src, alt }: { src: string; alt: string }) 
           height: 45vh;
           object-fit: cover;
           object-position: 50% 35%;
-          mix-blend-mode: multiply;
+          mix-blend-mode: var(--img-blend, multiply);
           background-color: var(--black);
         }
       `}</style>

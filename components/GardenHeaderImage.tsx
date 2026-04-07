@@ -164,7 +164,7 @@ export default function GardenHeaderImage({ src, colorSrc, alt }: { src: string;
 
         .base-image {
           display: block;
-          mix-blend-mode: multiply;
+          mix-blend-mode: var(--img-blend, multiply);
         }
 
         .color-image {

@@ -26,7 +26,6 @@ export default function UnzipToggle({ checkboxId = 'unzip-toggle' }: UnzipToggle
             left: 0,
             height: '100%',
             width: '100%',
-            background: 'rgba(255, 255, 255, 0.932)'
           }}
           frameBorder={0}
         />
@@ -36,32 +35,34 @@ export default function UnzipToggle({ checkboxId = 'unzip-toggle' }: UnzipToggle
         .zip-checkbox {
           z-index: 9999;
           filter: opacity(0.8);
-          accent-color: blue;
+          accent-color: var(--link-color);
           font-family: monospace;
           position: absolute;
           bottom: 0.6em;
           right: 0.4em;
           display: inline;
           opacity: 0.8;
-          color: black;
+          color: var(--black);
         }
 
         .zip-checkbox:hover:after {
           content: ' UNZIP? ';
-          background: white;
+          background: var(--white);
           margin-left: calc(-3rem - 2px);
           margin-bottom: 6px;
         }
 
         .zip-checkbox:checked:hover:after {
           content: 'ZIP?';
-          color: blue;
+          color: var(--link-color);
           margin-left: calc(-2rem - 2px);
           margin-bottom: 6px;
         }
 
         .iframe-container {
-          display: block;
+          position: absolute;
+          inset: 0;
+          background: var(--white);
         }
 
         .iframe-container.hidden {
