@@ -7,7 +7,10 @@
       "Bash(git merge *)",
       "Bash(git checkout *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); links=d.get\\('links',[]\\); print\\(json.dumps\\(links[0], indent=2\\)\\) if links else print\\('no links'\\)\")",
+      "Bash(node -e \"let d=''; process.stdin.on\\('data',c=>d+=c\\); process.stdin.on\\('end',\\(\\)=>{ const j=JSON.parse\\(d\\); console.log\\(JSON.stringify\\(j.links?.[0], null, 2\\)\\); }\\)\")",
+      "Bash(node -e \"let d=''; process.stdin.on\\('data',c=>d+=c\\); process.stdin.on\\('end',\\(\\)=>{ const j=JSON.parse\\(d\\); const keys=new Set\\(\\); j.links?.forEach\\(l=>Object.keys\\(l\\).forEach\\(k=>keys.add\\(k\\)\\)\\); console.log\\('All keys across all links:', [...keys]\\); console.log\\('Total links:', j.links?.length\\); }\\)\")"
     ]
   }
 }
