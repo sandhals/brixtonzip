@@ -64,7 +64,7 @@ function setSunlitInitial(t: Theme) {
   else b.classList.add('sunlit-hidden')
 }
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ inline = false }: { inline?: boolean }) {
   const [theme, setTheme] = useState<Theme>('light')
   const [mounted, setMounted] = useState(false)
 
@@ -128,9 +128,10 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="theme-toggle"
+      className={inline ? 'theme-toggle theme-toggle--inline' : 'theme-toggle'}
       aria-label={`Switch to ${nextLabel[theme]}`}
       title={`Switch to ${nextLabel[theme]}`}
+      style={inline ? { color: 'rgba(247,247,247,0.7)' } : undefined}
     >
       {icons[theme]}
       <style jsx>{`
@@ -154,10 +155,22 @@ export default function ThemeToggle() {
         .theme-toggle:hover {
           opacity: 1;
         }
+        /* Inline variant: used inside the marquee bar on mobile.
+           Bar is always dark so icon needs a fixed light color regardless of theme. */
+        .theme-toggle--inline {
+          position: static;
+          color: rgba(247, 247, 247, 0.7) !important;
+          opacity: 1;
+          padding: 0;
+        }
+        .theme-toggle--inline:hover {
+          color: rgba(247, 247, 247, 1) !important;
+          opacity: 1;
+        }
         @media (max-width: 640px) {
-          .theme-toggle {
-            top: auto;
-            bottom: 0.65rem;
+          /* Hide the fixed toggle on mobile — marquee slot takes over */
+          .theme-toggle:not(.theme-toggle--inline) {
+            display: none;
           }
         }
       `}</style>

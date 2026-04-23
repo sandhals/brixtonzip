@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carb Cycling Calculator</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 300;
+  background: #f5f5f5;
+  height: 100vh;
+  padding: 0.75rem 0.75rem 0.5rem;
+  color: #111;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+h1 {
+  font-size: 0.85rem;
+  font-weight: 400;
+  text-align: center;
+  margin-bottom: 0.1rem;
+}
+
+.subtitle {
+  font-size: 0.62rem;
+  text-align: center;
+  color: #888;
+  margin-bottom: 0.5rem;
+}
+
+/* ── Page wrapper ── */
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 0;
+}
+
+/* ── Stats + summary strip ── */
+.stats-strip {
+  border: 1px solid black;
+  background: white;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  align-items: flex-end;
+}
+
+.strip-divider {
+  width: 1px;
+  background: #e0e0e0;
+  align-self: stretch;
+  margin: 0 0.25rem;
+}
+
+.summary-stat { display: flex; flex-direction: column; gap: 0; }
+.summary-stat .stat-val { font-size: 0.95rem; font-weight: 400; }
+.summary-stat .stat-label { font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; }
+
+.balance-positive { color: #3a7a3a; }
+.balance-negative { color: #c0351a; }
+.balance-neutral  { color: #666; }
+
+/* ── Main two-column layout ── */
+.layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 262px 1fr;
+  gap: 0.5rem;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.input-panel {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+@media (max-width: 780px) {
+  body { height: auto; overflow: auto; }
+  .layout { grid-template-columns: 1fr; }
+}
+
+/* ── Sections ── */
+.section {
+  border: 1px solid black;
+  padding: 0.6rem 0.75rem;
+  background: white;
+  margin-bottom: 0.5rem;
+}
+
+.section:last-child { margin-bottom: 0; }
+
+.section-label {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #888;
+  margin-bottom: 0.5rem;
+}
+
+/* ── Inputs ── */
+label {
+  font-size: 0.65rem;
+  color: #666;
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+input[type="number"] {
+  border: 1px solid black;
+  padding: 0.3rem 0.4rem;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 300;
+  background: white;
+  width: 5rem;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+input[type="number"]:focus { outline: 2px solid black; }
+
+select {
+  border: 1px solid black;
+  padding: 0.3rem 0.4rem;
+  font-size: 0.68rem;
+  font-family: inherit;
+  font-weight: 300;
+  background: white;
+  width: 100%;
+  cursor: pointer;
+}
+
+select:focus { outline: 2px solid black; }
+
+.row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.row:last-child { margin-bottom: 0; }
+
+.field { display: flex; flex-direction: column; }
+
+/* ── Toggle buttons ── */
+.toggle-group {
+  display: flex;
+  border: 1px solid black;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.toggle-btn {
+  padding: 0.28rem 0.6rem;
+  font-size: 0.65rem;
+  font-family: inherit;
+  font-weight: 300;
+  background: white;
+  border: none;
+  cursor: pointer;
+  border-right: 1px solid black;
+  transition: background 150ms, color 150ms;
+  white-space: nowrap;
+}
+
+.toggle-btn:last-child { border-right: none; }
+.toggle-btn.active { background: black; color: white; }
+
+.unit-toggle {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.65rem;
+  font-family: inherit;
+  font-weight: 300;
+  background: white;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  color: #666;
+  align-self: flex-end;
+  transition: background 150ms;
+}
+
+.unit-toggle.active { background: #eee; }
+
+
+/* ── Output ── */
+.output-panel { display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto; min-height: 0; }
+
+/* ── Day cards ── */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+@media (max-width: 900px) {
+  .week-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 500px) {
+  .week-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.day-card {
+  border: 1px solid black;
+  background: white;
+  padding: 0.35rem 0.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: box-shadow 150ms;
+  position: relative;
+}
+
+.day-card:hover { box-shadow: 2px 2px 0 black; }
+
+.day-card .card-day { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; }
+
+.day-card .card-badge {
+  font-size: 0.55rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  letter-spacing: 0.05em;
+}
+
+.card-badge.HIGH  { background: #fff7e0; color: #7a5a00; }
+.card-badge.MOD   { background: #e8f0ff; color: #1a3a8f; }
+.card-badge.LOW   { background: #ffeaea; color: #8f1a1a; }
+.card-badge.REST  { background: #f0f0f0; color: #666;    }
+
+.day-card .card-cal {
+  font-size: 0.85rem;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.day-card .card-delta {
+  font-size: 0.6rem;
+  color: #888;
+}
+
+.card-delta.surplus { color: #3a7a3a; }
+.card-delta.deficit { color: #c0351a; }
+
+.day-card canvas { margin: 4px 0 2px; }
+
+.macro-row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.macro-chip {
+  font-size: 0.55rem;
+  padding: 1px 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.macro-chip.p { background: #dde8ff; color: #1a3a8f; }
+.macro-chip.c { background: #fff4cc; color: #7a5a00; }
+.macro-chip.f { background: #ffe0e0; color: #8f1a1a; }
+
+/* ── Weekly totals ── */
+.totals-section {
+  border: 1px solid black;
+  background: white;
+  padding: 0.5rem 0.75rem;
+}
+
+.totals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.total-stat { display: flex; flex-direction: column; gap: 0; }
+.total-stat .t-val { font-size: 0.85rem; font-weight: 400; }
+.total-stat .t-label { font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.04em; color: #888; }
+
+/* ── Warnings ── */
+.warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 0.5rem;
+}
+
+.warning {
+  font-size: 0.65rem;
+  padding: 4px 8px;
+  background: #fff7e0;
+  border-left: 3px solid #e0a800;
+  color: #7a5a00;
+}
+
+.warning.error {
+  background: #ffeaea;
+  border-left-color: #e05a5a;
+  color: #8f1a1a;
+}
+
+/* ── Macro legend ── */
+.legend {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6rem;
+  color: #666;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.optional-note {
+  font-size: 0.6rem;
+  color: #bbb;
+  margin-left: 0.25rem;
+}
+</style>
+</head>
+<body>
+
+<h1>Carb Cycling Calculator</h1>
+<p class="subtitle">Body recomposition · Bodybuilding macros · Week-by-week planning</p>
+
+<div class="page">
+
+  <!-- ══ STATS + SUMMARY STRIP (full width) ══ -->
+  <div class="stats-strip">
+    <div class="field">
+      <label>Sex</label>
+      <div class="toggle-group" id="sex-toggle">
+        <button class="toggle-btn active" data-val="male">Male</button>
+        <button class="toggle-btn" data-val="female">Female</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Age</label>
+      <input type="number" id="age" value="28" min="16" max="80" style="width:3.2rem">
+    </div>
+
+    <div class="field">
+      <label>Weight</label>
+      <div style="display:flex;align-items:flex-end;gap:3px">
+        <input type="number" id="weight" value="80" min="30" max="300" style="width:4rem">
+        <div class="toggle-group" id="weight-unit-toggle">
+          <button class="toggle-btn active" data-val="kg">kg</button>
+          <button class="toggle-btn" data-val="lb">lb</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>BF% <span class="optional-note">(opt.)</span></label>
+      <input type="number" id="bodyfat" placeholder="e.g. 18" min="3" max="60" style="width:4rem">
+    </div>
+
+    <div class="field">
+      <label>Height</label>
+      <div style="display:flex;align-items:flex-end;gap:3px;flex-wrap:wrap">
+        <input type="number" id="height-cm" value="178" min="100" max="250" style="width:4rem">
+        <span style="font-size:0.65rem;color:#888;align-self:center">cm</span>
+        <span style="font-size:0.6rem;color:#ccc;align-self:center;margin:0 2px">or</span>
+        <input type="number" id="height-ft" placeholder="5" min="4" max="8" style="width:2.6rem">
+        <span style="font-size:0.65rem;color:#888;align-self:center">ft</span>
+        <input type="number" id="height-in" placeholder="10" min="0" max="11" style="width:2.6rem">
+        <span style="font-size:0.65rem;color:#888;align-self:center">in</span>
+      </div>
+    </div>
+
+    <div class="field" style="min-width:170px;flex:1">
+      <label>Activity</label>
+      <select id="activity">
+        <option value="1.2">Sedentary</option>
+        <option value="1.375">Lightly active (1–3×/wk)</option>
+        <option value="1.55" selected>Moderately active (3–5×/wk)</option>
+        <option value="1.725">Very active (6–7×/wk)</option>
+        <option value="1.9">Athlete / physical job</option>
+      </select>
+    </div>
+
+    <div class="strip-divider"></div>
+
+    <div class="summary-stat">
+      <span class="stat-val" id="out-bmr">—</span>
+      <span class="stat-label">BMR</span>
+    </div>
+    <div class="summary-stat">
+      <span class="stat-val" id="out-tdee">—</span>
+      <span class="stat-label">TDEE</span>
+    </div>
+    <div class="summary-stat">
+      <span class="stat-val" id="out-avg">—</span>
+      <span class="stat-label">Avg / day</span>
+    </div>
+    <div class="summary-stat">
+      <span class="stat-val" id="out-balance">—</span>
+      <span class="stat-label">vs. TDEE</span>
+    </div>
+  </div><!-- end stats-strip -->
+
+  <!-- ══ TWO-COLUMN: controls left, week cards right ══ -->
+  <div class="layout">
+
+    <!-- Left: goal, macros, day types -->
+    <div class="input-panel">
+
+      <!-- Goal -->
+      <div class="section">
+        <div class="section-label">Goal</div>
+
+        <div class="row">
+          <div class="field">
+            <label>Objective</label>
+            <div class="toggle-group" id="goal-toggle">
+              <button class="toggle-btn active" data-val="recomp">Recomp</button>
+              <button class="toggle-btn" data-val="cut">Cut</button>
+              <button class="toggle-btn" data-val="bulk">Bulk</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" id="rate-row">
+          <div class="field">
+            <label id="rate-label">Target loss rate</label>
+            <div style="display:flex;align-items:flex-end;gap:6px">
+              <input type="number" id="rate-input" value="0.5" min="0.1" max="1.5" step="0.1" style="width:4.5rem">
+              <span id="rate-unit" style="font-size:0.7rem;color:#888;align-self:center">kg / week</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Carb swing HIGH vs LOW</label>
+            <div class="toggle-group" id="swing-toggle">
+              <button class="toggle-btn active" data-val="150">±150</button>
+              <button class="toggle-btn" data-val="250">±250</button>
+              <button class="toggle-btn" data-val="350">±350</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="goal-note" style="font-size:0.65rem;color:#888;margin-top:0.25rem"></div>
+      </div>
+
+      <!-- Macros -->
+      <div class="section">
+        <div class="section-label">Macro Preferences</div>
+
+        <div class="row">
+          <div class="field">
+            <label id="protein-label">Protein g/lb</label>
+            <div class="toggle-group" id="protein-toggle">
+              <button class="toggle-btn" data-val="0.8">0.8</button>
+              <button class="toggle-btn active" data-val="1.0">1.0</button>
+              <button class="toggle-btn" data-val="1.2">1.2</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:0.5rem">
+          <div class="field">
+            <label>Fat min g/lb</label>
+            <div class="toggle-group" id="fat-toggle">
+              <button class="toggle-btn" data-val="0.25">0.25</button>
+              <button class="toggle-btn active" data-val="0.35">0.35</button>
+              <button class="toggle-btn" data-val="0.45">0.45</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size:0.6rem;color:#bbb;margin-top:0.5rem">
+          Carbs fill remaining calories. Fat scales lower on high-carb days.
+        </div>
+        <div id="lbm-note" style="font-size:0.65rem;color:#5b8dee;margin-top:0.4rem;display:none">
+          ✓ Using Lean Body Mass for protein
+        </div>
+      </div>
+
+    </div><!-- end input-panel -->
+
+    <!-- Right: week cards + totals -->
+    <div class="output-panel" id="output-panel">
+
+      <!-- Week cards -->
+      <div class="section" style="padding:0.75rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <div class="section-label" style="margin-bottom:0">Weekly Plan — click any day to change type</div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#5b8dee"></div>P</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f0a500"></div>C</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#e05a5a"></div>F</div>
+          </div>
+        </div>
+        <div class="week-grid" id="week-grid"></div>
+      </div>
+
+      <!-- Totals -->
+      <div class="totals-section">
+        <div class="section-label">Weekly Totals</div>
+        <div class="totals-grid" id="totals-grid"></div>
+        <div class="warnings" id="warnings"></div>
+      </div>
+
+    </div><!-- end output-panel -->
+  </div><!-- end layout -->
+
+</div><!-- end page -->
+
+<script>
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const TYPE_CYCLE = ['HIGH','MOD','LOW','REST'];
+const COLORS = { p: '#5b8dee', c: '#f0a500', f: '#e05a5a' };
+
+const STATE_KEY = 'carbcycle-v2';
+
+let state = {
+  sex: 'male',
+  age: 28,
+  weightKg: 80,
+  weightUnit: 'kg',
+  heightCm: 178,
+  bodyfat: null,
+  activity: 1.55,
+  trainDays: 4,
+  dayTypes: ['HIGH','HIGH','MOD','MOD','LOW','LOW','REST'],
+  goal: 'recomp',
+  rateKgPerWeek: 0.5,   // target loss/gain rate; ignored for recomp
+  carbSwing: 150,        // kcal swing between HIGH and LOW days
+  proteinPerLb: 1.0,
+  fatPerLb: 0.35,
+};
+
+// ═══════════════════════════════════════════
+//  CALCULATIONS
+// ═══════════════════════════════════════════
+
+function kgToLb(kg) { return kg * 2.20462; }
+function lbToKg(lb) { return lb / 2.20462; }
+function cmToFtIn(cm) { const totalIn = cm / 2.54; return [Math.floor(totalIn/12), Math.round(totalIn%12)]; }
+function ftInToCm(ft, inches) { return (ft*12 + inches) * 2.54; }
+
+function calcBMR() {
+  const kg = state.weightKg;
+  const cm = state.heightCm;
+  const age = state.age;
+  const base = 10*kg + 6.25*cm - 5*age;
+  return state.sex === 'male' ? base + 5 : base - 161;
+}
+
+function calcTDEE() {
+  return calcBMR() * state.activity;
+}
+
+function getWeightLb() { return kgToLb(state.weightKg); }
+
+function getLBM() {
+  if (state.bodyfat && state.bodyfat > 0) {
+    return state.weightKg * (1 - state.bodyfat / 100) * 2.20462; // in lb
+  }
+  return null;
+}
+
+function getProteinBaseLb() {
+  const lbm = getLBM();
+  return lbm !== null ? lbm : getWeightLb();
+}
+
+// Calorie target for a day type given TDEE and goal settings.
+//
+// Deficit/surplus is derived from a real-world target rate (kg/week):
+//   dailyDeficit = rateKgPerWeek × 7700 ÷ 7  (7700 kcal ≈ 1kg fat)
+//
+// weeklyTarget = TDEE − dailyDeficit  (cut)
+//              = TDEE + dailyDeficit  (bulk)
+//              = TDEE                 (recomp)
+//
+// Carb swing (state.carbSwing) then varies HIGH/LOW around that target.
+// For recomp: a correction is applied so the weighted average across the
+// actual day-type distribution equals TDEE exactly.
+function getDayCalories(type, tdee) {
+  const v = state.carbSwing;
+
+  let weeklyTarget;
+  if (state.goal === 'recomp') {
+    weeklyTarget = tdee;
+  } else {
+    // 7700 kcal ≈ energy in 1kg body fat (widely used standard)
+    const dailyOffset = (state.rateKgPerWeek * 7700) / 7;
+    weeklyTarget = state.goal === 'cut'
+      ? tdee - dailyOffset
+      : tdee + dailyOffset;
+  }
+
+  // Day-level calories relative to weeklyTarget
+  let cal;
+  if (type === 'HIGH')      cal = weeklyTarget + v;
+  else if (type === 'MOD')  cal = weeklyTarget;
+  else                      cal = weeklyTarget - v; // LOW and REST both at low-carb level
+
+  // Recomp: correct for unequal day-type distribution so weekly avg = TDEE exactly
+  if (state.goal === 'recomp') {
+    const counts = { HIGH: 0, MOD: 0, LOW: 0, REST: 0 };
+    state.dayTypes.forEach(t => counts[t]++);
+    // Weighted avg = tdee + v*(nHigh − nLow − nRest)/7
+    // Subtract that drift from every day so avg = tdee
+    const drift = v * (counts.HIGH - counts.LOW - counts.REST) / 7;
+    cal -= drift;
+  }
+
+  return Math.round(cal);
+}
+
+function getMacros(type, calories) {
+  const proteinG = Math.round(state.proteinPerLb * getProteinBaseLb());
+  const proteinCal = proteinG * 4;
+
+  // Fat scales: lower on HIGH days (make room for carbs), higher on LOW/REST
+  let fatMult;
+  if (type === 'HIGH') fatMult = 0.7;
+  else if (type === 'MOD') fatMult = 1.0;
+  else fatMult = 1.3;
+
+  const fatBase = state.fatPerLb * getWeightLb() * fatMult;
+  const fatG = Math.max(40, Math.round(fatBase));
+  const fatCal = fatG * 9;
+
+  const remainingCal = calories - proteinCal - fatCal;
+  const carbG = Math.max(0, Math.round(remainingCal / 4));
+
+  const actualCal = proteinCal + fatCal + carbG * 4;
+
+  const pPct = Math.round(proteinCal / actualCal * 100);
+  const cPct = Math.round(carbG * 4 / actualCal * 100);
+  const fPct = 100 - pPct - cPct;
+
+  return { proteinG, carbG, fatG, pPct, cPct, fPct, actualCal };
+}
+
+// ═══════════════════════════════════════════
+//  PIE CHART
+// ═══════════════════════════════════════════
+
+function drawPie(canvas, pPct, cPct, fPct) {
+  const ctx = canvas.getContext('2d');
+  const size = canvas.width;
+  const cx = size/2, cy = size/2, r = size/2 - 1;
+  ctx.clearRect(0, 0, size, size);
+
+  const slices = [
+    { pct: pPct, color: COLORS.p },
+    { pct: cPct, color: COLORS.c },
+    { pct: fPct, color: COLORS.f },
+  ];
+
+  let startAngle = -Math.PI / 2;
+  for (const s of slices) {
+    const angle = (s.pct / 100) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startAngle, startAngle + angle);
+    ctx.closePath();
+    ctx.fillStyle = s.color;
+    ctx.fill();
+    startAngle += angle;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════
+
+function fmtCal(n) { return Math.round(n).toLocaleString() + ' kcal'; }
+function fmtG(n) { return Math.round(n) + 'g'; }
+function sign(n) { return n >= 0 ? '+' : ''; }
+
+function renderGoalNote() {
+  const el = document.getElementById('goal-note');
+  const rateRow = document.getElementById('rate-row');
+  const rateLabel = document.getElementById('rate-label');
+  const rateUnit = document.getElementById('rate-unit');
+  const rateInput = document.getElementById('rate-input');
+
+  const isMetric = state.weightUnit === 'kg';
+  const rate = state.rateKgPerWeek;
+  const displayRate = isMetric ? rate.toFixed(1) : (rate * 2.20462).toFixed(1);
+  const unitLabel = isMetric ? 'kg / week' : 'lb / week';
+  rateUnit.textContent = unitLabel;
+
+  if (state.goal === 'recomp') {
+    rateRow.style.display = 'none';
+    el.textContent = `Weekly avg = TDEE. HIGH days have more carbs, LOW/REST days have fewer — calories balance to maintenance.`;
+  } else {
+    rateRow.style.display = '';
+    const dailyDeficit = Math.round((rate * 7700) / 7);
+    const tdee = calcTDEE();
+    const target = Math.round(state.goal === 'cut' ? tdee - dailyDeficit : tdee + dailyDeficit);
+    if (state.goal === 'cut') {
+      rateLabel.textContent = 'Target loss rate';
+      el.textContent = `−${dailyDeficit} kcal/day deficit → weekly avg ${target.toLocaleString()} kcal. Every day stays in deficit; carbs cycle ±${state.carbSwing} kcal around that.`;
+    } else {
+      rateLabel.textContent = 'Target gain rate';
+      el.textContent = `+${dailyDeficit} kcal/day surplus → weekly avg ${target.toLocaleString()} kcal. Every day stays in surplus; carbs cycle ±${state.carbSwing} kcal around that.`;
+    }
+  }
+}
+
+function renderOutput() {
+  const bmr = calcBMR();
+  const tdee = calcTDEE();
+
+  document.getElementById('out-bmr').textContent = fmtCal(bmr);
+  document.getElementById('out-tdee').textContent = fmtCal(tdee);
+
+  renderGoalNote();
+
+  // Update LBM note
+  const lbm = getLBM();
+  const lbmNote = document.getElementById('lbm-note');
+  const protLabel = document.getElementById('protein-label');
+  if (lbm !== null) {
+    lbmNote.style.display = 'block';
+    protLabel.textContent = `Protein (g/lb lean body mass)`;
+  } else {
+    lbmNote.style.display = 'none';
+    protLabel.textContent = `Protein (g/lb bodyweight)`;
+  }
+
+  // Build weekly data
+  const weekData = state.dayTypes.map(type => {
+    const cal = getDayCalories(type, tdee);
+    const macros = getMacros(type, cal);
+    return { type, cal: macros.actualCal, ...macros };
+  });
+
+  // Weekly avg & balance
+  const totalCal = weekData.reduce((s, d) => s + d.actualCal, 0);
+  const avgCal = totalCal / 7;
+  const balance = avgCal - tdee;
+
+  document.getElementById('out-avg').textContent = fmtCal(avgCal);
+  const balEl = document.getElementById('out-balance');
+  balEl.textContent = sign(balance) + Math.round(balance) + ' kcal/day';
+  balEl.className = 'stat-val ' + (balance > 50 ? 'balance-positive' : balance < -50 ? 'balance-negative' : 'balance-neutral');
+
+  // Week cards
+  const weekGrid = document.getElementById('week-grid');
+  weekGrid.innerHTML = '';
+  weekData.forEach((d, i) => {
+    const delta = d.actualCal - tdee;
+    const card = document.createElement('div');
+    card.className = 'day-card';
+    card.innerHTML = `
+      <span class="card-day">${DAYS[i]}</span>
+      <span class="card-badge ${d.type}">${d.type}</span>
+      <canvas width="60" height="60"></canvas>
+      <span class="card-cal">${Math.round(d.actualCal).toLocaleString()}</span>
+      <span class="card-delta ${delta >= 0 ? 'surplus' : 'deficit'}">${sign(delta)}${Math.round(delta)}</span>
+      <div class="macro-row">
+        <span class="macro-chip p">P ${fmtG(d.proteinG)}</span>
+        <span class="macro-chip c">C ${fmtG(d.carbG)}</span>
+        <span class="macro-chip f">F ${fmtG(d.fatG)}</span>
+      </div>
+    `;
+    // Draw pie
+    const canvas = card.querySelector('canvas');
+    drawPie(canvas, d.pPct, d.cPct, d.fPct);
+    // Click to cycle type
+    card.addEventListener('click', () => {
+      const cur = TYPE_CYCLE.indexOf(state.dayTypes[i]);
+      state.dayTypes[i] = TYPE_CYCLE[(cur + 1) % TYPE_CYCLE.length];
+      save();
+      render();
+    });
+    weekGrid.appendChild(card);
+  });
+
+  // Totals
+  const avgP = weekData.reduce((s, d) => s + d.proteinG, 0) / 7;
+  const avgC = weekData.reduce((s, d) => s + d.carbG, 0) / 7;
+  const avgF = weekData.reduce((s, d) => s + d.fatG, 0) / 7;
+  const avgPct = weekData.reduce((s, d) => s + d.pPct, 0) / 7;
+  const avgCPct = weekData.reduce((s, d) => s + d.cPct, 0) / 7;
+  const avgFPct = weekData.reduce((s, d) => s + d.fPct, 0) / 7;
+  const weeklyBal = Math.round(balance * 7);
+
+  document.getElementById('totals-grid').innerHTML = `
+    <div class="total-stat">
+      <span class="t-val">${Math.round(avgCal).toLocaleString()} kcal</span>
+      <span class="t-label">Avg calories/day</span>
+    </div>
+    <div class="total-stat">
+      <span class="t-val">${Math.round(totalCal).toLocaleString()} kcal</span>
+      <span class="t-label">Total week</span>
+    </div>
+    <div class="total-stat">
+      <span class="t-val" style="color:${COLORS.p}">${Math.round(avgP)}g <span style="font-size:0.7rem;color:#888">${Math.round(avgPct)}%</span></span>
+      <span class="t-label">Avg protein/day</span>
+    </div>
+    <div class="total-stat">
+      <span class="t-val" style="color:${COLORS.c}">${Math.round(avgC)}g <span style="font-size:0.7rem;color:#888">${Math.round(avgCPct)}%</span></span>
+      <span class="t-label">Avg carbs/day</span>
+    </div>
+    <div class="total-stat">
+      <span class="t-val" style="color:${COLORS.f}">${Math.round(avgF)}g <span style="font-size:0.7rem;color:#888">${Math.round(avgFPct)}%</span></span>
+      <span class="t-label">Avg fat/day</span>
+    </div>
+    <div class="total-stat">
+      <span class="t-val ${weeklyBal >= 0 ? 'balance-positive' : 'balance-negative'}">${sign(weeklyBal)}${weeklyBal.toLocaleString()} kcal</span>
+      <span class="t-label">Weekly net vs. TDEE</span>
+    </div>
+  `;
+
+  // Warnings
+  const warnings = [];
+  const minProtein = 0.7 * getWeightLb();
+  if (state.proteinPerLb * getProteinBaseLb() < minProtein) {
+    warnings.push({ text: 'Protein target is below 0.7g/lb bodyweight — may impair muscle retention.', error: true });
+  }
+  weekData.forEach((d, i) => {
+    if (d.carbG <= 0) {
+      warnings.push({ text: `${DAYS[i]}: Carbs calculated to 0 — calories may be too low for protein + fat minimum. Reduce fat target or increase calories.`, error: true });
+    }
+  });
+  const dailyDeficit = Math.round((state.rateKgPerWeek * 7700) / 7);
+  if (state.goal === 'cut' && dailyDeficit > 700) {
+    warnings.push({ text: `Deficit of ${dailyDeficit} kcal/day is aggressive — deficits over 700 kcal/day risk muscle loss even with adequate protein.`, error: false });
+  }
+  if (state.goal === 'cut' && state.rateKgPerWeek > 1.0) {
+    warnings.push({ text: 'Losing more than 1 kg/week typically causes significant muscle loss. Consider a slower rate.', error: true });
+  }
+  const anyHighBelow1800 = weekData.some(d => d.type === 'HIGH' && d.actualCal < 1800);
+  if (anyHighBelow1800) {
+    warnings.push({ text: 'Some HIGH days are below 1,800 kcal — consider increasing overall intake for muscle growth on training days.', error: false });
+  }
+
+  const warnEl = document.getElementById('warnings');
+  warnEl.innerHTML = warnings.map(w =>
+    `<div class="warning ${w.error ? 'error' : ''}">${w.text}</div>`
+  ).join('');
+}
+
+function render() {
+  renderOutput();
+}
+
+// ═══════════════════════════════════════════
+//  PERSISTENCE
+// ═══════════════════════════════════════════
+
+function save() {
+  try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    Object.assign(state, saved);
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════
+//  WIRING
+// ═══════════════════════════════════════════
+
+function wireToggleGroup(id, stateKey, afterChange) {
+  const group = document.getElementById(id);
+  if (!group) return;
+  group.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      let val = btn.dataset.val;
+      if (!isNaN(parseFloat(val)) && stateKey !== 'goal' && stateKey !== 'sex') {
+        val = parseFloat(val);
+      }
+      state[stateKey] = val;
+      if (afterChange) afterChange(val);
+      save();
+      render();
+    });
+  });
+}
+
+function setToggleActive(id, val) {
+  const group = document.getElementById(id);
+  group.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.val == val);
+  });
+}
+
+function syncHeightToFtIn() {
+  const [ft, inches] = cmToFtIn(state.heightCm);
+  document.getElementById('height-ft').value = ft;
+  document.getElementById('height-in').value = inches;
+}
+
+function syncFtInToCm() {
+  const ft = parseFloat(document.getElementById('height-ft').value) || 0;
+  const inches = parseFloat(document.getElementById('height-in').value) || 0;
+  if (ft > 0) {
+    state.heightCm = Math.round(ftInToCm(ft, inches));
+    document.getElementById('height-cm').value = state.heightCm;
+  }
+}
+
+function syncWeightDisplay() {
+  const el = document.getElementById('weight');
+  if (state.weightUnit === 'kg') {
+    el.value = Math.round(state.weightKg * 10) / 10;
+    el.placeholder = 'kg';
+  } else {
+    el.value = Math.round(kgToLb(state.weightKg) * 10) / 10;
+    el.placeholder = 'lb';
+  }
+}
+
+function initFromState() {
+  // Sex
+  setToggleActive('sex-toggle', state.sex);
+  // Age
+  document.getElementById('age').value = state.age;
+  // Weight
+  setToggleActive('weight-unit-toggle', state.weightUnit);
+  syncWeightDisplay();
+  // Body fat
+  if (state.bodyfat) document.getElementById('bodyfat').value = state.bodyfat;
+  // Height
+  document.getElementById('height-cm').value = Math.round(state.heightCm);
+  syncHeightToFtIn();
+  // Activity
+  document.getElementById('activity').value = state.activity;
+  // Goal
+  setToggleActive('goal-toggle', state.goal);
+  // Rate
+  const isMetric = state.weightUnit === 'kg';
+  document.getElementById('rate-input').value = isMetric
+    ? state.rateKgPerWeek.toFixed(1)
+    : (state.rateKgPerWeek * 2.20462).toFixed(1);
+  // Carb swing
+  setToggleActive('swing-toggle', state.carbSwing);
+  // Protein
+  setToggleActive('protein-toggle', state.proteinPerLb);
+  // Fat
+  setToggleActive('fat-toggle', state.fatPerLb);
+}
+
+// ─── Wire number inputs ───
+document.getElementById('age').addEventListener('input', e => {
+  state.age = parseFloat(e.target.value) || 28;
+  save(); render();
+});
+
+document.getElementById('bodyfat').addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  state.bodyfat = isNaN(v) ? null : v;
+  save(); render();
+});
+
+document.getElementById('height-cm').addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  if (v > 50) { state.heightCm = v; syncHeightToFtIn(); save(); render(); }
+});
+
+document.getElementById('height-ft').addEventListener('input', () => {
+  syncFtInToCm(); save(); render();
+});
+document.getElementById('height-in').addEventListener('input', () => {
+  syncFtInToCm(); save(); render();
+});
+
+document.getElementById('weight').addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  if (!v) return;
+  state.weightKg = state.weightUnit === 'kg' ? v : lbToKg(v);
+  save(); render();
+});
+
+document.getElementById('activity').addEventListener('change', e => {
+  state.activity = parseFloat(e.target.value);
+  save(); render();
+});
+
+// ─── Rate input ───
+document.getElementById('rate-input').addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  if (!v || v <= 0) return;
+  // Always store internally as kg/week
+  state.rateKgPerWeek = state.weightUnit === 'kg' ? v : v / 2.20462;
+  save(); render();
+});
+
+// ─── Toggle groups ───
+wireToggleGroup('sex-toggle', 'sex');
+wireToggleGroup('goal-toggle', 'goal');
+wireToggleGroup('swing-toggle', 'carbSwing');
+wireToggleGroup('protein-toggle', 'proteinPerLb');
+wireToggleGroup('fat-toggle', 'fatPerLb');
+
+wireToggleGroup('weight-unit-toggle', 'weightUnit', () => {
+  syncWeightDisplay();
+  // Re-display rate in correct unit
+  const isMetric = state.weightUnit === 'kg';
+  document.getElementById('rate-input').value = isMetric
+    ? state.rateKgPerWeek.toFixed(1)
+    : (state.rateKgPerWeek * 2.20462).toFixed(1);
+});
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+
+load();
+initFromState();
+render();
+</script>
+</body>
+</html>

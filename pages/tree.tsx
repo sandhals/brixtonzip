@@ -169,17 +169,17 @@ const TreePage = () => {
           gap: 0.625rem;
           padding: 0.875rem 1rem;
           background: var(--white);
-          border: 2px solid black;
+          border: 2px solid var(--black);
           text-align: center;
           text-decoration: none;
-          color: black;
+          color: var(--black);
           font-weight: 500;
           font-size: 0.95rem;
           transition: all 0.15s ease;
         }
 
         .link-button:hover {
-          background: black;
+          background: var(--black);
           color: var(--white);
         }
 
@@ -217,7 +217,7 @@ const TreePage = () => {
 
         .link-title {
           display: block;
-          color: black;
+          color: var(--black);
         }
 
 

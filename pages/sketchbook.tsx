@@ -238,16 +238,18 @@ Welcome to my sketchbook! As a child, I used to spend a lot of time drawing with
 
         .page-selector label {
           font-size: 0.9rem;
-          color: #666;
+          color: var(--black);
+          opacity: 0.6;
         }
 
         .page-dropdown {
           padding: 0.25rem 0.5rem;
-          border: 1px solid #ddd;
+          border: 1px solid var(--black);
           border-radius: 4px;
           font-family: 'OCR';
           font-size: 0.5rem;
-          background: #fff;
+          background: var(--white);
+          color: var(--black);
         }
 
         .thumbnail-section {
@@ -258,12 +260,14 @@ Welcome to my sketchbook! As a child, I used to spend a lot of time drawing with
         }
 
         .scroll-btn {
-          color: #aaa;
+          color: var(--black);
+          opacity: 0.4;
           border: none;
           width: 20px;
           height: 20px;
           border-radius: 30%;
-          border: solid 1px #aaa;
+          border: solid 1px var(--black);
+          background: transparent;
           cursor: pointer;
           display: flex;
           align-items: center;
@@ -272,12 +276,11 @@ Welcome to my sketchbook! As a child, I used to spend a lot of time drawing with
           font-weight:100;
           font-size: 1rem;
           flex-shrink: 0;
-          transition: color 0.2s;
+          transition: opacity 0.2s;
         }
 
         .scroll-btn:hover {
-          color: #000;
-          border-color: #000;
+          opacity: 1;
         }
 
         .thumbnail-container {
@@ -311,11 +314,12 @@ Welcome to my sketchbook! As a child, I used to spend a lot of time drawing with
         }
 
         .thumbnail:hover {
-          border-color: #666;
+          border-color: var(--black);
+          opacity: 0.7;
         }
 
         .thumbnail.active {
-          border-color: #000;
+          border-color: var(--black);
         }
 
         .thumbnail img {

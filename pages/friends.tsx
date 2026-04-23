@@ -61,7 +61,7 @@ const FriendsPage = () => {
 
   const baseStyle = {
     fontFamily: 'monospace',
-    color: '#000',
+    color: 'var(--black)',
     fontSize: '14px'
   };
 

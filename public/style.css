@@ -48,6 +48,7 @@ body {
 [data-theme="dark"] {
   --black: rgb(210, 210, 205);
   --white: rgb(20, 20, 20);
+  --marquee-bg: rgb(10, 10, 10);
   --softwhite: rgba(22, 22, 22, 0.97);
   --white-0: rgba(20, 20, 20, 0);
   --link-color: #6fa3ef;
@@ -58,11 +59,11 @@ body {
 }
 
 [data-theme="warm"] {
-  --black: rgb(44, 34, 22);
+  --black: rgb(28, 16, 8);
   --white: rgb(245, 238, 217);
   --softwhite: rgba(245, 238, 217, 0.875);
   --white-0: rgba(245, 238, 217, 0);
-  --link-color: blue;
+  --link-color: #c0351a;
   --img-blend: multiply;
   /* sunlit */
   --sl-shadow: #2c2010;
@@ -473,7 +474,7 @@ details {
 
 .status-marquee-box {
   overflow: hidden;
-  background: var(--black);
+  background: var(--marquee-bg, var(--black));
   height: 1.3em;
   width: 100%;
   position: relative;
@@ -498,6 +499,26 @@ details {
   margin-top: -0.2em;
 }
 
+.marquee-theme-slot {
+  display: none;
+  flex-shrink: 0;
+  height: 100%;
+  padding-left: 0.4em;
+  padding-right: 0.4em;
+  align-items: center;
+}
+
+.marquee-theme-slot *,
+.marquee-theme-slot svg * {
+  color: rgba(247, 247, 247, 0.7) !important;
+}
+
+@media (max-width: 640px) {
+  .marquee-theme-slot {
+    display: flex;
+  }
+}
+
 .marquee-text-wrapper {
   overflow: hidden;
   flex: 1;
@@ -508,7 +529,7 @@ details {
   display: inline-block;
   white-space: nowrap;
   animation: scroll-left 20s linear infinite;
-  color: var(--white);
+  color: rgb(247, 247, 247);
   font-family: monospace;
   line-height: 1.3em;
   font-size: 1em;
@@ -519,7 +540,7 @@ details {
 }
 
 .status-marquee * {
-  color: var(--white) !important;
+  color: rgb(247, 247, 247) !important;
 }
 
 @keyframes scroll-left {

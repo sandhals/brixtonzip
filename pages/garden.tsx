@@ -3,6 +3,8 @@ import Layout from '@/components/Layout'
 import GardenHeaderImage from '@/components/GardenHeaderImage'
 
 const ITEMS = [
+  { name: 'Carb Cycling', href: '/garden/carbcycle', cat: 'tools',
+    desc: 'A bodybuilding-focused carb cycling calculator. Enter your stats, assign high/moderate/low/rest days, and get a full week of personalised macro targets with pie charts — built for body recomposition.' },
   { name: 'Markdown Editor', href: '/garden/markdown', cat: 'tools',
     desc: 'A lightweight split-screen markdown editor. Write markdown on the left, see rich text on the right — or edit either side. Supports hotkeys, link tooltips, and auto-save.' },
   { name: 'Rivers', href: '/garden/rivers', cat: 'life',
@@ -135,7 +137,8 @@ export default function GardenPage() {
         }
 
         .garden-table tr {
-          border-bottom: solid 1px gray;
+          border-bottom: solid 1px var(--black);
+          opacity: 0.85;
         }
 
         .garden-table tr:last-child {
@@ -188,22 +191,24 @@ export default function GardenPage() {
           font-size: 0.7em;
           font-weight: 300;
           padding: 3px 10px;
-          border: 1px solid #ccc;
-          background: #fff;
-          color: #888;
+          border: 1px solid var(--black);
+          background: var(--white);
+          color: var(--black);
+          opacity: 0.45;
           cursor: pointer;
           letter-spacing: 0.03em;
+          transition: opacity 200ms, background 200ms, color 200ms;
         }
 
         .filter-btn:hover {
-          border-color: #000;
-          color: #000;
+          opacity: 1;
         }
 
         .filter-btn.active {
-          border-color: #000;
-          background: #000;
-          color: #fff;
+          border-color: var(--black);
+          background: var(--black);
+          color: var(--white);
+          opacity: 1;
         }
       `}</style>
     </Layout>

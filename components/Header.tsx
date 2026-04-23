@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import ThemeToggle from './ThemeToggle'
 
 interface HeaderProps {
   variant?: 'home' | 'article'
@@ -84,6 +85,9 @@ export default function Header({ variant = 'article' }: HeaderProps) {
         <span id="myStatus"></span>
         RIGHT NOW
       </div>
+    </div>
+    <div className="marquee-theme-slot">
+      <ThemeToggle inline />
     </div>
   </div>
 
