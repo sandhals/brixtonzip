@@ -545,7 +545,7 @@ details {
 
 @keyframes scroll-left {
   0% {
-    transform: translateX(100vw);
+    transform: translateX(var(--marquee-start, 100vw));
   }
   100% {
     transform: translateX(-100%);
