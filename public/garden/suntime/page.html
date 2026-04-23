@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Current Times</title>
+    <link rel="stylesheet" href="/sunlit.css">
+    <style>
+        :root,
+        [data-theme="light"] {
+            --black: rgb(24, 24, 24);
+            --white: rgb(247, 247, 247);
+            --sl-shadow: #1a1917;
+            --sl-bounce: #fffffc;
+            --sl-timing: cubic-bezier(0.455, 0.190, 0.000, 0.985);
+        }
+        [data-theme="dark"] {
+            --black: rgb(210, 210, 205);
+            --white: rgb(20, 20, 20);
+            --sl-shadow: #030307;
+            --sl-bounce: #1b293f;
+        }
+        [data-theme="warm"] {
+            --black: rgb(44, 34, 22);
+            --white: rgb(245, 238, 217);
+            --sl-shadow: #2c2010;
+            --sl-bounce: #fff8ec;
+        }
+
+        * { color: var(--black); }
+
+        html {
+            background: var(--white);
+            transition: background 0.4s ease;
+        }
+
+        body {
+            font-family: Georgia, serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: transparent;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-style: italic;
+            font-weight: normal;
+            margin-bottom: 60px;
+            font-size: 2.5rem;
+        }
+
+        .time-row {
+            display: grid;
+            grid-template-columns: 30px 120px 150px 1fr;
+            align-items: center;
+            margin-bottom: 40px;
+            font-size: 1.5rem;
+            gap: 10px;
+        }
+
+        .symbol {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .time-value {
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .blank-time {
+            border-bottom: 2px solid var(--black);
+            width: 80px;
+            height: 1.5rem;
+        }
+
+        .time-name {
+            font-weight: bold;
+            font-size: 2rem;
+        }
+
+        .time-description {
+            font-size: 1.5rem;
+        }
+
+        #location-info {
+            margin-top: 60px;
+            font-style: italic;
+        }
+
+        .source {
+            position: fixed;
+            left: 10px;
+            bottom: 10px;
+            text-decoration: none;
+            color: gray;
+            z-index: 10;
+        }
+        .source:hover { color: black; transition: 1s; }
+
+        .source-right {
+            position: fixed;
+            right: 10px;
+            bottom: 10px;
+            text-decoration: none;
+            color: gray;
+            z-index: 10;
+        }
+        .source-right:hover { color: black; transition: 1s; }
+
+        .theme-toggle {
+            position: fixed;
+            top: 0.65rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--black);
+            opacity: 0.4;
+            padding: 0.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 200ms;
+            line-height: 0;
+            z-index: 10;
+        }
+        .theme-toggle:hover { opacity: 1; }
+        @media (max-width: 640px) {
+            .theme-toggle { top: auto; bottom: 0.65rem; }
+        }
+    </style>
+</head>
+<body>
+    <a class="source" href="https://www.are.na/block/11796022">idea from Yatu on Are.na</a>
+    <a class="source-right" href="https://brixton.zip">by Brixton</a>
+
+    <button class="theme-toggle" id="theme-toggle" aria-label="Switch theme" title="Switch theme"></button>
+
+    <h1>Current times</h1>
+
+    <div class="time-row">
+        <div class="symbol">+</div>
+        <div id="intoset-value" class="blank-time"></div>
+        <div class="time-name">intoset</div>
+        <div class="time-description">Time since last sunset</div>
+    </div>
+
+    <div class="time-row">
+        <div class="symbol">+</div>
+        <div id="intosun-value" class="blank-time"></div>
+        <div class="time-name">intosun</div>
+        <div class="time-description">Time spent in sun</div>
+    </div>
+
+    <div class="time-row">
+        <div class="symbol">-</div>
+        <div id="tilset-value" class="blank-time"></div>
+        <div class="time-name">tilset</div>
+        <div class="time-description">Time left in the sun</div>
+    </div>
+
+    <div class="time-row">
+        <div class="symbol">-</div>
+        <div id="tilsun-value" class="blank-time"></div>
+        <div class="time-name">tilsun</div>
+        <div class="time-description">Time until next sunrise</div>
+    </div>
+
+    <div id="location-info">Getting your location...</div>
+
+    <script>
+        function formatTime(hours, minutes) {
+            return `${hours}:${minutes.toString().padStart(2, '0')}`;
+        }
+
+        function minutesToHoursMinutes(totalMinutes) {
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = Math.floor(totalMinutes % 60);
+            return formatTime(hours, minutes);
+        }
+
+        function getTimeDifferenceInMinutes(time1, time2) {
+            return Math.abs(time1.getTime() - time2.getTime()) / (1000 * 60);
+        }
+
+        function isDaytime(sunriseTime, sunsetTime, currentTime) {
+            return currentTime >= sunriseTime && currentTime <= sunsetTime;
+        }
+
+        function updateTimes(sunrise, sunset) {
+            const now = new Date();
+            const sunriseToday = new Date(sunrise);
+            const sunsetToday = new Date(sunset);
+            const sunriseTomorrow = new Date(sunriseToday);
+            sunriseTomorrow.setDate(sunriseTomorrow.getDate() + 1);
+            const sunsetYesterday = new Date(sunsetToday);
+            sunsetYesterday.setDate(sunsetYesterday.getDate() - 1);
+
+            const dayTime = isDaytime(sunriseToday, sunsetToday, now);
+            const intosunMinutes = getTimeDifferenceInMinutes(sunriseToday, now);
+            const tilsetMinutes = getTimeDifferenceInMinutes(now, sunsetToday);
+            const lastSunset = now < sunriseToday ? sunsetYesterday : sunsetToday;
+            const intosetMinutes = getTimeDifferenceInMinutes(lastSunset, now);
+            const nextSunrise = now < sunriseToday ? sunriseToday : sunriseTomorrow;
+            const tilsunMinutes = getTimeDifferenceInMinutes(now, nextSunrise);
+
+            const intosetEl = document.getElementById('intoset-value');
+            const intosunEl = document.getElementById('intosun-value');
+            const tilsetEl  = document.getElementById('tilset-value');
+            const tilsunEl  = document.getElementById('tilsun-value');
+
+            if (dayTime) {
+                intosunEl.textContent = minutesToHoursMinutes(intosunMinutes);
+                intosunEl.className = 'time-value';
+                tilsetEl.textContent = minutesToHoursMinutes(tilsetMinutes);
+                tilsetEl.className = 'time-value';
+                intosetEl.textContent = '';
+                intosetEl.className = 'blank-time';
+                tilsunEl.textContent = '';
+                tilsunEl.className = 'blank-time';
+            } else {
+                intosetEl.textContent = minutesToHoursMinutes(intosetMinutes);
+                intosetEl.className = 'time-value';
+                tilsunEl.textContent = minutesToHoursMinutes(tilsunMinutes);
+                tilsunEl.className = 'time-value';
+                intosunEl.textContent = '';
+                intosunEl.className = 'blank-time';
+                tilsetEl.textContent = '';
+                tilsetEl.className = 'blank-time';
+            }
+
+            document.getElementById('location-info').textContent =
+                `Based on your location • Sunrise: ${formatTime(sunriseToday.getHours(), sunriseToday.getMinutes())} • Sunset: ${formatTime(sunsetToday.getHours(), sunsetToday.getMinutes())}`;
+        }
+
+        async function getSunData(latitude, longitude) {
+            try {
+                const response = await fetch(`https://api.sunrise-sunset.org/json?lat=${latitude}&lng=${longitude}&date=today&formatted=0`);
+                const data = await response.json();
+                if (data.status === 'OK') {
+                    const sunriseUTC = new Date(data.results.sunrise);
+                    const sunsetUTC = new Date(data.results.sunset);
+                    updateTimes(sunriseUTC, sunsetUTC);
+                    setInterval(() => updateTimes(sunriseUTC, sunsetUTC), 60000);
+                } else {
+                    document.getElementById('location-info').textContent = 'Failed to get sunrise/sunset data. Please try again.';
+                }
+            } catch (error) {
+                document.getElementById('location-info').textContent = 'Error fetching sun data: ' + error.message;
+            }
+        }
+
+        function getLocation() {
+            if (!navigator.geolocation) {
+                document.getElementById('location-info').textContent = 'Geolocation is not supported by this browser.';
+                getSunData(40.7128, -74.0060);
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`)
+                        .then(r => r.json())
+                        .then(data => {
+                            const a = data.address || {};
+                            const name = a.city || a.town || a.village || 'your location';
+                            document.getElementById('location-info').textContent = `Getting sun data for ${name}...`;
+                        })
+                        .catch(() => {});
+                    getSunData(latitude, longitude);
+                },
+                (error) => {
+                    const messages = {
+                        [error.PERMISSION_DENIED]: 'Location access denied. Please allow location access to see accurate sun times.',
+                        [error.POSITION_UNAVAILABLE]: 'Location information is unavailable.',
+                        [error.TIMEOUT]: 'Location request timed out.',
+                    };
+                    document.getElementById('location-info').textContent = messages[error.code] || 'An unknown error occurred.';
+                    getSunData(40.7128, -74.0060);
+                }
+            );
+        }
+
+        window.onload = getLocation;
+    </script>
+
+    <script src="/sunlit.js"></script>
+
+    <script>
+        const THEMES = ['light', 'warm', 'dark'];
+        const ICONS = {
+            light: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="currentColor"/><line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+            warm: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><line x1="2" y1="16" x2="22" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M5 16 A7 7 0 0 1 19 16" fill="currentColor"/><line x1="12" y1="1" x2="12" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="3.5" y1="5.5" x2="5.5" y2="7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="20.5" y1="5.5" x2="18.5" y2="7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+            dark: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor"/></svg>',
+        };
+        const NEXT  = { light: 'warm', warm: 'dark', dark: 'light' };
+        const LABEL = { light: 'warm mode', warm: 'dark mode', dark: 'light mode' };
+
+        let currentTheme = 'light';
+
+        function setSunlitClasses(theme) {
+            const b = document.body;
+            b.classList.remove('sunlit-dark', 'sunlit-warm', 'sunlit-hidden');
+            if (theme === 'dark') b.classList.add('sunlit-dark', 'sunlit-hidden');
+            else if (theme === 'warm') b.classList.add('sunlit-warm');
+            else b.classList.add('sunlit-hidden');
+        }
+
+        function applyTheme(theme) {
+            currentTheme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            const btn = document.getElementById('theme-toggle');
+            btn.innerHTML = ICONS[theme];
+            btn.setAttribute('aria-label', 'Switch to ' + LABEL[theme]);
+            btn.setAttribute('title', 'Switch to ' + LABEL[theme]);
+        }
+
+        (function initTheme() {
+            const stored = localStorage.getItem('theme');
+            let initial = 'light';
+            if (stored && THEMES.includes(stored)) initial = stored;
+            else if (window.matchMedia('(prefers-color-scheme: dark)').matches) initial = 'dark';
+            applyTheme(initial);
+            document.body.classList.add('sunlit-notransition');
+            setSunlitClasses(initial);
+            requestAnimationFrame(() =>
+                requestAnimationFrame(() =>
+                    document.body.classList.remove('sunlit-notransition')
+                )
+            );
+        })();
+
+        document.getElementById('theme-toggle').addEventListener('click', function () {
+            const next = NEXT[currentTheme];
+            const b = document.body;
+            if (currentTheme === 'warm' && next === 'dark') {
+                b.classList.remove('sunlit-warm', 'sunlit-hidden');
+                b.classList.add('sunlit-dark');
+                setTimeout(() => b.classList.add('sunlit-hidden'), 1800);
+            } else if (next === 'warm') {
+                b.classList.remove('sunlit-dark', 'sunlit-hidden');
+                b.classList.add('sunlit-warm', 'sunlit-shutters-closed', 'sunlit-shutters-notransition');
+                requestAnimationFrame(() =>
+                    requestAnimationFrame(() => {
+                        b.classList.remove('sunlit-shutters-notransition');
+                        setTimeout(() => b.classList.remove('sunlit-shutters-closed'), 350);
+                    })
+                );
+            } else {
+                b.classList.toggle('sunlit-dark', next === 'dark');
+                b.classList.remove('sunlit-warm');
+                b.classList.add('sunlit-hidden');
+            }
+            applyTheme(next);
+        });
+    </script>
+</body>
+</html>

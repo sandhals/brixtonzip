@@ -1,0 +1,571 @@
+:root {
+    --ink: #000000;
+    --paper: #ffffff;
+    --highlight: rgba(255, 243, 176, 0.7);
+    --header-font-size: 2.1rem;
+    --tooltip-bg: rgba(0, 0, 0, 0.95);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro W3', Meiryo, メイリオ, Osaka, 'MS PGothic', arial, helvetica, sans-serif;
+    background: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    touch-action: pan-y;
+}
+
+#canvas-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+
+#top-info {
+    position: absolute;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    text-align: center;
+    pointer-events: none;
+}
+
+#top-info h1 {
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: #000;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+
+#top-info p {
+    font-size: 12px;
+    color: #666;
+    margin: 5px 0;
+    font-weight: 300;
+}
+
+#bottom-info {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    text-align: center;
+    pointer-events: auto;
+}
+
+#bottom-text {
+    font-size: 12px;
+    color: #666;
+    font-weight: 300;
+}
+
+#take-omikuji-btn, #read-fortune-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 0;
+    font-weight: 400;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+#take-omikuji-btn:hover, #read-fortune-btn:hover {
+    background: #000;
+    color: #fff;
+}
+
+#start-over-link {
+    font-size: 11px;
+    color: #999;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: color 0.2s;
+    text-decoration: none;
+    display: none;
+}
+
+#start-over-link:hover {
+    color: #333;
+}
+
+.shake-hint {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+#fortune-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: 40px 20px;
+}
+
+#fortune-modal-overlay.active {
+    display: flex;
+}
+
+.modal-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+#fortune-modal-overlay.screenshot-mode {
+  background: #f7f1e3;
+}
+
+#fortune-modal-overlay.screenshot-mode .omikuji-paper {
+  box-shadow: none;
+}
+
+.omikuji-paper {
+    background-color: var(--paper);
+    width: 400px;
+    height: fit-content;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    font-family: 'Sawarabi Mincho', serif;
+    position: relative;
+    overflow: hidden;
+}
+
+.omikuji-paper.export-paper .main-fortune-text {
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.frame {
+    border: 4px double var(--ink);
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 2px;
+}
+
+.header-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    height: auto;
+    min-height: 280px;
+    border-bottom: 1px solid var(--ink);
+}
+
+.body-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    height: auto;
+}
+
+.items-stack {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+}
+
+.items-top {
+    border-bottom: 1px solid var(--ink);
+}
+
+.v-text {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    width: 100%;
+    height: auto;
+}
+
+.h-cell:not(:last-child), .body-left-col {
+    border-right: 1px solid var(--ink);
+}
+
+.center-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.text-cell {
+    padding: 35px 25px 35px 15px;
+    display: block;
+    height: auto;
+}
+
+.bold { font-weight: bold; }
+ruby rt { font-size: 0.35em; font-weight: normal; }
+.header-text { font-size: var(--header-font-size); }
+.title-container { line-height: 2.8; }
+.main-fortune-text { line-height: 1.9; font-size: 1.25rem; }
+.items-text { line-height: 1.7; font-size: 1.05rem; }
+
+@supports (-webkit-appearance: none) and (not (appearance: none)) {
+    .body-row {
+        grid-template-columns: 66.67% 33.33%;
+    }
+}
+
+.tip {
+    cursor: help;
+    transition: background 0.2s;
+}
+.tip:hover, .tip:active { background-color: var(--highlight); }
+
+body.no-tooltips .tip {
+    cursor: default !important;
+}
+body.no-tooltips .tip:hover,
+body.no-tooltips .tip:active {
+    background-color: transparent !important;
+}
+body.no-tooltips #tooltip {
+    display: none !important;
+}
+
+.item-line {
+    display: block;
+    margin-left: 10px;
+    white-space: nowrap;
+}
+
+#tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--tooltip-bg);
+    color: #fff;
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    width: 240px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-family: sans-serif;
+    line-height: 1.5;
+    writing-mode: horizontal-tb;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    text-align: center;
+}
+
+.footer { text-align: center; padding: 25px 0 10px; font-size: 0.8rem; }
+.footer a { color: var(--ink); text-decoration: underline; }
+
+.mon-logo {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 15px;
+    display: block;
+}
+
+.save-button {
+    padding: 8px 16px;
+    font-size: 11px;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 0;
+    font-weight: 400;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.save-button:hover {
+    background: #000;
+    color: #fff;
+}
+
+.language-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 6px 12px;
+    font-size: 11px;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 0;
+    font-weight: 400;
+    transition: all 0.2s;
+    font-family: inherit;
+    z-index: 100;
+    min-width: 75px;
+    text-align: center;
+}
+
+.language-btn:hover {
+    background: #000;
+    color: #fff;
+}
+
+.number-input-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.number-input-container input {
+    width: 50px;
+    padding: 6px;
+    font-size: 11px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 0;
+    font-family: inherit;
+    text-align: center;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.number-input-container input::-webkit-outer-spin-button,
+.number-input-container input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+#mobile-number-picker {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+#mobile-number-picker.active {
+    display: flex;
+}
+
+.number-picker-content {
+    background: #fff;
+    border: 2px solid #000;
+    width: 280px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.number-picker-header {
+    padding: 15px;
+    border-bottom: 1px solid #000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.number-picker-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.number-picker-close {
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    padding: 0;
+    background: none;
+    border: none;
+}
+
+.number-picker-list {
+    overflow-y: auto;
+    flex: 1;
+    -webkit-overflow-scrolling: touch;
+}
+
+.number-picker-item {
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background 0.2s;
+}
+
+.number-picker-item:hover,
+.number-picker-item:active {
+    background: #f0f0f0;
+}
+
+.number-picker-item.selected {
+    background: #000;
+    color: #fff;
+    font-weight: bold;
+}
+
+.number-input-container button {
+    padding: 6px 12px;
+    font-size: 11px;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 0;
+    font-weight: 400;
+    transition: all 0.2s;
+    font-family: inherit;
+    min-width: 75px;
+    text-align: center;
+}
+
+.number-input-container button:hover {
+    background: #000;
+    color: #fff;
+}
+
+.number-input-container button:hover .icon-svg {
+    stroke: #fff;
+}
+
+#mobile-instruction-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.instruction-content {
+    background: #fff;
+    padding: 30px;
+    border: 2px solid #000;
+    text-align: center;
+    max-width: 300px;
+}
+
+.instruction-content p {
+    font-size: 16px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+#instruction-close-btn {
+    padding: 10px 30px;
+    font-size: 14px;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 0;
+    font-weight: 400;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+#instruction-close-btn:hover {
+    background: #000;
+    color: #fff;
+}
+
+.icon-svg {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+.drawer-icon .drawer-pull {
+    transition: transform 0.3s ease;
+    transform-origin: center;
+}
+
+.number-input-container:hover .drawer-pull {
+    transform: translateY(-6px);
+}
+
+@media (max-width: 600px) {
+    .omikuji-paper {
+        width: 95%;
+        max-width: 400px;
+    }
+
+    #tooltip.mobile-active {
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 85%;
+    }
+}
+
+@media (max-width: 768px) {
+    #info h1 {
+        font-size: 20px;
+    }
+    #info p {
+        font-size: 12px;
+    }
+
+    .omikuji-paper {
+        width: 98%;
+        max-width: 98%;
+        padding: 15px;
+    }
+
+    .header-text {
+        font-size: 1.5rem !important;
+    }
+
+    .title-container {
+        line-height: 2.2 !important;
+    }
+
+    .main-fortune-text {
+        font-size: 1rem !important;
+        line-height: 1.6 !important;
+    }
+
+    .items-text {
+        font-size: 0.75rem !important;
+        line-height: 1.3 !important;
+    }
+
+    .text-cell {
+        padding: 20px 15px 20px 10px;
+    }
+
+    .header-row {
+        min-height: 200px;
+    }
+
+    .close-button-mobile {
+        display: block !important;
+        margin-top: 15px;
+    }
+}

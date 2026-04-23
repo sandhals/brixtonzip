@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>おみくじ - Omikuji</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <button id="language-toggle" class="language-btn">
+        <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        EN
+    </button>
+
+    <div class="number-input-container">
+        <input type="number" id="fortune-number-input" min="1" max="100" placeholder="#" />
+        <button id="view-fortune-btn">
+            <svg class="icon-svg drawer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                
+                <rect x="5" y="5" width="14" height="14" rx="1" stroke="currentColor" fill="none"/>
+                
+                <g class="drawer-pull">
+                    <rect x="7" y="15" width="10" height="3" fill="currentColor" stroke="currentColor"/>
+                    <circle cx="12" cy="16.5" r="0.8" fill="white"/>
+                </g>
+            </svg>
+            <span id="view-btn-text">View</span>
+        </button>
+    </div>
+
+    
+    <div id="mobile-number-picker">
+        <div class="number-picker-content">
+            <div class="number-picker-header">
+                <h3 id="picker-title">Select Fortune Number</h3>
+                <button class="number-picker-close" id="picker-close">×</button>
+            </div>
+            <div class="number-picker-list" id="number-picker-list">
+                
+            </div>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div id="top-info">
+        <h1 id="title">Omikuji</h1>
+        <p id="shake-count" style="display: none;"><span id="shake-value">0</span> <span id="shake-label">shakes</span></p>
+    </div>
+
+    <div id="bottom-info">
+        <p id="bottom-text">Shake the container!</p>
+        <button id="take-omikuji-btn" style="display: none;">Get omikuji</button>
+        <button id="read-fortune-btn" style="display: none;">Check your fortune</button>
+        <a id="start-over-link">Start over</a>
+    </div>
+
+    
+    <div id="fortune-modal-overlay">
+        <div id="tooltip"></div>
+
+        
+        <div id="mobile-instruction-modal" style="display: none;">
+            <div class="instruction-content">
+                <p id="instruction-text">Tap any section to see translation</p>
+                <button id="instruction-close-btn">Got it</button>
+            </div>
+        </div>
+
+        <div class="modal-content-wrapper">
+            <div class="omikuji-paper">
+                <img src="mon.jpg" alt="Shrine Mon" class="mon-logo">
+                <div class="frame">
+                <div class="header-row">
+                    <div class="h-cell v-text center-content bold header-text tip" id="fortune-type">
+                        大吉
+                    </div>
+
+                    <div class="h-cell v-text center-content header-text tip" id="shrine-title" data-tip="Internet Hongu </br> Brixton Shrine Fortune">
+                        <div class="title-container">
+                            <ruby>電<rt>でん</rt></ruby><ruby>脳<rt>のう</rt></ruby><ruby>本<rt>ほん</rt></ruby><ruby>宮<rt>ぐう</rt></ruby><br>
+                            <ruby>振<rt>ぶり</rt></ruby><ruby>楠<rt>くす</rt></ruby><ruby>神<rt>じん</rt></ruby><ruby>社<rt>じゃ</rt></ruby><ruby>籤<rt>くじ</rt></ruby>
+                        </div>
+                    </div>
+
+                    <div class="h-cell v-text center-content bold header-text tip" id="fortune-number">
+                        十二番
+                    </div>
+                </div>
+
+                <div class="body-row">
+                    <div class="body-left-col">
+                        <div class="items-stack">
+                            <div class="items-half items-top">
+                                <div class="v-text text-cell items-text" id="items-top-content">
+                                    
+                                </div>
+                            </div>
+                            <div class="items-half">
+                                <div class="v-text text-cell items-text" id="items-bottom-content">
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="body-right-col">
+                        <div class="v-text text-cell main-fortune-text center-content tip" id="main-fortune-content">
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">振楠神社社務所（<a href="https://brixton.zip">brixton.zip</a>）</div>
+            </div>
+            <button class="save-button" id="save-fortune-btn">Save as image</button>
+            <button class="save-button close-button-mobile" id="close-modal-btn" style="display: none;">Close</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="omikuji.js"></script>
+</body>
+</html>

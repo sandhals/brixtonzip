@@ -1,0 +1,114 @@
+#sunlit-glow {
+    pointer-events: none;
+    position: fixed;
+    top: 0; left: 0;
+    height: 100%; width: 100%;
+    z-index: 0;
+    transition: opacity 1.2s ease;
+    -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.75) 22%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 58%, rgba(0,0,0,0) 70%);
+    mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.75) 22%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 58%, rgba(0,0,0,0) 70%);
+}
+body.sunlit-hidden #sunlit-glow { opacity: 0; }
+body.sunlit-notransition #sunlit-glow { transition: none !important; }
+
+#glow {
+    position: absolute;
+    background: linear-gradient(309deg, var(--sl-bounce), var(--sl-bounce) 20%, transparent);
+    transition: background 1s var(--sl-timing);
+    height: 100%; width: 100%;
+    opacity: 0.35;
+    filter: blur(60px);
+}
+
+#glow-bounce {
+    position: absolute;
+    background: linear-gradient(355deg, var(--sl-bounce) 0%, transparent 30%, transparent 100%);
+    transition: background 1s var(--sl-timing);
+    opacity: 0.28;
+    height: 100%; width: 100%;
+    bottom: 0;
+    filter: blur(60px);
+}
+
+#sunlit-shadows {
+    pointer-events: none;
+    position: fixed;
+    top: 0; left: 0;
+    height: 100%; width: 100%;
+    z-index: 3;
+    transition: opacity 1.2s ease;
+}
+body.sunlit-hidden #sunlit-shadows { opacity: 0; }
+body.sunlit-notransition #sunlit-shadows,
+body.sunlit-notransition .sunlit-perspective,
+body.sunlit-notransition #blinds > .shutters,
+body.sunlit-notransition .shutter { transition: none !important; }
+body.sunlit-shutters-notransition #blinds > .shutters,
+body.sunlit-shutters-notransition .shutter { transition: none !important; }
+
+.sunlit-perspective {
+    position: absolute;
+    transition: transform 1.7s var(--sl-timing), opacity 4s ease;
+    top: -30vh; right: 0;
+    width: 80vw; height: 130vh;
+    opacity: 0.035;
+    background-blend-mode: darken;
+    transform-origin: top right;
+    transform-style: preserve-3d;
+    transform: matrix3d(0.75, -0.0625, 0, 0.0008, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+    -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.92) 12%, rgba(0,0,0,0.5) 28%, rgba(0,0,0,0.14) 44%, rgba(0,0,0,0.03) 55%, rgba(0,0,0,0) 63%);
+    mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.92) 12%, rgba(0,0,0,0.5) 28%, rgba(0,0,0,0.14) 44%, rgba(0,0,0,0.03) 55%, rgba(0,0,0,0) 63%);
+}
+#sunlit-shadows .shutters,
+#sunlit-shadows .vertical,
+#sunlit-shadows #leaves { filter: blur(2px); }
+body.sunlit-dark .sunlit-perspective {
+    opacity: 0.07;
+    transform: matrix3d(0.8333, 0.0833, 0, 0.0003, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+}
+body.sunlit-warm .sunlit-perspective { opacity: 0.05; }
+
+#leaves {
+    position: absolute;
+    background-size: cover;
+    background-repeat: no-repeat;
+    bottom: 0; right: -600px;
+    width: 1600px; height: 1400px;
+    background-image: url('/leaves.png');
+    perspective: 400px;
+    animation: sunlit-billow 8s ease-in-out infinite;
+}
+
+#blinds { position: relative; width: 100%; }
+#blinds .shutter,
+#blinds .bar {
+    background-color: var(--sl-shadow);
+    transition: background-color 1s var(--sl-timing);
+}
+#blinds > .shutters {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 60px;
+    transition: gap 1s var(--sl-timing);
+}
+body.sunlit-dark #blinds > .shutters { gap: 20px; }
+#blinds > .vertical {
+    top: 0; position: absolute;
+    height: 100%; width: 100%;
+    display: flex;
+    justify-content: space-around;
+}
+.vertical > .bar { width: 12px; height: 100%; }
+.shutter { width: 100%; height: 40px; transition: height 1s var(--sl-timing); }
+body.sunlit-dark .shutter { height: 80px; }
+body.sunlit-shutters-closed #blinds > .shutters { gap: 20px; }
+body.sunlit-shutters-closed .shutter { height: 80px; }
+
+@keyframes sunlit-billow {
+    0%   { transform: rotateX(0deg)  rotateY(0deg)  scale(1);    }
+    18%  { transform: rotateX(1deg)  rotateY(2deg)  scale(1.03); }
+    32%  { transform: rotateX(-4deg) rotateY(-2deg) scale(0.96); }
+    66%  { transform: rotateX(3deg)  rotateY(-1deg) scale(1.04); }
+    100% { transform: rotateX(0deg)  rotateY(0deg)  scale(1);    }
+}

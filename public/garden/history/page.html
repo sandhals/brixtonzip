@@ -1,0 +1,2221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>East Asian History Timeline</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #f4f2ed;
+    font-family: -apple-system, 'Helvetica Neue', system-ui, sans-serif;
+    color: #1a1a1a;
+    overflow-x: auto;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Sticky header ── */
+  .sticky-header {
+    position: sticky; top: 0; z-index: 200;
+    background: rgba(244,242,237,0.92);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    padding: 10px 24px; display: flex; align-items: baseline; gap: 16px;
+  }
+  .sticky-header h1 { font-size: 0.85rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #444; }
+  .year-indicator { font-size: 0.8rem; color: #999; font-variant-numeric: tabular-nums; }
+  .scale-control { display: flex; align-items: center; gap: 6px; margin-left: 12px; }
+  .scale-control label { font-size: 0.65rem; color: #999; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+  .scale-control input[type="range"] { width: 80px; height: 3px; -webkit-appearance: none; appearance: none; background: rgba(0,0,0,0.1); border-radius: 2px; outline: none; cursor: pointer; }
+  .scale-control input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; border-radius: 50%; background: #888; cursor: pointer; }
+  .scale-value { font-size: 0.6rem; color: #aaa; font-variant-numeric: tabular-nums; min-width: 28px; }
+  .period-indicator { font-size: 0.7rem; color: #aaa; letter-spacing: 0.05em; margin-left: auto; }
+
+  /* ── Date cursor ── */
+  .date-cursor { position: fixed; left: 24px; top: 50%; transform: translateY(-50%); z-index: 150; display: flex; align-items: center; gap: 4px; pointer-events: auto; }
+  .date-cursor .arrow { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid #a88050; }
+  .date-cursor .cursor-year { font-size: 0.6rem; font-weight: 600; color: #a88050; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .date-crosshair { position: fixed; top: 50%; left: 0; right: 0; height: 1px; background: rgba(168,128,80,0.35); pointer-events: none; z-index: 100; opacity: 0; transition: opacity 0.15s; }
+  .date-crosshair.visible { opacity: 1; }
+
+  /* ── Layout ── */
+  .timeline-layout { display: flex; padding: 0 24px 80px; min-width: fit-content; }
+  .year-axis { width: 74px; flex-shrink: 0; position: relative; }
+  .year-marker { position: absolute; right: 8px; font-size: 0.65rem; color: #c0bdb6; transform: translateY(-50%); font-variant-numeric: tabular-nums; user-select: none; white-space: nowrap; padding: 2px 4px; cursor: default; }
+  .year-marker.century { color: #908a80; font-weight: 500; }
+  .year-marker.hover-reveal { opacity: 1 !important; pointer-events: auto !important; }
+
+  .map-wrap { position: relative; overflow: hidden; }
+  svg { display: block; background: transparent; }
+
+  /* ── Sticky scroll labels (HTML overlays for tall kingdoms) ── */
+  .sticky-label {
+    position: absolute;
+    pointer-events: none;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; gap: 2px;
+    z-index: 5;
+    transition: opacity 0.3s ease;
+    overflow: hidden;
+    padding: 4px 6px;
+    box-sizing: border-box;
+  }
+  .sticky-label .sl-glyph { font-weight: 700; line-height: 1.1; white-space: nowrap; }
+  .sticky-label .sl-en { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; opacity: 0.85; white-space: nowrap; }
+  .sticky-label .sl-sub { font-size: 7px; opacity: 0.6; }
+  .sticky-label .sl-dates { font-size: 7px; opacity: 0.45; font-variant-numeric: tabular-nums; }
+
+  .kingdom-poly { stroke-linejoin: round; stroke-width: 0.5; transition: filter 0.2s; cursor: pointer; }
+  .kingdom-poly:hover, .kingdom-poly.k-hover { filter: saturate(1.6) brightness(1.1); }
+  svg.has-date-highlight .kingdom-poly:not(.date-highlight) { opacity: 0.45; }
+
+  /* Hover tooltip for kingdoms too small for inline labels */
+  .kingdom-tooltip {
+    position: fixed; pointer-events: none; z-index: 99999;
+    padding: 6px 10px; border-radius: 4px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    text-align: center; opacity: 0; transition: opacity 0.15s;
+    white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .kingdom-tooltip.visible { opacity: 1; }
+  .kingdom-tooltip .sl-glyph { font-weight: 700; font-size: 22px; line-height: 1.1; }
+  .kingdom-tooltip .sl-en { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; opacity: 0.85; }
+  .kingdom-tooltip .sl-dates { font-size: 7px; opacity: 0.45; font-variant-numeric: tabular-nums; }
+
+  .grid-line { stroke: rgba(0,0,0,0.04); }
+  .grid-line.century { stroke: rgba(0,0,0,0.08); }
+  .grid-line.event { stroke: rgba(0,0,0,0.04); stroke-dasharray: 3 4; }
+
+  .label-glyph { font-weight: 700; text-anchor: middle; pointer-events: none; dominant-baseline: central; }
+  .label-en { font-size: 9px; text-anchor: middle; pointer-events: none; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; dominant-baseline: central; }
+  .label-sub { font-size: 7px; text-anchor: middle; pointer-events: none; dominant-baseline: central; opacity: 0.6; }
+  .label-dates { font-size: 7px; text-anchor: middle; pointer-events: none; dominant-baseline: central; opacity: 0.45; font-variant-numeric: tabular-nums; }
+
+  .period-col { width: 28px; flex-shrink: 0; position: relative; margin-left: 8px; }
+  .period-label { position: absolute; writing-mode: vertical-rl; text-orientation: mixed; font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(0,0,0,0.12); font-weight: 700; user-select: none; left: 0; }
+  .period-label .hanzi { display: block; margin-top: 8px; font-size: 0.72rem; letter-spacing: 0.12em; }
+
+  .intro { padding: 24px 24px 16px; max-width: 720px; }
+  .intro h2 { font-size: 1rem; font-weight: 500; margin-bottom: 4px; }
+  .intro .range { font-size: 0.75rem; color: #999; margin-bottom: 8px; }
+  .intro .note { font-size: 0.75rem; color: #aaa; line-height: 1.5; }
+
+  /* ── China panel ── */
+  .china-toggle { position: relative; width: 24px; flex-shrink: 0; cursor: pointer; z-index: 10; }
+  .china-toggle-btn { position: sticky; top: 60px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: #888; background: rgba(244,242,237,0.9); border: 1px solid rgba(0,0,0,0.08); border-radius: 4px; padding: 8px 4px; cursor: pointer; user-select: none; white-space: nowrap; z-index: 12; }
+  .china-toggle-btn:hover { color: #555; background: rgba(230,228,223,0.95); }
+  .china-panel { display: flex; overflow: hidden; transition: width 0.3s ease, opacity 0.3s ease; flex-shrink: 0; }
+  .china-panel.collapsed { width: 0 !important; opacity: 0; pointer-events: none; }
+
+  /* ── Korea panel ── */
+  .korea-toggle { position: relative; width: 24px; flex-shrink: 0; cursor: pointer; z-index: 10; }
+  .korea-toggle-btn { position: sticky; top: 60px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: #888; background: rgba(244,242,237,0.9); border: 1px solid rgba(0,0,0,0.08); border-radius: 4px; padding: 8px 4px; cursor: pointer; user-select: none; white-space: nowrap; z-index: 12; }
+  .korea-toggle-btn:hover { color: #555; background: rgba(230,228,223,0.95); }
+  .korea-panel { overflow: hidden; transition: width 0.3s ease, opacity 0.3s ease; flex-shrink: 0; }
+  .korea-panel.collapsed { width: 0 !important; opacity: 0; pointer-events: none; }
+  .korea-panel .map-wrap { position: relative; overflow: hidden; }
+
+  /* ── Mongolia panel ── */
+  .mongol-toggle { position: relative; width: 24px; flex-shrink: 0; cursor: pointer; z-index: 10; }
+  .mongol-toggle-btn { position: sticky; top: 60px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: #888; background: rgba(244,242,237,0.9); border: 1px solid rgba(0,0,0,0.08); border-radius: 4px; padding: 8px 4px; cursor: pointer; user-select: none; white-space: nowrap; z-index: 12; }
+  .mongol-toggle-btn:hover { color: #555; background: rgba(230,228,223,0.95); }
+  .mongol-panel { overflow: hidden; transition: width 0.3s ease, opacity 0.3s ease; flex-shrink: 0; }
+  .mongol-panel.collapsed { width: 0 !important; opacity: 0; pointer-events: none; }
+  .mongol-bridge, .china-korea-bridge, .japan-bridge { position: absolute; top: 0; pointer-events: none; z-index: 1; opacity: 0.4; }
+  .mongol-bridge { left: 0; }
+  .china-korea-bridge { left: -36px; }
+  .japan-bridge { left: 0; }
+  .mongol-bridge.hidden, .china-korea-bridge.hidden, .japan-bridge.hidden { display: none; }
+  .mongol-panel .map-wrap { position: relative; overflow: hidden; }
+
+  /* ── Japan panel ── */
+  .japan-toggle { position: relative; width: 24px; flex-shrink: 0; cursor: pointer; z-index: 10; }
+  .japan-toggle-btn { position: sticky; top: 60px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: #888; background: rgba(244,242,237,0.9); border: 1px solid rgba(0,0,0,0.08); border-radius: 4px; padding: 8px 4px; cursor: pointer; user-select: none; white-space: nowrap; z-index: 12; }
+  .japan-toggle-btn:hover { color: #555; background: rgba(230,228,223,0.95); }
+  .japan-panel { overflow: hidden; transition: width 0.3s ease, opacity 0.3s ease; flex-shrink: 0; }
+  .japan-panel.collapsed { width: 0 !important; opacity: 0; pointer-events: none; }
+  .japan-panel .map-wrap { position: relative; overflow: hidden; }
+</style>
+</head>
+<body>
+
+<header class="sticky-header">
+  <h1>East Asian History</h1>
+  <span class="year-indicator" id="yearIndicator">2070 BCE</span>
+  <div class="scale-control">
+    <label>Scale</label>
+    <input type="range" id="scaleSlider" min="1" max="10" step="0.1" value="4">
+    <span class="scale-value" id="scaleValue">4.0 px/yr</span>
+  </div>
+  <span class="period-indicator" id="periodIndicator"></span>
+</header>
+
+<div class="intro">
+  <h2>China: Xia Dynasty through Present</h2>
+  <div class="range">2070 BCE – 2026 CE</div>
+  <div class="note">Scroll down to move forward in time.</div>
+</div>
+
+<div class="date-cursor" id="dateCursor"><div class="arrow"></div><div class="cursor-year" id="cursorYear"></div></div>
+<div class="date-crosshair" id="dateCrosshair"></div>
+
+<main>
+  <div class="timeline-layout" id="timeline">
+    <div class="year-axis" id="yearAxis"></div>
+    <div class="mongol-panel collapsed" id="mongolPanel"><div class="map-wrap" id="mongolMapWrap"></div></div>
+    <div class="mongol-toggle" onclick="toggleMongol()"><div class="mongol-toggle-btn" id="mongolToggleBtn">🇲🇳</div></div>
+    <div style="position:relative;width:0;height:0;overflow:visible"><div class="mongol-bridge hidden" id="mongolBridge"></div></div>
+    <div class="china-toggle" onclick="toggleChina()"><div class="china-toggle-btn" id="chinaToggleBtn">◂</div></div>
+    <div class="china-panel" id="chinaPanel">
+      <div class="map-wrap" id="mapWrap"></div>
+      <div class="period-col" id="periodCol"></div>
+    </div>
+    <div style="position:relative;width:0;height:0;overflow:visible"><div class="china-korea-bridge hidden" id="chinaKoreaBridge"></div></div>
+    <div class="korea-toggle" onclick="toggleKorea()"><div class="korea-toggle-btn" id="koreaToggleBtn">🇰🇷</div></div>
+    <div class="korea-panel collapsed" id="koreaPanel"><div class="map-wrap" id="koreaMapWrap"></div></div>
+    <div style="position:relative;width:0;height:0;overflow:visible"><div class="japan-bridge hidden" id="japanBridge"></div></div>
+    <div class="japan-toggle" onclick="toggleJapan()"><div class="japan-toggle-btn" id="japanToggleBtn">🇯🇵</div></div>
+    <div class="japan-panel collapsed" id="japanPanel"><div class="map-wrap" id="japanMapWrap"></div></div>
+  </div>
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  SVG POLYGON ARCHITECTURE
+//
+//  Each kingdom = array of phases { start, end, x1, x2 }
+//  x1/x2: 0–100 continuous axis (no columns!)
+//  generatePath() traces left edges down, right edges up → SVG path
+//  Rescaling: change scaleY, re-render. Labels adapt automatically.
+// ═══════════════════════════════════════════════════════════════
+
+const BASE_YEAR = -2070;
+const END_YEAR  = 2026;
+const DEFAULT_SCALE_X = 10;
+let SCALE_X = DEFAULT_SCALE_X;
+let WIDTH   = 100 * SCALE_X;
+let scaleY  = 4;
+
+const fmtYr = y => y < 0 ? Math.abs(y) + ' BCE' : y === 0 ? '1 BCE' : y + ' CE';
+const yPos = y => (y - BASE_YEAR) * scaleY;
+
+function getContrast(hex) {
+  const r = parseInt(hex.substr(1,2),16), g = parseInt(hex.substr(3,2),16), b = parseInt(hex.substr(5,2),16);
+  return ((r*299)+(g*587)+(b*114))/1000 >= 128 ? '#1a1a1a' : '#f8f8f6';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  KINGDOM DATA — poly phases with x1,x2 on 0–100 axis
+//  Mapped from reference images
+// ═══════════════════════════════════════════════════════════════
+
+const data = [
+  // ═══ UNIFIED EARLY DYNASTIES ═══
+  { name:"Xia Dynasty", glyph:"夏朝", color:"#5b8cb8", poly:[
+    {start:-2070, end:-1600, x1:0, x2:100}
+  ]},
+  { name:"Shang Dynasty", glyph:"商朝", color:"#4878a0", poly:[
+    {start:-1600, end:-1046, x1:0, x2:100}
+  ]},
+  { name:"Western Zhou", glyph:"西周", color:"#c83838", poly:[
+    {start:-1046, end:-771, x1:0, x2:100}
+  ]},
+
+  // ═══ SPRING & AUTUMN / WARRING STATES (771–221 BCE) ═══
+  // 11 equal columns of ~9 units each (≈9.09):
+  // Qin | Chu | Yue | Wu | Jin/Zhao | Jin/Wei | Jin/Han | Yan | Song | Qi | E.Zhou
+  //  0-9  9-18 18-27 27-36  36-45      45-54     54-63   63-72 72-81 81-90 90-100
+  //
+  // 771–473: Qin Chu Yue Wu  ──── Jin ────  Yan Song Qi E.Zhou
+  // 473–403: Qin Chu  ─ Yue ─    ──── Jin ────  Yan Song Qi E.Zhou
+  // 403–306: Qin Chu  ─ Yue ─  Zhao Wei Han Yan Song Qi E.Zhou
+  // 306–221: Qin ── Chu ──     Zhao Wei Han Yan  Qi(+Song) conquests...
+
+  { name:"Qin", glyph:"秦", color:"#5c2d7e", group:"qin", poly:[
+    {start:-771, end:-223, x1:91, x2:100},
+    {start:-223, end:-222, x1:64, x2:100},
+    {start:-222, end:-221, x1:28, x2:100}
+  ]},
+  { name:"Chu", glyph:"楚", color:"#7084b4", group:"chu", poly:[
+    {start:-771, end:-306, x1:82, x2:91}
+  ]},
+  { name:"Chu", glyph:"楚", color:"#7084b4", group:"chu", poly:[
+    {start:-306, end:-223, x1:64, x2:91}
+  ]},
+  { name:"Wu", glyph:"吳", color:"#b8b8b0", poly:[
+    {start:-771, end:-473, x1:64, x2:73}
+  ]},
+  { name:"Yue", glyph:"越", color:"#c4ac6c", group:"yue", poly:[
+    {start:-771, end:-473, x1:73, x2:82}
+  ]},
+  { name:"Yue", glyph:"越", color:"#c4ac6c", group:"yue", poly:[
+    {start:-473, end:-306, x1:64, x2:82}
+  ]},
+  { name:"Jin", glyph:"晉", color:"#d48a3c", poly:[
+    {start:-771, end:-403, x1:37, x2:64}
+  ]},
+  { name:"Zhao", glyph:"趙", color:"#d8cc40", poly:[
+    {start:-403, end:-222, x1:55, x2:64}
+  ]},
+  { name:"Wei", glyph:"魏", color:"#d8ccc0", poly:[
+    {start:-403, end:-225, x1:46, x2:55}
+  ]},
+  { name:"Han", glyph:"韓", color:"#7cb0d8", poly:[
+    {start:-403, end:-230, x1:37, x2:46}
+  ]},
+  { name:"Yan", glyph:"燕", color:"#2d6a4f", poly:[
+    {start:-771, end:-222, x1:28, x2:37}
+  ]},
+  { name:"Song", glyph:"宋", color:"#c05858", poly:[
+    {start:-771, end:-286, x1:19, x2:28}
+  ]},
+  { name:"Qi (Jiang)", glyph:"姜齊", color:"#a8c8d8", poly:[
+    {start:-771, end:-386, x1:10, x2:19}
+  ]},
+  { name:"Qi (Tian)", glyph:"田齊", color:"#7a5c2e", group:"qitian", poly:[
+    {start:-386, end:-286, x1:10, x2:19}
+  ]},
+  { name:"Qi (Tian)", glyph:"田齊", color:"#7a5c2e", group:"qitian", poly:[
+    {start:-286, end:-221, x1:10, x2:28}
+  ]},
+  { name:"Eastern Zhou", glyph:"東周", color:"#cc7828", poly:[
+    {start:-771, end:-256, x1:0, x2:10}
+  ]},
+
+  // Qin expansion fills (non-contiguous conquests before main Qin widens)
+  { name:"Qin", glyph:"秦", color:"#5c2d7e", group:"qin", noGroupFade:true, poly:[
+    {start:-256, end:-221, x1:0, x2:10}
+  ]},
+  { name:"Qin", glyph:"秦", color:"#5c2d7e", group:"qin", hideLabel:true, poly:[
+    {start:-230, end:-225, x1:37, x2:46},
+    {start:-225, end:-222, x1:37, x2:55}
+  ]},
+
+  // ═══ QIN UNIFICATION & HAN ═══
+  { name:"Qin Dynasty", glyph:"秦朝", color:"#5c2d7e", sub:"Unified China", poly:[
+    {start:-221, end:-206, x1:0, x2:100}
+  ]},
+  { name:"Western Chu", glyph:"西楚", color:"#8c3060", sub:"Chu–Han Contention", poly:[
+    {start:-206, end:-202, x1:0, x2:100}
+  ]},
+  { name:"Western Han", glyph:"西漢", color:"#c83838", poly:[
+    {start:-202, end:9, x1:0, x2:100}
+  ]},
+  { name:"Xin Dynasty", glyph:"新朝", color:"#2a2a2a", sub:"Wang Mang", poly:[
+    {start:9, end:23, x1:0, x2:100}
+  ]},
+  { name:"Gengshi", glyph:"更始", color:"#c83838", sub:"Restored Han", poly:[
+    {start:23, end:25, x1:0, x2:100}
+  ], hideLabel:true},
+  { name:"Eastern Han", glyph:"東漢", color:"#2a7848", group:"ehan", poly:[
+    {start:25, end:220, x1:0, x2:100}
+  ]},
+
+  // ═══ THREE KINGDOMS (220–280 CE) ═══
+  // 3 equal columns: Shu 0-33, Wei 33-67, Wu 67-100
+  { name:"Eastern Han", glyph:"東漢", color:"#2a7848", group:"ehan", hideLabel:true, poly:[
+    {start:220, end:221, x1:67, x2:100}
+  ]},
+  { name:"Eastern Han", glyph:"東漢", color:"#2a7848", group:"ehan", hideLabel:true, poly:[
+    {start:220, end:229, x1:0, x2:33}
+  ]},
+  { name:"Shu Han", glyph:"蜀漢", color:"#7cb0d8", stickyAlignBot:280, poly:[
+    {start:221, end:263, x1:67, x2:100}
+  ]},
+  { name:"Cao Wei", glyph:"曹魏", color:"#c4ac6c", group:"caowei", noSticky:true, stickyAlignBot:280, poly:[
+    {start:220, end:265, x1:33, x2:67}
+  ]},
+  { name:"Eastern Wu", glyph:"東吳", color:"#2d6a4f", stickyAlignBot:280, poly:[
+    {start:229, end:280, x1:0, x2:33}
+  ]},
+
+  // ═══ WESTERN JIN (265–316 CE) ═══
+  { name:"Cao Wei", glyph:"曹魏", color:"#c4ac6c", group:"caowei", hideLabel:true, poly:[
+    {start:263, end:265, x1:67, x2:100}
+  ]},
+  { name:"Western Jin", glyph:"西晉", color:"#a8c8d8", group:"wjin", noSticky:true, labelRect:{start:265,end:300,x1:0, x2:100}, poly:[
+    {start:265, end:280, x1:33, x2:100},
+    {start:280, end:304, x1:0, x2:100},
+    {start:304, end:316, x1:0, x2:33}
+  ]},
+  { name:"Western Jin", glyph:"西晉", color:"#a8c8d8", group:"wjin", hideLabel:true, poly:[
+    {start:304, end:314, x1:87, x2:100}
+  ]},
+
+  // ═══ SIXTEEN KINGDOMS (304–439 CE) ═══
+  // North 5 columns: A=0-13, B=13-27, C=27-40, D=40-53, E=53-67
+  // South: Eastern Jin / Song 67-100
+
+  // ── Phase 1: Early fragmentation (304–337) ──
+  { name:"Former Zhao", glyph:"前趙", color:"#d48a3c", labelRect:{start:304,end:329,x1:73, x2:87}, poly:[
+    {start:304, end:319, x1:47, x2:87},
+    {start:319, end:329, x1:73, x2:87}
+  ]},
+  { name:"Cheng Han", glyph:"成漢", color:"#c05858", poly:[
+    {start:304, end:347, x1:33, x2:47}
+  ]},
+  { name:"Former Liang", glyph:"前涼", color:"#d8ccc0", poly:[
+    {start:314, end:376, x1:87, x2:100}
+  ]},
+  { name:"Later Zhao", glyph:"後趙", color:"#a86830", labelRect:{start:319,end:351,x1:47, x2:87}, poly:[
+    {start:319, end:329, x1:47, x2:73},
+    {start:329, end:337, x1:47, x2:87},
+    {start:337, end:351, x1:60, x2:87}
+  ]},
+
+  // ── Phase 2: Former Yan & Former Qin rise (337–383) ──
+  { name:"Former Yan", glyph:"前燕", color:"#7084b4", poly:[
+    {start:337, end:370, x1:47, x2:60}
+  ]},
+  { name:"Former Qin", glyph:"前秦", color:"#5c2d7e", group:"fqin", labelRect:{start:351,end:383,x1:60, x2:87}, poly:[
+    {start:351, end:370, x1:60, x2:87},
+    {start:370, end:376, x1:47, x2:87},
+    {start:376, end:383, x1:47, x2:100}
+  ]},
+
+  // Eastern Jin (south)
+  { name:"Eastern Jin", glyph:"東晉", color:"#4878a0", noSticky:true, labelRect:{start:316,end:420,x1:0, x2:33}, poly:[
+    {start:316, end:347, x1:0, x2:33},
+    {start:347, end:383, x1:0, x2:47},
+    {start:383, end:420, x1:0, x2:33}
+  ]},
+
+  // ── Phase 3: Post-Fei fragmentation (383–420) ──
+  // A column (0-13): Liang successor states
+  { name:"Later Liang", glyph:"後涼", color:"#b8b8b0", poly:[
+    {start:383, end:397, x1:87, x2:100}
+  ]},
+  { name:"Southern Liang", glyph:"南涼", color:"#6a9060", poly:[
+    {start:397, end:414, x1:93, x2:100}
+  ]},
+  { name:"Western Qin", glyph:"西秦", color:"#5b8cb8", poly:[
+    {start:397, end:431, x1:87, x2:93}
+  ]},
+  { name:"Northern Liang", glyph:"北涼", color:"#7a9868", labelRect:{start:414,end:439,x1:93, x2:100}, poly:[
+    {start:414, end:431, x1:93, x2:100},
+    {start:431, end:439, x1:87, x2:100}
+  ]},
+
+  // B+C columns (13-40): Former Qin remnant → Later Qin → Xia
+  { name:"Former Qin", glyph:"前秦", color:"#5c2d7e", group:"fqin", hideLabel:true, poly:[
+    {start:383, end:394, x1:73, x2:87}
+  ]},
+  { name:"Later Qin", glyph:"後秦", color:"#c89070", labelRect:{start:383,end:417,x1:60, x2:73}, poly:[
+    {start:383, end:394, x1:60, x2:73},
+    {start:394, end:417, x1:60, x2:87}
+  ]},
+  { name:"Xia", glyph:"胡夏", color:"#d8cc40", poly:[
+    {start:417, end:431, x1:60, x2:87}
+  ]},
+
+  // D column (40-53): Yan successor states
+  { name:"Later Yan", glyph:"後燕", color:"#8068a0", labelRect:{start:383,end:398,x1:47, x2:60}, poly:[
+    {start:383, end:398, x1:47, x2:60},
+    {start:398, end:407, x1:54, x2:60}
+  ]},
+  { name:"Southern Yan", glyph:"南燕", color:"#c4ac6c", poly:[
+    {start:398, end:410, x1:47, x2:54}
+  ]},
+  { name:"Northern Yan", glyph:"北燕", color:"#3d5a80", labelRect:{start:410,end:436,x1:47, x2:60}, poly:[
+    {start:407, end:410, x1:54, x2:60},
+    {start:410, end:436, x1:47, x2:60}
+  ]},
+
+  // E column (53-67): Northern Wei grows
+  { name:"Northern Wei", glyph:"北魏", color:"#8898b0", group:"nwei", hideLabel:true, poly:[
+    {start:383, end:436, x1:33, x2:47}
+  ]},
+  { name:"Northern Wei", glyph:"北魏", color:"#8898b0", group:"nwei", hideLabel:true, poly:[
+    {start:431, end:436, x1:60, x2:87}
+  ]},
+  { name:"Northern Wei", glyph:"北魏", color:"#8898b0", group:"nwei", poly:[
+    {start:436, end:439, x1:33, x2:93},
+    {start:439, end:534, x1:33, x2:100}
+  ]},
+
+  // ═══ LIU SONG ═══
+  { name:"Song", glyph:"宋", color:"#7084b4", sub:"Liu Song", poly:[
+    {start:420, end:479, x1:0, x2:33}
+  ]},
+
+  // ═══ NORTHERN & SOUTHERN DYNASTIES (420–589) ═══
+  // South (67-100): successive short dynasties
+  { name:"Qi", glyph:"齊", color:"#d8ccc0", sub:"Southern Qi", poly:[
+    {start:479, end:502, x1:0, x2:33}
+  ]},
+  { name:"Liang", glyph:"梁", color:"#d48a3c", sub:"Liang Dynasty", poly:[
+    {start:502, end:557, x1:0, x2:33}
+  ]},
+  { name:"Chen", glyph:"陳", color:"#a86830", sub:"Chen Dynasty", poly:[
+    {start:557, end:589, x1:0, x2:33}
+  ]},
+
+  // North (0-67): Wei splits then reunifies
+  { name:"Eastern Wei", glyph:"東魏", color:"#d8cc40", poly:[
+    {start:534, end:550, x1:67, x2:100}
+  ]},
+  { name:"Western Wei", glyph:"西魏", color:"#5b8cb8", poly:[
+    {start:535, end:557, x1:33, x2:67}
+  ]},
+  { name:"Northern Qi", glyph:"北齊", color:"#2a7848", poly:[
+    {start:550, end:577, x1:67, x2:100}
+  ]},
+  { name:"Northern Zhou", glyph:"北周", color:"#6a9060", poly:[
+    {start:557, end:577, x1:33, x2:67},
+    {start:577, end:581, x1:33, x2:100}
+  ]},
+
+  // ═══ SUI DYNASTY (581–618) ═══
+  { name:"Sui Dynasty", glyph:"隋朝", color:"#c8a0a0", poly:[
+    {start:581, end:589, x1:33, x2:100},
+    {start:589, end:618, x1:0, x2:100}
+  ]},
+
+  // ═══ TANG DYNASTY (618–907) ═══
+  // Phase 1: pre-Wu Zhou (centered label, noSticky)
+  { name:"Tang Dynasty", glyph:"唐朝", color:"#2d6a4f", sub:"618 – 907 CE", group:"tang", noSticky:true, labelRect:{start:618, end:690, x1:0, x2:100}, poly:[
+    {start:618, end:690, x1:0, x2:100}
+  ]},
+  { name:"Wu Zhou", glyph:"武周", color:"#c83838", sub:"Reign of Wu Zetian, only Empress Regnant in Chinese history", poly:[
+    {start:690, end:705, x1:0, x2:100}
+  ]},
+  // Phase 2: post-Wu Zhou (sticky label)
+  { name:"Tang Dynasty", glyph:"唐朝", color:"#2d6a4f", group:"tang", poly:[
+    {start:705, end:907, x1:0, x2:100}
+  ]},
+
+  // ═══ AN LUSHAN & HUANG CHAO REBELLIONS ═══
+  { name:"Yan (An Lushan Rebellion)", glyph:"燕", color:"#d4a017", sub:"Major rebellion that weakened the Tang", poly:[
+    {start:756, end:763, x1:92, x2:100}
+  ]},
+  { name:"Great Qi (Huang Chao Rebellion)", glyph:"大齊", color:"#e76f51", sub:"Peasant uprising that devastated the Tang", poly:[
+    {start:878, end:884, x1:68, x2:80}
+  ]},
+
+  // ═══ LIAO DYNASTY (907–1125) ═══
+  // Wide background — fills gaps behind Ten Kingdoms; label in definitive territory
+  { name:"Liao Dynasty", glyph:"遼朝", color:"#bfbfbf", sub:"Khitan empire", group:"liao", labelRect:{start:907, end:1040, x1:0, x2:15}, poly:[
+    {start:907, end:1040, x1:0, x2:60},
+    {start:1040, end:1125, x1:0, x2:50}
+  ]},
+  { name:"Liao Dynasty", glyph:"遼朝", color:"#bfbfbf", group:"liao", labelRect:{start:1040, end:1125, x1:15, x2:50}, poly:[
+    {start:1040, end:1125, x1:15, x2:50}
+  ]},
+
+  // ═══ NORTHERN SONG (960–1127) ═══
+  // Background — fills gaps behind remaining kingdoms after 960
+  { name:"Northern Song", glyph:"北宋", color:"#b8860b", labelRect:{start:979, end:1040, x1:25, x2:100}, poly:[
+    {start:960, end:1040, x1:25, x2:100},
+    {start:1040, end:1127, x1:50, x2:100}
+  ]},
+
+  // ═══ FIVE DYNASTIES (907–960) ═══
+  { name:"Later Liang", glyph:"後梁", color:"#c8a0a0", group:"later_liang", poly:[
+    {start:907, end:923, x1:85, x2:100}
+  ]},
+  { name:"Later Liang", glyph:"後梁", color:"#c8a0a0", group:"later_liang", labelRect:{start:907, end:923, x1:67, x2:76}, poly:[
+    {start:907, end:917, x1:58, x2:76},
+    {start:917, end:924, x1:67, x2:76}
+  ]},
+  { name:"Later Tang", glyph:"後唐", color:"#8B7355", poly:[
+    {start:923, end:925, x1:85, x2:100},
+    {start:925, end:936, x1:76, x2:100}
+  ]},
+  { name:"Later Jin", glyph:"後晉", color:"#6a4c93", poly:[
+    {start:936, end:947, x1:85, x2:100}
+  ]},
+  { name:"Later Han", glyph:"後漢", color:"#c83838", poly:[
+    {start:947, end:951, x1:85, x2:100}
+  ]},
+  { name:"Later Zhou", glyph:"後周", color:"#1d7874", poly:[
+    {start:951, end:960, x1:85, x2:92}
+  ]},
+
+  // ═══ NORTHERN HAN (951–979) ═══
+  { name:"Northern Han", glyph:"北漢", color:"#a3c4d9", poly:[
+    {start:951, end:979, x1:92, x2:100}
+  ]},
+
+  // ═══ TEN KINGDOMS ═══
+  // Shu adjacent to Five Dynasties (Later Tang cuts through); order matches reference
+  // Render ON TOP of Liao & Northern Song backgrounds
+  { name:"Former Shu", glyph:"前蜀", color:"#7b2d8e", poly:[
+    {start:907, end:925, x1:76, x2:85}
+  ]},
+  { name:"Later Shu", glyph:"後蜀", color:"#9b59b6", poly:[
+    {start:934, end:965, x1:76, x2:85}
+  ]},
+  { name:"Nanping", glyph:"南平", color:"#d4a373", poly:[
+    {start:924, end:963, x1:67, x2:76}
+  ]},
+  { name:"Southern Han", glyph:"南漢", color:"#b56576", poly:[
+    {start:917, end:971, x1:58, x2:67}
+  ]},
+  { name:"Wuyue", glyph:"吳越", color:"#577590", poly:[
+    {start:907, end:978, x1:48, x2:58}
+  ]},
+  { name:"Wu", glyph:"吳", color:"#e8a838", sub:"House of Yang", poly:[
+    {start:902, end:937, x1:37, x2:48}
+  ]},
+  { name:"Southern Tang", glyph:"南唐", color:"#2d6a4f", poly:[
+    {start:937, end:975, x1:37, x2:48}
+  ]},
+  { name:"Later Liang", glyph:"後梁", color:"#c8a0a0", group:"later_liang", hideLabel:true, poly:[
+    {start:907, end:909, x1:28, x2:37}
+  ]},
+  { name:"Min", glyph:"閩", color:"#e76f51", poly:[
+    {start:909, end:945, x1:28, x2:37}
+  ]},
+  { name:"Chu", glyph:"楚", color:"#d4a017", sub:"House of Ma", poly:[
+    {start:907, end:951, x1:18, x2:28}
+  ]},
+
+  // ═══ WESTERN XIA (1038–1227) ═══
+  { name:"Western Xia", glyph:"西夏", color:"#6495ED", poly:[
+    {start:1038, end:1227, x1:0, x2:15}
+  ]},
+
+  // ═══ JIN DYNASTY (1115–1234) ═══
+  { name:"Jin Dynasty", glyph:"金朝", color:"#2ca02c", sub:"Jurchen dynasty", poly:[
+    {start:1115, end:1234, x1:30, x2:60}
+  ]},
+
+  // ═══ WESTERN LIAO (1124–1218) ═══
+  { name:"Western Liao", glyph:"西遼", color:"#999999", sub:"Karakhitai Empire", poly:[
+    {start:1124, end:1218, x1:15, x2:30}
+  ]},
+
+  // ═══ MONGOL EMPIRE (1206–1271) ═══
+  { name:"Mongol Empire", glyph:"大蒙古國", color:"#888888", poly:[
+    {start:1218, end:1227, x1:15, x2:30},
+    {start:1227, end:1234, x1:0, x2:30},
+    {start:1234, end:1271, x1:0, x2:60}
+  ]},
+
+  // ═══ MONGOL EMPIRE / YUAN (1206–1368) ═══
+  // Mongol presence on China's right before full conquest
+  { name:"Mongol Empire", glyph:"蒙古帝國", color:"#B22222", noSticky:true, poly:[
+    {start:1206, end:1271, x1:0, x2:15}
+  ]},
+  // Yuan Dynasty proper
+  { name:"Yuan Dynasty", glyph:"元朝", color:"#B22222", poly:[
+    {start:1271, end:1279, x1:0, x2:60},
+    {start:1279, end:1368, x1:0, x2:100}
+  ]},
+
+  // ═══ SOUTHERN SONG (1127–1279) ═══
+  { name:"Southern Song", glyph:"南宋", color:"#e07020", poly:[
+    {start:1127, end:1279, x1:60, x2:100}
+  ]},
+
+  // ═══ MING DYNASTY (1368–1644) ═══
+  { name:"Ming Dynasty", glyph:"明朝", color:"#5dade2", poly:[
+    {start:1368, end:1644, x1:0, x2:100}
+  ]},
+
+  // ═══ NORTHERN YUAN (1368–1388) ═══
+  { name:"Northern Yuan", glyph:"北元", color:"#A0522D", poly:[
+    {start:1368, end:1388, x1:0, x2:30}
+  ]},
+
+  // ═══ LATER JIN (1616–1636) ═══
+  { name:"Later Jin", glyph:"後金", color:"#a0a0a0", sub:"Manchu state, predecessor of Qing", poly:[
+    {start:1616, end:1636, x1:18, x2:30}
+  ]},
+
+  // ═══ QING DYNASTY (1636–1912) ═══
+  { name:"Qing Dynasty", glyph:"清朝", color:"#85C1E9", poly:[
+    {start:1636, end:1644, x1:0, x2:30},
+    {start:1644, end:1912, x1:0, x2:100}
+  ]},
+
+  // ═══ GREAT SHUN (1644–1645) ═══
+  { name:"Great Shun", glyph:"大順", color:"#FFD700", sub:"Peasant rebel Li Zicheng's short-lived dynasty", poly:[
+    {start:1644, end:1645, x1:70, x2:80}
+  ]},
+
+  // ═══ SOUTHERN MING (1644–1662) ═══
+  { name:"Southern Ming", glyph:"南明", color:"#5dade2", poly:[
+    {start:1644, end:1662, x1:80, x2:100}
+  ]},
+
+  // ═══ KINGDOM OF TUNGNING / ZHENG (1662–1683) ═══
+  { name:"Zheng (Ming Remnant)", glyph:"明鄭", color:"#e07020", sub:"Zheng Chenggong's Ming remnant regime on Taiwan", poly:[
+    {start:1662, end:1683, x1:88, x2:100}
+  ]},
+
+  // ═══ TAIPING HEAVENLY KINGDOM (1851–1864) ═══
+  { name:"Taiping Heavenly Kingdom", glyph:"太平天國", color:"#FFD700", sub:"Taiping Rebellion", poly:[
+    {start:1851, end:1864, x1:52, x2:65}
+  ]},
+
+  // ═══ REPUBLIC OF CHINA (1912–1949) ═══
+  { name:"Republic of China", glyph:"中華民國", color:"#4A90D9", poly:[
+    {start:1912, end:1949, x1:0, x2:100}
+  ]},
+
+  // ═══ MANCHUKUO (1932–1945) ═══
+  { name:"Manchukuo", glyph:"滿洲國", color:"#a0a0a0", sub:"Japanese puppet state", poly:[
+    {start:1932, end:1945, x1:12, x2:22}
+  ]},
+
+  // ═══ PEOPLE'S REPUBLIC OF CHINA (1949–) ═══
+  { name:"People's Republic of China", glyph:"中華人民共和國", color:"#cc0000", poly:[
+    {start:1949, end:2026, x1:0, x2:100}
+  ]},
+
+  // ═══ REPUBLIC OF CHINA (TAIWAN) (1949–) ═══
+  { name:"Republic of China (Taiwan)", glyph:"中華民國（台灣）", color:"#4A90D9", poly:[
+    {start:1949, end:2026, x1:0, x2:22}
+  ]},
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  PERIODS
+// ═══════════════════════════════════════════════════════════════
+
+const PERIODS = [
+  { s:-2070, e:-1600, name:'Xia Dynasty', hanzi:'夏朝' },
+  { s:-1600, e:-1046, name:'Shang Dynasty', hanzi:'商朝' },
+  { s:-1046, e:-771, name:'Western Zhou', hanzi:'西周' },
+  { s:-771, e:-476, name:'Spring and Autumn', hanzi:'春秋時代' },
+  { s:-475, e:-221, name:'Warring States', hanzi:'戰國時代' },
+  { s:-221, e:-206, name:'Qin Dynasty', hanzi:'秦朝' },
+  { s:-206, e:-202, name:'Chu–Han Contention', hanzi:'楚漢之爭' },
+  { s:-202, e:9, name:'Western Han', hanzi:'西漢' },
+  { s:9, e:23, name:'Xin Dynasty', hanzi:'新朝' },
+  { s:25, e:220, name:'Eastern Han', hanzi:'東漢' },
+  { s:220, e:280, name:'Three Kingdoms', hanzi:'三國' },
+  { s:265, e:316, name:'Western Jin', hanzi:'西晉' },
+  { s:304, e:439, name:'Sixteen Kingdoms', hanzi:'五胡十六國' },
+  { s:317, e:420, name:'Eastern Jin', hanzi:'東晉' },
+  { s:420, e:479, name:'Liu Song', hanzi:'劉宋' },
+  { s:479, e:502, name:'Southern Qi', hanzi:'南齊' },
+  { s:502, e:557, name:'Liang Dynasty', hanzi:'梁朝' },
+  { s:557, e:589, name:'Chen Dynasty', hanzi:'陳朝' },
+  { s:386, e:534, name:'Northern Wei', hanzi:'北魏' },
+  { s:534, e:577, name:'Eastern Wei / Northern Qi', hanzi:'東魏·北齊' },
+  { s:535, e:581, name:'Western Wei / Northern Zhou', hanzi:'西魏·北周' },
+  { s:581, e:618, name:'Sui Dynasty', hanzi:'隋朝' },
+  { s:618, e:907, name:'Tang Dynasty', hanzi:'唐朝' },
+  { s:690, e:705, name:'Wu Zhou', hanzi:'武周' },
+  { s:755, e:763, name:'An Lushan Rebellion', hanzi:'安史之亂' },
+  { s:907, e:960, name:'Five Dynasties', hanzi:'五代' },
+  { s:907, e:979, name:'Ten Kingdoms', hanzi:'十國' },
+  { s:907, e:1125, name:'Liao Dynasty', hanzi:'遼朝' },
+  { s:960, e:1127, name:'Northern Song', hanzi:'北宋' },
+  { s:1038, e:1227, name:'Western Xia', hanzi:'西夏' },
+  { s:1115, e:1234, name:'Jin Dynasty', hanzi:'金朝' },
+  { s:1124, e:1218, name:'Western Liao', hanzi:'西遼' },
+  { s:1127, e:1279, name:'Southern Song', hanzi:'南宋' },
+  { s:1206, e:1271, name:'Mongol Empire', hanzi:'大蒙古國' },
+  { s:1271, e:1368, name:'Yuan Dynasty', hanzi:'元朝' },
+  { s:1368, e:1644, name:'Ming Dynasty', hanzi:'明朝' },
+  { s:1368, e:1388, name:'Northern Yuan', hanzi:'北元' },
+  { s:1616, e:1636, name:'Later Jin', hanzi:'後金' },
+  { s:1636, e:1912, name:'Qing Dynasty', hanzi:'清朝' },
+  { s:1644, e:1662, name:'Southern Ming', hanzi:'南明' },
+  { s:1851, e:1864, name:'Taiping Rebellion', hanzi:'太平天國' },
+  { s:1912, e:1949, name:'Republic of China', hanzi:'中華民國' },
+  { s:1949, e:2026, name:"People's Republic of China", hanzi:'中華人民共和國' },
+];
+
+const EVENT_YEARS = [
+  -1600,-1046,-771,-473,-403,-386,-306,-286,-256,
+  -230,-225,-223,-222,-221,-206,-202,9,23,25,
+  220,221,229,263,265,280,304,314,316,317,319,329,
+  337,347,350,351,370,376,384,385,386,394,397,398,
+  400,403,407,409,410,414,417,420,421,431,436,439,479,
+  502,534,535,550,557,577,581,589,618,690,705,
+  756,763,878,884,902,907,909,917,923,924,925,934,936,937,
+  945,947,951,960,963,965,971,975,978,979,1038,1040,
+  1115,1124,1125,1127,1206,1218,1227,1234,1271,1279,1368,1388,
+  1616,1636,1644,1645,1653,1662,1683,1851,1864,1912,1932,1945,1949
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  SVG RENDERING
+// ═══════════════════════════════════════════════════════════════
+
+const NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs) {
+  const el = document.createElementNS(NS, tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+function generatePath(phases) {
+  let d = "";
+  for (let i = 0; i < phases.length; i++) {
+    const x = phases[i].x1 * SCALE_X;
+    const yT = yPos(phases[i].start);
+    const yB = yPos(phases[i].end);
+    d += (i === 0 ? `M ${x} ${yT} ` : `L ${x} ${yT} `);
+    d += `L ${x} ${yB} `;
+  }
+  for (let i = phases.length - 1; i >= 0; i--) {
+    const x = phases[i].x2 * SCALE_X;
+    const yT = yPos(phases[i].start);
+    const yB = yPos(phases[i].end);
+    d += `L ${x} ${yB} L ${x} ${yT} `;
+  }
+  return d + "Z";
+}
+
+function getLargestPhase(phases) {
+  return phases.reduce((best, p) => {
+    const area = (p.end - p.start) * (p.x2 - p.x1);
+    return area > (best.end - best.start) * (best.x2 - best.x1) ? p : best;
+  });
+}
+
+// Shared label tier metrics — returns { hz, canFull, canHzGlyph, canVGlyph, vHz, glyphSz, fullLabelH }
+function labelMetrics(pxW, pxH, glyph, name) {
+  const nChars = glyph ? [...glyph].length : 1;
+  // CJK chars are ~1em wide; leave 20% padding so text doesn't touch edges
+  const maxByW = (pxW * 0.8) / nChars;
+  const maxByH = pxH / 3;
+  const hz = Math.round(Math.min(Math.max(12, maxByW), Math.max(12, maxByH), 42));
+  const fullLabelH = hz + 40;
+  const enW = name ? name.length * 6.5 : 0;
+  const canFull = pxH > fullLabelH + 10 && pxW > Math.max(60, enW) && hz >= 14;
+  // horizontal glyph: each CJK char ~1em, need padding
+  const canHzGlyph = pxW > nChars * hz * 1.15 && pxH > hz + 4;
+  // vertical stack: one char per line, font scales to available width
+  const vHz = Math.min(Math.max(7, pxW * 0.75), 18);
+  const canVGlyph = !!glyph && pxW >= vHz && pxH > nChars * vHz * 1.15;
+  const glyphSz = Math.min(hz, 28);
+  return { hz, canFull, canHzGlyph, canVGlyph, vHz, glyphSz, fullLabelH, nChars };
+}
+
+const mapWrap = document.getElementById('mapWrap');
+const yearAxis = document.getElementById('yearAxis');
+const periodCol = document.getElementById('periodCol');
+const chinaPanel = document.getElementById('chinaPanel');
+let chinaOpen = true;
+const markerEls = {};
+let stickyLabels = []; // { el, topPx, botPx, cx } for scroll positioning
+let koreaStickyLabels = [];
+
+function renderYearAxis() {
+  yearAxis.innerHTML = '';
+  for (const k in markerEls) delete markerEls[k];
+  const MIN_GAP = 14;
+  const fc = Math.ceil(BASE_YEAR / 100) * 100;
+  const f5 = Math.ceil(BASE_YEAR / 50) * 50;
+  const markers = [];
+  for (let y = fc; y <= END_YEAR; y += 100) markers.push({y, cls:'century', pri:2});
+  for (let y = f5; y <= END_YEAR; y += 50) { if (y%100===0) continue; markers.push({y, cls:'', pri:1}); }
+  markers.sort((a,b) => b.pri - a.pri || a.y - b.y);
+  const placedPx = [];
+  markers.forEach(m => {
+    const px = yPos(m.y);
+    const tooClose = placedPx.some(p => Math.abs(px-p) < MIN_GAP);
+    const mk = document.createElement('div');
+    mk.className = 'year-marker ' + m.cls;
+    mk.style.top = px + 'px';
+    mk.textContent = fmtYr(m.y);
+    mk.dataset.markerY = m.y;
+    if (tooClose) { mk.style.opacity = '0'; mk.style.pointerEvents = 'none'; }
+    yearAxis.appendChild(mk);
+    if (!markerEls[m.y]) markerEls[m.y] = [];
+    markerEls[m.y].push(mk);
+    if (!tooClose) placedPx.push(px);
+  });
+}
+
+let tooltipEl = null;
+function render() {
+  mapWrap.innerHTML = '';
+  periodCol.innerHTML = '';
+  stickyLabels = [];
+  const tooltipData = [];
+
+  const height = (END_YEAR - BASE_YEAR) * scaleY;
+  const svg = svgEl('svg', { width: WIDTH, height: height });
+
+  // Gridlines
+  const fc = Math.ceil(BASE_YEAR / 100) * 100;
+  for (let y = fc; y <= END_YEAR; y += 100)
+    svg.appendChild(svgEl('line', { x1:0, y1:yPos(y), x2:WIDTH, y2:yPos(y), class:'grid-line century' }));
+  const f5 = Math.ceil(BASE_YEAR / 50) * 50;
+  for (let y = f5; y <= END_YEAR; y += 50) {
+    if (y % 100 === 0) continue;
+    svg.appendChild(svgEl('line', { x1:0, y1:yPos(y), x2:WIDTH, y2:yPos(y), class:'grid-line' }));
+  }
+  EVENT_YEARS.forEach(y => svg.appendChild(svgEl('line', { x1:0, y1:yPos(y), x2:WIDTH, y2:yPos(y), class:'grid-line event' })));
+
+  // Kingdom polygons + labels
+  data.forEach((k, idx) => {
+    const pathAttrs = { d: generatePath(k.poly), fill: k.color, stroke: k.color, class:'kingdom-poly', 'data-idx': idx };
+    if (k.group) { pathAttrs['data-group'] = k.group; }
+    const path = svgEl('path', pathAttrs);
+    const allS = k.poly.map(p => p.start), allE = k.poly.map(p => p.end);
+    path.dataset.start = Math.min(...allS);
+    path.dataset.end = Math.max(...allE);
+    const tt = svgEl('title', {}); tt.textContent = `${k.name} (${k.glyph})`; path.appendChild(tt);
+    svg.appendChild(path);
+
+    if (!k.hideLabel) {
+      const lp = k.labelRect || (k.labelPhase != null ? k.poly[k.labelPhase] : getLargestPhase(k.poly));
+      const cx = ((lp.x1 + lp.x2) / 2) * SCALE_X;
+      const cy = yPos((lp.start + lp.end) / 2);
+      const pxW = (lp.x2 - lp.x1) * SCALE_X;
+      const pxH = (lp.end - lp.start) * scaleY;
+      const tc = getContrast(k.color);
+      const lm = labelMetrics(pxW, pxH, k.glyph, k.name);
+      const { hz, canFull, canHzGlyph, canVGlyph, vHz, glyphSz, fullLabelH } = lm;
+
+      const isTall = pxH > 300;
+      // Only force sticky for groups with multiple labeled entries (fade system)
+      const groupLabelCount = k.group ? data.filter(d => d.group === k.group && !d.hideLabel).length : 0;
+      const forceSticky = groupLabelCount > 1;
+
+      const inLateSection = lp.start >= 220;
+      if ((isTall || forceSticky) && !k.noSticky && !inLateSection && pxW > 25) {
+        // ── HTML overlay label that sticks on scroll ──
+        const allStarts = k.poly.map(p => p.start), allEnds = k.poly.map(p => p.end);
+        const topPx = yPos(Math.min(...allStarts));
+        const actualEnd = Math.max(...allEnds);
+        const ALIGN_BOT = -221;
+        const isAligned = k.stickyAlignBot != null || (actualEnd <= ALIGN_BOT && actualEnd >= -235);
+        const alignedEnd = k.stickyAlignBot != null ? k.stickyAlignBot : (isAligned ? ALIGN_BOT : actualEnd);
+        const botPx = yPos(alignedEnd);
+        const el = document.createElement('div');
+        el.className = 'sticky-label';
+        el.style.color = tc;
+        el.style.left = (lp.x1 * SCALE_X) + 'px';
+        el.style.width = pxW + 'px';
+
+        let inner = `<div class="sl-glyph" style="font-size:${hz}px">${k.glyph}</div>`;
+        inner += `<div class="sl-en">${k.name}</div>`;
+        if (k.sub) inner += `<div class="sl-sub">${k.sub}</div>`;
+        const s = k.poly[0].start, e = k.poly[k.poly.length-1].end;
+        inner += `<div class="sl-dates">${fmtYr(s)} – ${fmtYr(e)}</div>`;
+        el.innerHTML = inner;
+
+        mapWrap.appendChild(el);
+        const aligned = isAligned;
+        stickyLabels.push({ el, topPx, botPx, cx, group: k.group || null, aligned, noGroupFade: !!k.noGroupFade });
+
+      } else if (pxW > 10 && pxH > 10) {
+        const s = k.poly[0].start, e = k.poly[k.poly.length-1].end;
+        const ttIdx = tooltipData.length;
+        const ttEntry = { name:k.name, glyph:k.glyph, sub:k.sub, color:k.color, tc, s, e, cx, cy, pxW };
+        // Tier 1: Full label (glyph + en + dates) — only if everything fits
+        if (canFull) {
+          svg.appendChild(svgEl('text', { x:cx, y:cy-8, fill:tc, class:'label-glyph', 'font-size':hz })).textContent = k.glyph;
+          svg.appendChild(svgEl('text', { x:cx, y:cy+hz/2+4, fill:tc, class:'label-en' })).textContent = k.name;
+          if (k.sub && pxH > fullLabelH + 14) svg.appendChild(svgEl('text', { x:cx, y:cy+hz/2+16, fill:tc, class:'label-sub' })).textContent = k.sub;
+          svg.appendChild(svgEl('text', { x:cx, y:cy+hz/2+(k.sub && pxH>fullLabelH+14?26:16), fill:tc, class:'label-dates' })).textContent = fmtYr(s)+' – '+fmtYr(e);
+        // Tier 2: Horizontal glyph only — must actually fit at computed size
+        } else if (canHzGlyph) {
+          const glyphSz = Math.min(hz, 28);
+          svg.appendChild(svgEl('text', { x:cx, y:cy, fill:tc, class:'label-glyph', 'font-size':glyphSz })).textContent = k.glyph;
+          path.dataset.tooltipIdx = ttIdx;
+          tooltipData.push(ttEntry);
+        // Tier 2.5: Vertical stacked glyph — one char per line
+        } else if (canVGlyph) {
+          const chars = [...k.glyph];
+          const totalH = chars.length * vHz * 1.15;
+          const startY = cy - totalH / 2 + vHz / 2;
+          chars.forEach((ch, ci) => {
+            svg.appendChild(svgEl('text', { x:cx, y:startY + ci * vHz * 1.15, fill:tc, class:'label-glyph', 'font-size':vHz })).textContent = ch;
+          });
+          path.dataset.tooltipIdx = ttIdx;
+          tooltipData.push(ttEntry);
+        // Tier 3: No inline label — tooltip only
+        } else {
+          path.dataset.tooltipIdx = ttIdx;
+          tooltipData.push(ttEntry);
+        }
+      }
+    }
+  });
+
+  mapWrap.appendChild(svg);
+
+  // ── Hover tooltips for tiny kingdoms ──
+  if (tooltipEl) tooltipEl.remove();
+  if (tooltipData.length > 0) {
+    tooltipEl = document.createElement('div');
+    tooltipEl.className = 'kingdom-tooltip';
+    mapWrap.appendChild(tooltipEl);
+    svg.querySelectorAll('[data-tooltip-idx]').forEach(path => {
+      const td = tooltipData[parseInt(path.dataset.tooltipIdx)];
+      path.addEventListener('mouseenter', (e) => {
+        tooltipEl.style.background = td.color;
+        tooltipEl.style.color = td.tc;
+        let html = `<div class="sl-glyph">${td.glyph}</div>`;
+        html += `<div class="sl-en">${td.name}</div>`;
+        if (td.sub) html += `<div class="sl-en" style="opacity:0.6">${td.sub}</div>`;
+        html += `<div class="sl-dates">${fmtYr(td.s)} – ${fmtYr(td.e)}</div>`;
+        tooltipEl.innerHTML = html;
+        const wr = mapWrap.getBoundingClientRect();
+        tooltipEl.style.left = (wr.left + td.cx) + 'px';
+        tooltipEl.style.top = (wr.top + td.cy) + 'px';
+        tooltipEl.style.transform = 'translate(-50%, -50%)';
+        tooltipEl.classList.add('visible');
+      });
+      path.addEventListener('mouseleave', () => {
+        tooltipEl.classList.remove('visible');
+      });
+    });
+  }
+
+  // Period labels
+  PERIODS.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'period-label';
+    el.style.top = (yPos(p.s) + 8) + 'px';
+    el.style.height = Math.max(40, (p.e - p.s) * scaleY - 16) + 'px';
+    el.innerHTML = `${p.name}<span class="hanzi">${p.hanzi}</span>`;
+    periodCol.appendChild(el);
+  });
+
+  setupHover();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  HOVER INTERACTIONS
+// ═══════════════════════════════════════════════════════════════
+
+function setupHover() {
+  const svg = mapWrap.querySelector('svg');
+  if (!svg) return;
+  const polys = svg.querySelectorAll('.kingdom-poly');
+
+  // Build group map for seamless hover
+  const groupMap = {};
+  polys.forEach(path => {
+    const g = path.dataset.group;
+    if (g) { if (!groupMap[g]) groupMap[g] = []; groupMap[g].push(path); }
+  });
+
+  let activeMarkers = [];
+  let hoverGroup = [];
+  polys.forEach(path => {
+    path.addEventListener('mouseenter', () => {
+      activeMarkers.forEach(mk => mk.classList.remove('hover-reveal'));
+      activeMarkers = [];
+      hoverGroup.forEach(p => { p.style.filter = ''; });
+      hoverGroup = [];
+
+      // Highlight all group siblings
+      const g = path.dataset.group;
+      const siblings = g ? groupMap[g] : [path];
+      siblings.forEach(p => {
+        p.style.filter = 'saturate(1.6) brightness(1.1)';
+        hoverGroup.push(p);
+      });
+
+      // Reveal year markers for full group span
+      const years = new Set();
+      siblings.forEach(p => { years.add(parseFloat(p.dataset.start)); years.add(parseFloat(p.dataset.end)); });
+      const visPx = [];
+      yearAxis.querySelectorAll('.year-marker').forEach(mk => {
+        if (mk.style.opacity !== '0' && !mk.classList.contains('hover-reveal'))
+          visPx.push(parseFloat(mk.style.top));
+      });
+      years.forEach(y => {
+        if (!markerEls[y]) return;
+        markerEls[y].forEach(mk => {
+          const px = yPos(y);
+          if (visPx.some(p => Math.abs(px-p) < 14)) return;
+          mk.classList.add('hover-reveal');
+          activeMarkers.push(mk);
+          visPx.push(px);
+        });
+      });
+    });
+    path.addEventListener('mouseleave', () => {
+      activeMarkers.forEach(mk => mk.classList.remove('hover-reveal'));
+      activeMarkers = [];
+      hoverGroup.forEach(p => { p.style.filter = ''; });
+      hoverGroup = [];
+    });
+  });
+
+  const entsByYear = {};
+  polys.forEach(path => {
+    [parseFloat(path.dataset.start), parseFloat(path.dataset.end)].forEach(y => {
+      if (!entsByYear[y]) entsByYear[y] = [];
+      entsByYear[y].push(path);
+    });
+  });
+
+  let activeHL = [];
+  yearAxis.querySelectorAll('.year-marker').forEach(mk => {
+    const y = parseFloat(mk.dataset.markerY);
+    mk.addEventListener('mouseenter', () => {
+      activeHL.forEach(el => el.classList.remove('date-highlight'));
+      activeHL = [];
+      if (entsByYear[y]) {
+        svg.classList.add('has-date-highlight');
+        entsByYear[y].forEach(el => { el.classList.add('date-highlight'); activeHL.push(el); });
+      }
+    });
+    mk.addEventListener('mouseleave', () => {
+      svg.classList.remove('has-date-highlight');
+      activeHL.forEach(el => el.classList.remove('date-highlight'));
+      activeHL = [];
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SCROLL + SCALE
+// ═══════════════════════════════════════════════════════════════
+
+const yearIndicator = document.getElementById('yearIndicator');
+const periodIndicator = document.getElementById('periodIndicator');
+const cursorYear = document.getElementById('cursorYear');
+const dateCursor = document.getElementById('dateCursor');
+const dateCrosshair = document.getElementById('dateCrosshair');
+
+dateCursor.addEventListener('mouseenter', () => dateCrosshair.classList.add('visible'));
+dateCursor.addEventListener('mouseleave', () => dateCrosshair.classList.remove('visible'));
+
+const HEADER_H = 42;
+
+function onScroll() {
+  const vpH = window.innerHeight, vpMid = vpH / 2;
+  const r = mapWrap.getBoundingClientRect();
+  const yr = BASE_YEAR + (vpMid - r.top) / scaleY;
+  const c = Math.max(BASE_YEAR, Math.min(END_YEAR, Math.round(yr)));
+  const s = fmtYr(c);
+  yearIndicator.textContent = s;
+  cursorYear.textContent = s;
+  dateCursor.style.opacity = (r.top < vpH && r.bottom > 0) ? '1' : '0';
+  let pName = '';
+  for (const p of PERIODS) { if (c >= p.s && c < p.e) { pName = p.name + '  ' + p.hanzi; break; } }
+  periodIndicator.textContent = pName;
+
+  // ── Position sticky labels to follow viewport center ──
+  const vpMidInMap = vpMid - r.top;
+  for (const sl of stickyLabels) {
+    const elH = sl.el.offsetHeight;
+    const blockTop = r.top + sl.topPx;
+    const blockBot = r.top + sl.botPx;
+    const blockH = sl.botPx - sl.topPx;
+
+    // Visible portion of the block
+    const visTop = Math.max(blockTop, HEADER_H);
+    const visBot = Math.min(blockBot, vpH);
+    if (visBot <= visTop) { sl.el.style.opacity = '0'; sl.el.dataset.hidden = '1'; continue; }
+    sl.el.dataset.hidden = '';
+
+    // Target: viewport center, clamped to block bounds
+    const minEdgeTop = Math.min(blockH * 0.1, 24);
+    const minEdgeBot = sl.aligned ? 48 : minEdgeTop;
+    const targetInBlock = vpMid - blockTop - elH / 2;
+    const clampedTop = Math.max(minEdgeTop, Math.min(blockH - elH - minEdgeBot, targetInBlock));
+    sl.el.style.top = (sl.topPx + clampedTop) + 'px';
+  }
+
+  // ── Group-aware label opacity: one active, others dimmed ──
+  const groupLabels = {};
+  for (const sl of stickyLabels) {
+    if (sl.group && !sl.noGroupFade) {
+      if (!groupLabels[sl.group]) groupLabels[sl.group] = [];
+      groupLabels[sl.group].push(sl);
+    } else if (sl.el.dataset.hidden !== '1') {
+      sl.el.style.opacity = '1';
+    }
+  }
+  for (const g in groupLabels) {
+    const labels = groupLabels[g];
+    const visible = labels.filter(sl => sl.el.dataset.hidden !== '1');
+    if (visible.length <= 1) {
+      visible.forEach(sl => { sl.el.style.opacity = '1'; });
+      continue;
+    }
+    // Active label = block whose vertical center is closest to viewport center
+    let activeIdx = 0;
+    const fadeZonePx = 60;
+    let minDist = Infinity;
+    visible.forEach((sl, i) => {
+      const mid = (sl.topPx + sl.botPx) / 2;
+      const dist = Math.abs(vpMidInMap - mid);
+      if (dist < minDist) { minDist = dist; activeIdx = i; }
+    });
+    // Get positions of active and secondary labels to check overlap
+    const activeLabel = activeIdx >= 0 ? visible[activeIdx] : null;
+    visible.forEach((sl, i) => {
+      if (i === activeIdx) {
+        const nearTop = Math.abs(vpMidInMap - sl.topPx) < fadeZonePx;
+        const nearBot = Math.abs(vpMidInMap - sl.botPx) < fadeZonePx;
+        sl.el.style.opacity = (nearTop || nearBot) ? '0.8' : '1';
+      } else {
+        // Hide secondary if it would overlap the primary label
+        let hidden = false;
+        if (activeLabel) {
+          const aTop = parseFloat(activeLabel.el.style.top) || 0;
+          const aBot = aTop + activeLabel.el.offsetHeight;
+          const sTop = parseFloat(sl.el.style.top) || 0;
+          const sBot = sTop + sl.el.offsetHeight;
+          const overlap = sTop < aBot + 20 && sBot > aTop - 20;
+          if (overlap) { sl.el.style.opacity = '0'; hidden = true; }
+        }
+        if (!hidden) {
+          const nearBot = Math.abs(vpMidInMap - sl.botPx) < fadeZonePx;
+          const nearTop = Math.abs(vpMidInMap - sl.topPx) < fadeZonePx;
+          sl.el.style.opacity = (nearBot || nearTop) ? '0.4' : '0';
+        }
+      }
+    });
+  }
+
+  // ── Korea sticky labels ──
+  if (koreaOpen && koreaStickyLabels.length) {
+    const kr = koreaMapWrap.getBoundingClientRect();
+    const vpMidInKorea = vpMid - kr.top;
+    for (const sl of koreaStickyLabels) {
+      const elH = sl.el.offsetHeight;
+      const blockTop = kr.top + sl.topPx;
+      const blockBot = kr.top + sl.botPx;
+      const blockH = sl.botPx - sl.topPx;
+      const visTop = Math.max(blockTop, HEADER_H);
+      const visBot = Math.min(blockBot, vpH);
+      if (visBot <= visTop) { sl.el.dataset.hidden = '1'; sl.el.style.opacity = '0'; continue; }
+      sl.el.dataset.hidden = '0';
+      if (sl.isSvgLabel) continue; // SVG labels don't reposition, just need visibility
+      const minEdge = Math.min(blockH * 0.1, 24);
+      const targetInBlock = vpMid - blockTop - elH / 2;
+      const clampedTop = Math.max(minEdge, Math.min(blockH - elH - minEdge, targetInBlock));
+      sl.el.style.top = (sl.topPx + clampedTop) + 'px';
+    }
+    // Group-aware fade: show only closest label per group
+    const kGroupLabels = {};
+    for (const sl of koreaStickyLabels) {
+      if (sl.group && !sl.noGroupFade) {
+        if (!kGroupLabels[sl.group]) kGroupLabels[sl.group] = [];
+        kGroupLabels[sl.group].push(sl);
+      } else if (sl.el.dataset.hidden !== '1') {
+        sl.el.style.opacity = '1';
+      }
+    }
+    for (const g in kGroupLabels) {
+      const labels = kGroupLabels[g];
+      const visible = labels.filter(sl => sl.el.dataset.hidden !== '1');
+      if (visible.length <= 1) { visible.forEach(sl => { sl.el.style.opacity = '1'; }); continue; }
+      let activeIdx = 0, minDist = Infinity;
+      visible.forEach((sl, i) => {
+        const mid = (sl.topPx + sl.botPx) / 2;
+        const dist = Math.abs(vpMidInKorea - mid);
+        if (dist < minDist) { minDist = dist; activeIdx = i; }
+      });
+      const activeLabel = visible[activeIdx];
+      visible.forEach((sl, i) => {
+        if (i === activeIdx) {
+          const fadeZonePx = 60;
+          const nearTop = Math.abs(vpMidInKorea - sl.topPx) < fadeZonePx;
+          const nearBot = Math.abs(vpMidInKorea - sl.botPx) < fadeZonePx;
+          sl.el.style.opacity = (nearTop || nearBot) ? '0.8' : '1';
+        } else {
+          const aTop = parseFloat(activeLabel.el.style.top) || 0;
+          const aBot = aTop + activeLabel.el.offsetHeight;
+          const sTop = parseFloat(sl.el.style.top) || 0;
+          const sBot = sTop + sl.el.offsetHeight;
+          const overlap = sTop < aBot + 20 && sBot > aTop - 20;
+          sl.el.style.opacity = overlap ? '0' : '0';
+        }
+      });
+    }
+  }
+
+  // ── Mongolia sticky labels ──
+  if (mongolOpen && mongolStickyLabels.length) {
+    const mr = mongolMapWrap.getBoundingClientRect();
+    const vpMidInMongol = vpMid - mr.top;
+    for (const sl of mongolStickyLabels) {
+      const elH = sl.el.offsetHeight;
+      const blockTop = mr.top + sl.topPx;
+      const blockBot = mr.top + sl.botPx;
+      const blockH = sl.botPx - sl.topPx;
+      const visTop = Math.max(blockTop, HEADER_H);
+      const visBot = Math.min(blockBot, vpH);
+      if (visBot <= visTop) { sl.el.dataset.hidden = '1'; sl.el.style.opacity = '0'; continue; }
+      sl.el.dataset.hidden = '0';
+      const minEdge = Math.min(blockH * 0.1, 24);
+      const targetInBlock = vpMid - blockTop - elH / 2;
+      const clampedTop = Math.max(minEdge, Math.min(blockH - elH - minEdge, targetInBlock));
+      sl.el.style.top = (sl.topPx + clampedTop) + 'px';
+    }
+    for (const sl of mongolStickyLabels) {
+      if (sl.el.dataset.hidden !== '1') sl.el.style.opacity = '1';
+    }
+  }
+
+  // ── Japan sticky labels ──
+  if (japanOpen && japanStickyLabels.length) {
+    const jr = japanMapWrap.getBoundingClientRect();
+    const vpMidInJapan = vpMid - jr.top;
+    for (const sl of japanStickyLabels) {
+      const elH = sl.el.offsetHeight;
+      const blockTop = jr.top + sl.topPx;
+      const blockBot = jr.top + sl.botPx;
+      const blockH = sl.botPx - sl.topPx;
+      const visTop = Math.max(blockTop, HEADER_H);
+      const visBot = Math.min(blockBot, vpH);
+      if (visBot <= visTop) { sl.el.dataset.hidden = '1'; sl.el.style.opacity = '0'; continue; }
+      sl.el.dataset.hidden = '0';
+      const minEdge = Math.min(blockH * 0.1, 24);
+      const targetInBlock = vpMid - blockTop - elH / 2;
+      const clampedTop = Math.max(minEdge, Math.min(blockH - elH - minEdge, targetInBlock));
+      sl.el.style.top = (sl.topPx + clampedTop) + 'px';
+    }
+    for (const sl of japanStickyLabels) {
+      if (sl.el.dataset.hidden !== '1') sl.el.style.opacity = '1';
+    }
+  }
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+
+const scaleSlider = document.getElementById('scaleSlider');
+const scaleValueEl = document.getElementById('scaleValue');
+scaleSlider.addEventListener('input', () => {
+  const r = mapWrap.getBoundingClientRect();
+  const vpMid = window.innerHeight / 2;
+  const curYear = BASE_YEAR + (vpMid - r.top) / scaleY;
+  scaleY = parseFloat(scaleSlider.value);
+  scaleValueEl.textContent = scaleY.toFixed(1) + ' px/yr';
+  render();
+  if (koreaOpen) renderKorea();
+  const mainTop = mapWrap.closest('main').offsetTop;
+  window.scrollTo(0, mainTop + yPos(curYear) - vpMid);
+  onScroll();
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  KOREA TIMELINE DATA
+// ═══════════════════════════════════════════════════════════════
+
+const KOREA_WIDTH = 500;
+const KOREA_SCALE = 5; // px per x-unit (Korea uses 0-100 range too)
+
+const koreaData = [
+  // ═══ DANGUN JOSEON ═══ (progressively shrinks as entities split off)
+  { name:"Dangun Joseon", glyph:"단군조선", color:"#b8a070", noLabel:true, poly:[
+    {start:-2070, end:-400, x1:0, x2:100},   // full width
+    {start:-400, end:-300, x1:84, x2:100},    // remnant after Gojoseon/Jinbeon/Imdun/Jin split
+    {start:-300, end:-194, x1:84, x2:92}      // tiny remnant after Buyeo splits off
+  ]},
+  { name:"Dangun Joseon", glyph:"단군조선", color:"#b8a070", labelRect:{start:-2070, end:-450, x1:0, x2:100}, poly:[
+    {start:-2070, end:-450, x1:0, x2:100}    // sticky label stops well before Jin/Gojoseon
+  ]},
+
+  // ═══ JIN ═══ (splits from Dangun at -400, predecessor to Samhan + Dongye)
+  { name:"Jin", glyph:"진국", color:"#d4c8a8", sub:"Predecessor to Samhan + Dongye", poly:[
+    {start:-400, end:-108, x1:0, x2:54}
+  ]},
+
+  // ═══ GOJOSEON ═══ (splits from Dangun at -400, absorbs Jinbeon+Imdun at -194)
+  // Phase 1: narrow
+  { name:"Gojoseon", glyph:"고조선", color:"#a08060", sub:"400 – 108 BC", group:"gojoseon", labelRect:{start:-400, end:-194, x1:54, x2:70}, poly:[
+    {start:-400, end:-194, x1:54, x2:70}
+  ]},
+  // Phase 2: wide (after absorbing Jinbeon + Imdun)
+  { name:"Gojoseon", glyph:"고조선", color:"#a08060", group:"gojoseon", labelRect:{start:-194, end:-108, x1:54, x2:84}, poly:[
+    {start:-194, end:-108, x1:54, x2:84}
+  ]},
+
+  // ═══ PRE-COMMANDERY STATES ═══ (split from Dangun at -400, absorbed by Gojoseon at -194)
+  { name:"Jinbeon", glyph:"진번", color:"#b0a070", sub:"Absorbed by Gojoseon ~194 BC", noSticky:true, poly:[
+    {start:-400, end:-194, x1:70, x2:78}
+  ]},
+  { name:"Imdun", glyph:"임둔", color:"#a89868", sub:"Absorbed by Gojoseon ~194 BC", noSticky:true, poly:[
+    {start:-400, end:-194, x1:78, x2:84}
+  ]},
+
+  // ═══ BUYEO ═══ (splits from Dangun remnant at -300)
+  { name:"Buyeo", glyph:"부여", color:"#c8b8a0", sub:"Absorbed by Goguryeo ~504 CE", poly:[
+    {start:-300, end:504, x1:92, x2:100}
+  ]},
+
+  // ═══ OKJEO ═══ (last Dangun remnant becomes Okjeo at -194)
+  { name:"Okjeo", glyph:"옥저", color:"#9e9870", sub:"Absorbed by Goguryeo ~411 CE", poly:[
+    {start:-194, end:411, x1:84, x2:92}
+  ]},
+
+  // ═══ BACKGROUND: GOGURYEO ═══ (rendered first so all foreground states draw on top)
+  // Small label: sticky only in wider gap between Lelang (x:63) and Xuantu (x:76), 38-302 AD
+  { name:"Goguryeo", glyph:"고구려", color:"#7b2d8e", sub:"37 BC – 668 CE", group:"goguryeo", labelRect:{start:38, end:302, x1:63, x2:76}, poly:[
+    {start:38, end:302, x1:63, x2:76}
+  ]},
+  // Main background + large label
+  { name:"Goguryeo", glyph:"고구려", color:"#7b2d8e", group:"goguryeo", noSticky:true, labelRect:{start:510, end:600, x1:40, x2:100}, poly:[
+    {start:-37, end:411, x1:0, x2:84},
+    {start:411, end:504, x1:0, x2:92},
+    {start:504, end:668, x1:0, x2:100}
+  ]},
+
+  // ═══ SAMHAN + DONGYE (all from Jin at -108) ═══
+  // 4 entities split from Jin's x:0-54 space
+  { name:"Jinhan", glyph:"진한", color:"#c8c0a0", sub:"Absorbed by Silla ~300", noSticky:true, labelRect:{start:-108, end:-57, x1:0, x2:13}, poly:[
+    {start:-108, end:-57, x1:0, x2:13},
+    {start:-57, end:300, x1:0, x2:3}
+  ]},
+  { name:"Byeonhan", glyph:"변한", color:"#c0b898", sub:"Becomes Gaya 42 CE", noSticky:true, poly:[
+    {start:-108, end:42, x1:13, x2:27}
+  ]},
+  { name:"Mahan", glyph:"마한", color:"#e0a898", sub:"Absorbed by Baekje ~500", noSticky:true, labelRect:{start:-108, end:-18, x1:27, x2:40}, poly:[
+    {start:-108, end:-18, x1:27, x2:40},
+    {start:-18, end:500, x1:27, x2:30}
+  ]},
+  { name:"Dongye", glyph:"동예", color:"#a8a078", sub:"Absorbed by Goguryeo ~300", poly:[
+    {start:-108, end:300, x1:40, x2:54}
+  ]},
+
+  // ═══ COMMANDERIES (from Gojoseon at -108) ═══
+  // Jinbeon → Lelang (left side), Imdun → Xuantu (right side, near Okjeo/Buyeo)
+  // Lelang full shape (original sticky label)
+  { name:"Lelang", glyph:"낙랑군", color:"#889870", sub:"Absorbed by Goguryeo 313", group:"lelang", poly:[
+    {start:-108, end:-82, x1:54, x2:60},      // initial (thin, with Jinbeon cmdry)
+    {start:-82, end:38, x1:54, x2:68},         // expands after absorbing Jinbeon cmdry
+    {start:38, end:313, x1:54, x2:63}          // narrows as Goguryeo takes territory
+  ]},
+  // Lelang thick portion: centered label, sticky stops before Jinbeon/Imdun
+  { name:"Lelang", glyph:"낙랑군", color:"#889870", group:"lelang", labelRect:{start:-60, end:38, x1:51, x2:71}, poly:[
+    {start:-60, end:38, x1:54, x2:68}
+  ]},
+  { name:"Jinbeon", glyph:"진번", color:"#b0a070", sub:"Absorbed into Lelang 82 BC", noSticky:true, noLabel:true, svgLabel:{start:-108, end:-82, x1:60, x2:68, hz:14}, poly:[
+    {start:-108, end:-82, x1:60, x2:68}
+  ]},
+  { name:"Imdun", glyph:"임둔", color:"#a89868", sub:"Absorbed into Xuantu 82 BC", noSticky:true, noLabel:true, svgLabel:{start:-108, end:-82, x1:68, x2:75, hz:14}, poly:[
+    {start:-108, end:-82, x1:68, x2:75}
+  ]},
+  // Xuantu full shape (sticky label for sliver)
+  { name:"Xuantu", glyph:"현도군", color:"#90a078", sub:"Absorbed by Goguryeo 302", group:"xuantu", poly:[
+    {start:-108, end:-82, x1:75, x2:84},
+    {start:-82, end:-37, x1:68, x2:84},
+    {start:-37, end:302, x1:76, x2:84}
+  ]},
+  // Xuantu thick portion: SVG label managed by scroll handler (see svgGroupLabels)
+  { name:"Xuantu", glyph:"현도군", color:"#90a078", group:"xuantu", noLabel:true, svgLabel:{start:-75, end:-45, x1:65, x2:87}, poly:[
+    {start:-82, end:-37, x1:68, x2:84}
+  ]},
+
+  // ═══ THREE KINGDOMS (split per phase for correct label centering) ═══
+  // Silla phase 1: alongside Jinhan strip
+  { name:"Silla", glyph:"신라", color:"#c83838", sub:"57 BC – 668 CE", group:"silla", poly:[
+    {start:-57, end:300, x1:3, x2:13}
+  ]},
+  // Silla phase 2: absorbs Jinhan
+  { name:"Silla", glyph:"신라", color:"#c83838", group:"silla", poly:[
+    {start:300, end:562, x1:0, x2:13}
+  ]},
+  // Silla phase 3: absorbs Gaya
+  { name:"Silla", glyph:"신라", color:"#c83838", group:"silla", noSticky:true, labelRect:{start:562, end:668, x1:0, x2:27}, poly:[
+    {start:562, end:668, x1:0, x2:27}
+  ]},
+  // Gaya: full width from start (Byeonhan becomes Gaya directly)
+  { name:"Gaya", glyph:"가야", color:"#e8a838", sub:"42 – 562, absorbed by Silla", poly:[
+    {start:42, end:562, x1:13, x2:27}
+  ]},
+  // Baekje phase 1: alongside Mahan strip (x:30-40)
+  { name:"Baekje", glyph:"백제", color:"#2ca02c", sub:"18 BC – 660 CE", group:"baekje", labelRect:{start:-18, end:500, x1:30, x2:40}, poly:[
+    {start:-18, end:500, x1:30, x2:40}
+  ]},
+  // Baekje phase 2: full width after Mahan absorbed (x:27-40)
+  { name:"Baekje", glyph:"백제", color:"#2ca02c", group:"baekje", labelRect:{start:500, end:660, x1:27, x2:40}, poly:[
+    {start:500, end:660, x1:27, x2:40}
+  ]},
+
+  // ═══ UNIFIED SILLA & BALHAE ═══
+  { name:"Unified Silla", glyph:"통일 신라", color:"#c83838", poly:[
+    {start:668, end:926, x1:0, x2:60},
+    {start:926, end:935, x1:0, x2:100}
+  ]},
+  { name:"Balhae", glyph:"발해", color:"#6a4c93", sub:"698 – 926 CE", poly:[
+    {start:668, end:926, x1:60, x2:100}
+  ]},
+
+  // ═══ GORYEO ═══
+  { name:"Goryeo", glyph:"고려왕조", color:"#2d8a4e", sub:"918 – 1392 CE", poly:[
+    {start:935, end:1392, x1:0, x2:100}
+  ]},
+
+  // ═══ JOSEON ═══
+  { name:"Joseon Dynasty", glyph:"대조선국", color:"#4A90D9", sub:"1392 – 1897 CE", poly:[
+    {start:1392, end:1897, x1:0, x2:100}
+  ]},
+
+  // ═══ KOREAN EMPIRE ═══
+  { name:"Korean Empire", glyph:"대한제국", color:"#6a0dad", sub:"1897 – 1910", poly:[
+    {start:1897, end:1910, x1:0, x2:100}
+  ]},
+
+  // ═══ JAPANESE COLONIAL RULE ═══
+  { name:"Japanese Colonial Rule", glyph:"일제강점기", color:"#a0a0a0", sub:"1910 – 1945", poly:[
+    {start:1910, end:1945, x1:0, x2:100}
+  ]},
+
+  // ═══ MILITARY GOVERNMENT ═══
+  { name:"Military Government", glyph:"군정기", color:"#c0c0c0", sub:"1945 – 1948", poly:[
+    {start:1945, end:1948, x1:0, x2:100}
+  ]},
+
+  // ═══ DIVIDED KOREA ═══
+  { name:"South Korea", glyph:"대한민국", color:"#4A90D9", poly:[
+    {start:1948, end:2026, x1:0, x2:50}
+  ]},
+  { name:"North Korea", glyph:"조선민주주의인민공화국", color:"#cc0000", poly:[
+    {start:1948, end:2026, x1:50, x2:100}
+  ]},
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  KOREA RENDERING
+// ═══════════════════════════════════════════════════════════════
+
+const koreaMapWrap = document.getElementById('koreaMapWrap');
+const koreaPanel = document.getElementById('koreaPanel');
+let koreaOpen = false;
+
+function computeWidths() {
+  const sidePanels = (mongolOpen?1:0) + (koreaOpen?1:0) + (japanOpen?1:0);
+  const toggleW = 24 * (1 + (mongolOpen?0:1) + (chinaOpen?0:1) + (koreaOpen?0:1) + (japanOpen?0:1));
+  const vw = window.innerWidth;
+  const baseChrome = 74 + 48 + toggleW; // year-axis + padding + toggles
+  if (chinaOpen && sidePanels === 0) {
+    SCALE_X = DEFAULT_SCALE_X;
+    WIDTH = 100 * SCALE_X;
+    return { mongolW: 0, koreaW: 0, japanW: 0 };
+  }
+  const usable = vw - baseChrome - (chinaOpen ? 28 + 8 : 0); // period-col if china open
+  if (chinaOpen) {
+    const chinaShare = sidePanels >= 3 ? 0.30 : sidePanels === 2 ? 0.40 : 0.57;
+    const chinaW = Math.max(300, Math.min(750, Math.round(usable * chinaShare)));
+    const remaining = usable - chinaW;
+    let mongolW = 0, koreaW = 0, japanW = 0;
+    if (sidePanels > 0) {
+      if (mongolOpen) mongolW = Math.round(remaining / sidePanels);
+      if (koreaOpen) koreaW = Math.round(remaining / sidePanels);
+      if (japanOpen) japanW = remaining - mongolW - koreaW;
+    }
+    SCALE_X = chinaW / 100;
+    WIDTH = chinaW;
+    return { mongolW, koreaW, japanW };
+  } else {
+    // China hidden — distribute all space to side panels
+    let mongolW = 0, koreaW = 0, japanW = 0;
+    if (sidePanels > 0) {
+      if (mongolOpen) mongolW = Math.round(usable / sidePanels);
+      if (koreaOpen) koreaW = Math.round(usable / sidePanels);
+      if (japanOpen) japanW = usable - mongolW - koreaW;
+    }
+    SCALE_X = DEFAULT_SCALE_X;
+    WIDTH = 100 * SCALE_X;
+    return { mongolW, koreaW, japanW };
+  }
+}
+
+function rerenderAll() {
+  computeWidths();
+  renderYearAxis();
+  if (chinaOpen) render();
+  if (mongolOpen) renderMongol();
+  renderMongolBridge();
+  if (koreaOpen) renderKorea();
+  if (japanOpen) renderJapan();
+  renderChinaKoreaBridge();
+  renderJapanBridge();
+  onScroll();
+}
+
+function toggleChina() {
+  chinaOpen = !chinaOpen;
+  chinaPanel.classList.toggle('collapsed', !chinaOpen);
+  document.getElementById('chinaToggleBtn').textContent = chinaOpen ? '◂' : '🇨🇳';
+  savePanelState(); rerenderAll();
+}
+
+function toggleKorea() {
+  koreaOpen = !koreaOpen;
+  koreaPanel.classList.toggle('collapsed', !koreaOpen);
+  document.getElementById('koreaToggleBtn').textContent = koreaOpen ? '◂' : '🇰🇷';
+  savePanelState(); rerenderAll();
+}
+
+let koreaTooltipEl = null;
+function renderKorea() {
+  koreaMapWrap.innerHTML = '';
+  koreaStickyLabels = [];
+  const koreaTooltipData = [];
+  const height = (END_YEAR - BASE_YEAR) * scaleY;
+  const { koreaW: kW } = computeWidths();
+  koreaPanel.style.width = kW + 'px';
+  const svg = svgEl('svg', { width: kW, height: height });
+  const kScale = kW / 100;
+
+  // Grid lines (matching China)
+  const fc = Math.ceil(BASE_YEAR / 100) * 100;
+  for (let y = fc; y <= END_YEAR; y += 100)
+    svg.appendChild(svgEl('line', { x1:0, y1:yPos(y), x2:kW, y2:yPos(y), class:'grid-line century' }));
+
+  // Korea polygons
+  koreaData.forEach((k, idx) => {
+    const phases = k.poly;
+    // Generate path using Korea scale
+    let d = "";
+    for (let i = 0; i < phases.length; i++) {
+      const x = phases[i].x1 * kScale;
+      const yT = yPos(phases[i].start);
+      const yB = yPos(phases[i].end);
+      d += (i === 0 ? `M ${x} ${yT} ` : `L ${x} ${yT} `);
+      d += `L ${x} ${yB} `;
+    }
+    for (let i = phases.length - 1; i >= 0; i--) {
+      const x = phases[i].x2 * kScale;
+      const yT = yPos(phases[i].start);
+      const yB = yPos(phases[i].end);
+      d += `L ${x} ${yB} L ${x} ${yT} `;
+    }
+    d += "Z";
+
+    const path = svgEl('path', { d, fill: k.color, stroke: k.color, class:'kingdom-poly', 'data-idx': 'k'+idx });
+    if (k.name) path.dataset.kname = k.name;
+    const tt = svgEl('title', {}); tt.textContent = `${k.name} (${k.glyph})`; path.appendChild(tt);
+    svg.appendChild(path);
+
+    // Labels
+    if (!k.hideLabel) {
+      const lp = k.labelRect || (k.labelPhase != null ? k.poly[k.labelPhase] : getLargestPhase(k.poly));
+      const cx = ((lp.x1 + lp.x2) / 2) * kScale;
+      const cy = yPos((lp.start + lp.end) / 2);
+      const pxW = (lp.x2 - lp.x1) * kScale;
+      const pxH = (lp.end - lp.start) * scaleY;
+      const tc = getContrast(k.color);
+      const lm = labelMetrics(pxW, pxH, k.glyph, k.name);
+      const { hz, canFull, canHzGlyph, canVGlyph, vHz, glyphSz, fullLabelH } = lm;
+      const s = k.poly[0].start, e = k.poly[k.poly.length-1].end;
+      const isTall = pxH > 300;
+
+      if (k.svgLabel) {
+        const sl = k.svgLabel;
+        const slCx = (sl.x1 + sl.x2) / 2 * kScale;
+        const slCy = (yPos(sl.start) + yPos(sl.end)) / 2;
+        const slW = (sl.x2 - sl.x1) * kScale;
+        const slH = (sl.end - sl.start) * scaleY;
+        const slm = labelMetrics(slW, slH, k.glyph, k.name);
+        const slHz = sl.hz || slm.hz;
+        const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+        if (slm.canFull) {
+          g.appendChild(svgEl('text', { x:slCx, y:slCy-8, fill:tc, class:'label-glyph', 'font-size':slHz })).textContent = k.glyph;
+          g.appendChild(svgEl('text', { x:slCx, y:slCy+slHz/2+4, fill:tc, class:'label-en' })).textContent = k.name;
+          g.appendChild(svgEl('text', { x:slCx, y:slCy+slHz/2+16, fill:tc, class:'label-dates' })).textContent = fmtYr(sl.start)+' – '+fmtYr(sl.end);
+        } else if (slm.canHzGlyph) {
+          g.appendChild(svgEl('text', { x:slCx, y:slCy, fill:tc, class:'label-glyph', 'font-size':slm.glyphSz })).textContent = k.glyph;
+        } else if (slm.canVGlyph) {
+          const chars = [...k.glyph];
+          const totalH = chars.length * slm.vHz * 1.15;
+          const startY = slCy - totalH / 2 + slm.vHz / 2;
+          chars.forEach((ch, ci) => {
+            g.appendChild(svgEl('text', { x:slCx, y:startY + ci * slm.vHz * 1.15, fill:tc, class:'label-glyph', 'font-size':slm.vHz })).textContent = ch;
+          });
+        }
+        svg.appendChild(g);
+        const wrapper = { style: g.style, dataset: { hidden: '0' }, offsetHeight: slH };
+        koreaStickyLabels.push({ el: wrapper, topPx: yPos(sl.start), botPx: yPos(sl.end), cx: slCx, group: k.group || null, aligned: false, noGroupFade: false, isSvgLabel: true });
+      } else if (k.noLabel) {
+        // shape-only, no label
+      } else if (isTall && !k.noSticky && pxW > 25) {
+        const allStarts = k.poly.map(p => p.start), allEnds = k.poly.map(p => p.end);
+        const topPx = yPos(Math.min(...allStarts));
+        const botPx = yPos(Math.max(...allEnds));
+        const el = document.createElement('div');
+        el.className = 'sticky-label';
+        el.style.color = tc;
+        el.style.left = (lp.x1 * kScale) + 'px';
+        el.style.width = pxW + 'px';
+        let inner = `<div class="sl-glyph" style="font-size:${hz}px">${k.glyph}</div>`;
+        inner += `<div class="sl-en">${k.name}</div>`;
+        if (k.sub) inner += `<div class="sl-sub">${k.sub}</div>`;
+        inner += `<div class="sl-dates">${fmtYr(s)} – ${fmtYr(e)}</div>`;
+        el.innerHTML = inner;
+        koreaMapWrap.appendChild(el);
+        koreaStickyLabels.push({ el, topPx, botPx, cx, group: k.group || null, aligned: false, noGroupFade: false });
+      } else if (canFull) {
+        svg.appendChild(svgEl('text', { x:cx, y:cy-8, fill:tc, class:'label-glyph', 'font-size':hz })).textContent = k.glyph;
+        svg.appendChild(svgEl('text', { x:cx, y:cy+hz/2+4, fill:tc, class:'label-en' })).textContent = k.name;
+        if (k.sub && pxH > fullLabelH + 14) svg.appendChild(svgEl('text', { x:cx, y:cy+hz/2+16, fill:tc, class:'label-sub' })).textContent = k.sub;
+        svg.appendChild(svgEl('text', { x:cx, y:cy+hz/2+(k.sub && pxH>fullLabelH+14?26:16), fill:tc, class:'label-dates' })).textContent = fmtYr(s)+' – '+fmtYr(e);
+      } else if (canHzGlyph) {
+        svg.appendChild(svgEl('text', { x:cx, y:cy, fill:tc, class:'label-glyph', 'font-size':glyphSz })).textContent = k.glyph;
+      } else if (canVGlyph) {
+        const chars = [...k.glyph];
+        const totalH = chars.length * vHz * 1.15;
+        const startY = cy - totalH / 2 + vHz / 2;
+        chars.forEach((ch, ci) => {
+          svg.appendChild(svgEl('text', { x:cx, y:startY + ci * vHz * 1.15, fill:tc, class:'label-glyph', 'font-size':vHz })).textContent = ch;
+        });
+      }
+
+      // Tooltip for noLabel entities (too small for text)
+      if (k.noLabel && !k.svgLabel && k.name) {
+        const p0 = phases[0];
+        const tx1 = p0.x1 * kScale, tx2 = p0.x2 * kScale;
+        const ty1 = yPos(p0.start), ty2 = yPos(p0.end);
+        const tcx = (tx1 + tx2) / 2, tcy = (ty1 + ty2) / 2;
+        const ttc = getContrast(k.color);
+        const hitRect = svgEl('rect', { x:tx1, y:ty1, width:tx2-tx1, height:ty2-ty1, fill:'transparent', class:'kingdom-poly' });
+        hitRect.dataset.koreaTooltipIdx = koreaTooltipData.length;
+        koreaTooltipData.push({ name:k.name, glyph:k.glyph, sub:k.sub, color:k.color, tc:ttc, s:k.poly[0].start, e:k.poly[k.poly.length-1].end, cx:tcx, cy:tcy });
+        svg.appendChild(hitRect);
+      }
+      // Strip: register tooltip for thin trailing strip
+      if (k.labelRect && k.noSticky && phases.length > 1) {
+        const strip = phases[phases.length - 1];
+        const sx1 = strip.x1 * kScale, sx2 = strip.x2 * kScale;
+        const sy1 = yPos(strip.start), sy2 = yPos(strip.end);
+        const scx = (sx1 + sx2) / 2, scy = (sy1 + sy2) / 2;
+        const stc = getContrast(k.color);
+        const hitRect = svgEl('rect', { x:sx1, y:sy1, width:sx2-sx1, height:sy2-sy1, fill:'transparent', class:'kingdom-poly' });
+        hitRect.dataset.koreaTooltipIdx = koreaTooltipData.length;
+        koreaTooltipData.push({ name:k.name, glyph:k.glyph, sub:k.sub, color:k.color, tc:stc, s:k.poly[0].start, e:k.poly[k.poly.length-1].end, cx:scx, cy:scy });
+        svg.appendChild(hitRect);
+      }
+    }
+  });
+
+  koreaMapWrap.appendChild(svg);
+
+  // ── Grouped hover: highlight all polys with same name ──
+  svg.querySelectorAll('[data-kname]').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      svg.querySelectorAll(`[data-kname="${el.dataset.kname}"]`).forEach(s => s.classList.add('k-hover'));
+    });
+    el.addEventListener('mouseleave', () => {
+      svg.querySelectorAll('.k-hover').forEach(s => s.classList.remove('k-hover'));
+    });
+  });
+
+  // ── Korea hover tooltips ──
+  if (koreaTooltipEl) koreaTooltipEl.remove();
+  if (koreaTooltipData.length > 0) {
+    koreaTooltipEl = document.createElement('div');
+    koreaTooltipEl.className = 'kingdom-tooltip';
+    koreaMapWrap.appendChild(koreaTooltipEl);
+    svg.querySelectorAll('[data-korea-tooltip-idx]').forEach(el => {
+      const td = koreaTooltipData[parseInt(el.dataset.koreaTooltipIdx)];
+      el.addEventListener('mouseenter', () => {
+        koreaTooltipEl.style.background = td.color;
+        koreaTooltipEl.style.color = td.tc;
+        let html = `<div class="sl-glyph">${td.glyph}</div>`;
+        html += `<div class="sl-en">${td.name}</div>`;
+        if (td.sub) html += `<div class="sl-en" style="opacity:0.6">${td.sub}</div>`;
+        html += `<div class="sl-dates">${fmtYr(td.s)} – ${fmtYr(td.e)}</div>`;
+        koreaTooltipEl.innerHTML = html;
+        const wr = koreaMapWrap.getBoundingClientRect();
+        koreaTooltipEl.style.left = (wr.left + td.cx) + 'px';
+        koreaTooltipEl.style.top = (wr.top + td.cy) + 'px';
+        koreaTooltipEl.style.transform = 'translate(-50%, -50%)';
+        koreaTooltipEl.classList.add('visible');
+      });
+      el.addEventListener('mouseleave', () => {
+        koreaTooltipEl.classList.remove('visible');
+      });
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MONGOLIA DATA & RENDERING
+// ═══════════════════════════════════════════════════════════════
+
+const mongolData = [
+  // ═══ EARLY STEPPE CULTURES ═══
+  { name:"Chemurchek", glyph:"切木爾切克", color:"#9E8B6E", sub:"Early Bronze Age steppe culture", poly:[
+    {start:-2070, end:-1500, x1:0, x2:100}
+  ]},
+  { name:"Deer Stone–Khirigsuur", glyph:"鹿石文化", color:"#A0956E", sub:"Late Bronze Age monumental culture", poly:[
+    {start:-1500, end:-1000, x1:0, x2:100}
+  ]},
+
+  // ═══ SLAB GRAVE CULTURE ═══
+  { name:"Slab Grave", glyph:"石板墓", color:"#8A7D60", sub:"Eastern Mongolian Iron Age culture", poly:[
+    {start:-1000, end:-700, x1:0, x2:100}
+  ]},
+
+  // ═══ DONGHU & CONTEMPORARIES (700–209 BC) ═══
+  { name:"Donghu", glyph:"東胡", color:"#7A6B3D", sub:"Defeated by Xiongnu 209 BC", poly:[
+    {start:-700, end:-209, x1:0, x2:60}
+  ]},
+  { name:"Linhu", glyph:"林胡", color:"#6E7A50", sub:"Forest nomads, absorbed by Zhao", poly:[
+    {start:-700, end:-300, x1:60, x2:80}
+  ]},
+  { name:"Loufan", glyph:"樓煩", color:"#7A8860", sub:"Absorbed by Zhao ~300 BC", poly:[
+    {start:-700, end:-300, x1:80, x2:100}
+  ]},
+  { name:"Proto-Xiongnu", glyph:"匈奴", color:"#8B7830", sub:"Rising Xiongnu tribes", poly:[
+    {start:-300, end:-209, x1:60, x2:100}
+  ]},
+
+  // ═══ XIONGNU ═══
+  { name:"Xiongnu", glyph:"匈奴", color:"#8B6914", sub:"209 BC – 93 CE", poly:[
+    {start:-209, end:93, x1:0, x2:100}
+  ]},
+
+  // ═══ XIANBEI ═══
+  { name:"Xianbei", glyph:"鮮卑", color:"#6B8E23", sub:"93 – 234 CE", poly:[
+    {start:93, end:234, x1:0, x2:100}
+  ]},
+
+  // ═══ XIANBEI SUCCESSOR STATES (234–330) ═══
+  { name:"Tuoba", glyph:"拓跋", color:"#5a7a20", sub:"Xianbei clan, founded Northern Wei", poly:[
+    {start:234, end:330, x1:0, x2:33}
+  ]},
+  { name:"Murong", glyph:"慕容", color:"#7a9040", sub:"Xianbei clan, founded Former Yan", poly:[
+    {start:234, end:330, x1:33, x2:66}
+  ]},
+  { name:"Yuwen", glyph:"宇文", color:"#4a6a18", sub:"Xianbei clan, founded Northern Zhou", poly:[
+    {start:234, end:330, x1:66, x2:100}
+  ]},
+
+  // ═══ ROURAN ═══
+  { name:"Rouran", glyph:"柔然", color:"#8B7355", sub:"330 – 555 CE", poly:[
+    {start:330, end:555, x1:0, x2:100}
+  ]},
+
+  // ═══ GÖKTÜRK KHAGANATE ═══
+  { name:"Göktürk", glyph:"突厥", color:"#4682B4", sub:"552 – 744 CE", poly:[
+    {start:552, end:744, x1:0, x2:100}
+  ]},
+
+  // ═══ UYGHUR KHAGANATE ═══
+  { name:"Uyghur Khaganate", glyph:"回鶻", color:"#DAA520", sub:"744 – 840 CE", poly:[
+    {start:744, end:840, x1:0, x2:100}
+  ]},
+
+  // ═══ POST-UYGHUR FRAGMENTATION (840–916) ═══
+  { name:"Yenisei Kirghiz", glyph:"黠戛斯", color:"#9B7653", sub:"Destroyed Uyghur Khaganate", poly:[
+    {start:840, end:880, x1:0, x2:100}
+  ]},
+  { name:"Zubu", glyph:"阻卜", color:"#8B7D6B", sub:"Tatar-related tribes", poly:[
+    {start:880, end:916, x1:0, x2:50}
+  ]},
+  { name:"Khitan", glyph:"契丹", color:"#B8860B", sub:"Rising Khitan before Liao", poly:[
+    {start:880, end:916, x1:50, x2:100}
+  ]},
+
+  // ═══ KHITAN / LIAO ═══
+  { name:"Khitan Liao", glyph:"契丹遼", color:"#CD853F", sub:"916 – 1125 CE", poly:[
+    {start:916, end:1125, x1:0, x2:100}
+  ]},
+
+  // ═══ KHAMAG MONGOL ═══
+  { name:"Khamag Mongol", glyph:"全蒙古", color:"#8B4513", sub:"1120 – 1206 CE", poly:[
+    {start:1120, end:1206, x1:0, x2:100}
+  ]},
+
+  // ═══ MONGOL EMPIRE ═══
+  { name:"Mongol Empire", glyph:"蒙古帝國", color:"#B22222", sub:"1206 – 1368 CE", poly:[
+    {start:1206, end:1368, x1:0, x2:100}
+  ]},
+
+  // ═══ NORTHERN YUAN ═══
+  { name:"Northern Yuan", glyph:"北元", color:"#A0522D", sub:"1368 – 1635 CE", poly:[
+    {start:1368, end:1635, x1:0, x2:100}
+  ]},
+
+  // ═══ QING RULE ═══
+  { name:"Qing Rule", glyph:"清統治", color:"#708090", sub:"1635 – 1911 CE", poly:[
+    {start:1635, end:1911, x1:0, x2:100}
+  ]},
+
+  // ═══ BOGD KHANATE ═══
+  { name:"Bogd Khanate", glyph:"博克多汗國", color:"#6a4c93", sub:"1911 – 1924 CE", poly:[
+    {start:1911, end:1924, x1:0, x2:100}
+  ]},
+
+  // ═══ MONGOLIAN PEOPLE'S REPUBLIC ═══
+  { name:"MPR", glyph:"蒙古人民共和國", color:"#cc0000", sub:"1924 – 1992 CE", poly:[
+    {start:1924, end:1992, x1:0, x2:100}
+  ]},
+
+  // ═══ MONGOLIA ═══
+  { name:"Mongolia", glyph:"蒙古國", color:"#4A90D9", sub:"1992 – present", poly:[
+    {start:1992, end:2026, x1:0, x2:100}
+  ]},
+];
+
+const mongolMapWrap = document.getElementById('mongolMapWrap');
+const mongolPanel = document.getElementById('mongolPanel');
+let mongolOpen = false;
+let mongolStickyLabels = [];
+
+function toggleMongol() {
+  mongolOpen = !mongolOpen;
+  mongolPanel.classList.toggle('collapsed', !mongolOpen);
+  document.getElementById('mongolToggleBtn').textContent = mongolOpen ? '▸' : '🇲🇳';
+  savePanelState(); rerenderAll();
+}
+
+function renderMongol() {
+  mongolMapWrap.innerHTML = '';
+  mongolStickyLabels = [];
+  const height = (END_YEAR - BASE_YEAR) * scaleY;
+  const { mongolW: mW } = computeWidths();
+  mongolPanel.style.width = mW + 'px';
+  const svg = svgEl('svg', { width: mW, height: height });
+  const mScale = mW / 100;
+
+  const fc = Math.ceil(BASE_YEAR / 100) * 100;
+  for (let y = fc; y <= END_YEAR; y += 100)
+    svg.appendChild(svgEl('line', { x1:0, y1:yPos(y), x2:mW, y2:yPos(y), class:'grid-line century' }));
+
+  mongolData.forEach((k, idx) => {
+    const phases = k.poly;
+    let d = "";
+    for (let i = 0; i < phases.length; i++) {
+      const x = phases[i].x1 * mScale;
+      const yT = yPos(phases[i].start);
+      const yB = yPos(phases[i].end);
+      d += (i === 0 ? `M ${x} ${yT} ` : `L ${x} ${yT} `);
+      d += `L ${x} ${yB} `;
+    }
+    for (let i = phases.length - 1; i >= 0; i--) {
+      const x = phases[i].x2 * mScale;
+      const yT = yPos(phases[i].start);
+      const yB = yPos(phases[i].end);
+      d += `L ${x} ${yB} L ${x} ${yT} `;
+    }
+    d += "Z";
+
+    const path = svgEl('path', { d, fill: k.color, stroke: k.color, class:'kingdom-poly', 'data-idx': 'm'+idx });
+    if (k.name) path.dataset.kname = k.name;
+    svg.appendChild(path);
+
+    const lp = k.labelRect || phases[0];
+    const pxW = (lp.x2 - lp.x1) * mScale;
+    const pxH = (lp.end - lp.start) * scaleY;
+    const cx = (lp.x1 + lp.x2) / 2 * mScale;
+    const cy = (yPos(lp.start) + yPos(lp.end)) / 2;
+    const tc = getContrast(k.color);
+    const lm = labelMetrics(pxW, pxH, k.glyph, k.name);
+    const { hz, canFull, canHzGlyph, canVGlyph, vHz, glyphSz, fullLabelH } = lm;
+    const s = k.poly[0].start, e = k.poly[k.poly.length-1].end;
+    const isTall = pxH > 300;
+
+    if (isTall && !k.noSticky && pxW > 25) {
+      const allStarts = k.poly.map(p => p.start), allEnds = k.poly.map(p => p.end);
+      const topPx = yPos(Math.min(...allStarts));
+      const botPx = yPos(Math.max(...allEnds));
+      const el = document.createElement('div');
+      el.className = 'sticky-label';
+      el.style.color = tc;
+      el.style.left = (lp.x1 * mScale) + 'px';
+      el.style.width = pxW + 'px';
+      let inner = `<div class="sl-glyph" style="font-size:${hz}px">${k.glyph}</div>`;
+      inner += `<div class="sl-en">${k.name}</div>`;
+      if (k.sub) inner += `<div class="sl-sub">${k.sub}</div>`;
+      inner += `<div class="sl-dates">${fmtYr(s)} – ${fmtYr(e)}</div>`;
+      el.innerHTML = inner;
+      mongolMapWrap.appendChild(el);
+      mongolStickyLabels.push({ el, topPx, botPx, cx, group: k.group || null, aligned: false, noGroupFade: false });
+    } else if (canFull) {
+      svg.appendChild(svgEl('text', { x:cx, y:cy-8, fill:tc, class:'label-glyph', 'font-size':hz })).textContent = k.glyph;
+      svg.appendChild(svgEl('text', { x:cx, y:cy+hz/2+4, fill:tc, class:'label-en' })).textContent = k.name;
+      if (k.sub && pxH > fullLabelH + 14) svg.appendChild(svgEl('text', { x:cx, y:cy+hz/2+16, fill:tc, class:'label-sub' })).textContent = k.sub;
+      svg.appendChild(svgEl('text', { x:cx, y:cy+hz/2+(k.sub && pxH>fullLabelH+14?26:16), fill:tc, class:'label-dates' })).textContent = fmtYr(s)+' – '+fmtYr(e);
+    } else if (canHzGlyph) {
+      svg.appendChild(svgEl('text', { x:cx, y:cy, fill:tc, class:'label-glyph', 'font-size':glyphSz })).textContent = k.glyph;
+    } else if (canVGlyph) {
+      const chars = [...k.glyph];
+      const totalH = chars.length * vHz * 1.15;
+      const startY = cy - totalH / 2 + vHz / 2;
+      chars.forEach((ch, ci) => {
+        svg.appendChild(svgEl('text', { x:cx, y:startY + ci * vHz * 1.15, fill:tc, class:'label-glyph', 'font-size':vHz })).textContent = ch;
+      });
+    }
+  });
+
+  mongolMapWrap.appendChild(svg);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MONGOLIA ↔ CHINA COLOR BRIDGES
+// ═══════════════════════════════════════════════════════════════
+
+const mongolBridgeEl = document.getElementById('mongolBridge');
+const mongolChinaBridges = [
+  { start:1206, end:1368, color:'#B22222' },   // Mongol Empire → Yuan
+  { start:1368, end:1388, color:'#A0522D' },   // Northern Yuan
+  { start:1636, end:1912, color:'#85C1E9' },   // Qing rule
+];
+
+function renderMongolBridge() {
+  if (!mongolOpen || !chinaOpen) { mongolBridgeEl.classList.add('hidden'); return; }
+  mongolBridgeEl.classList.remove('hidden');
+  const height = (END_YEAR - BASE_YEAR) * scaleY;
+  // Bridge spans from right edge of mongol panel across toggle + year-axis to left edge of mapWrap
+  const bridgeW = 24 + 24; // mongol-toggle + china-toggle
+  mongolBridgeEl.style.width = bridgeW + 'px';
+  mongolBridgeEl.style.height = height + 'px';
+  mongolBridgeEl.innerHTML = '';
+  const bsvg = svgEl('svg', { width: bridgeW, height: height });
+  mongolChinaBridges.forEach(b => {
+    const y1 = yPos(b.start), y2 = yPos(b.end);
+    bsvg.appendChild(svgEl('rect', { x:0, y:y1, width:bridgeW, height:y2-y1, fill:b.color }));
+  });
+  mongolBridgeEl.appendChild(bsvg);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CHINA ↔ KOREA & KOREA ↔ JAPAN COLOR BRIDGES
+// ═══════════════════════════════════════════════════════════════
+
+const chinaKoreaBridgeEl = document.getElementById('chinaKoreaBridge');
+const japanBridgeEl = document.getElementById('japanBridge');
+
+// Bridges that cross the China↔Korea gap
+const chinaKoreaBridges = [
+  { start:1270, end:1356, color:'#B22222', needs:'mongol' },  // Mongol control of Goryeo
+  { start:1910, end:1945, color:'#a0a0a0', needs:'japan' },   // Japanese empire (Korea + Manchukuo)
+];
+
+// Bridges that cross the Korea↔Japan gap
+const koreaJapanBridges = [
+  { start:1910, end:1945, color:'#a0a0a0' },   // Japanese Colonial Rule of Korea
+];
+
+function renderChinaKoreaBridge() {
+  if (!koreaOpen || !chinaOpen) { chinaKoreaBridgeEl.classList.add('hidden'); return; }
+  // Check if any bridge entries are relevant given open panels
+  const hasAny = chinaKoreaBridges.some(b => {
+    if (b.needs === 'mongol' && !mongolOpen) return false;
+    if (b.needs === 'japan' && !japanOpen) return false;
+    return true;
+  });
+  if (!hasAny) { chinaKoreaBridgeEl.classList.add('hidden'); return; }
+  chinaKoreaBridgeEl.classList.remove('hidden');
+  const height = (END_YEAR - BASE_YEAR) * scaleY;
+  const bridgeW = 36 + 24; // period-col (28+8) + korea-toggle width
+  chinaKoreaBridgeEl.style.width = bridgeW + 'px';
+  chinaKoreaBridgeEl.style.height = height + 'px';
+  chinaKoreaBridgeEl.innerHTML = '';
+  const bsvg = svgEl('svg', { width: bridgeW, height: height });
+  chinaKoreaBridges.forEach(b => {
+    if (b.needs === 'mongol' && !mongolOpen) return;
+    if (b.needs === 'japan' && !japanOpen) return;
+    const y1 = yPos(b.start), y2 = yPos(b.end);
+    bsvg.appendChild(svgEl('rect', { x:0, y:y1, width:bridgeW, height:y2-y1, fill:b.color }));
+  });
+  chinaKoreaBridgeEl.appendChild(bsvg);
+}
+
+function renderJapanBridge() {
+  if (!japanOpen || !koreaOpen) { japanBridgeEl.classList.add('hidden'); return; }
+  japanBridgeEl.classList.remove('hidden');
+  const height = (END_YEAR - BASE_YEAR) * scaleY;
+  const bridgeW = 24; // japan-toggle width
+  japanBridgeEl.style.width = bridgeW + 'px';
+  japanBridgeEl.style.height = height + 'px';
+  japanBridgeEl.innerHTML = '';
+  const bsvg = svgEl('svg', { width: bridgeW, height: height });
+  koreaJapanBridges.forEach(b => {
+    const y1 = yPos(b.start), y2 = yPos(b.end);
+    bsvg.appendChild(svgEl('rect', { x:0, y:y1, width:bridgeW, height:y2-y1, fill:b.color }));
+  });
+  japanBridgeEl.appendChild(bsvg);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  JAPAN DATA & RENDERING
+// ═══════════════════════════════════════════════════════════════
+
+const japanData = [
+  // ═══ JŌMON PERIOD ═══
+  { name:"Jōmon", glyph:"縄文", color:"#b8a070", sub:"~14000 – 300 BC", poly:[
+    {start:-2070, end:-300, x1:0, x2:100}
+  ]},
+
+  // ═══ YAYOI PERIOD ═══
+  { name:"Yayoi", glyph:"弥生", color:"#c8b898", sub:"300 BC – 300 CE", poly:[
+    {start:-300, end:300, x1:0, x2:100}
+  ]},
+
+  // ═══ KOFUN PERIOD ═══
+  { name:"Kofun", glyph:"古墳", color:"#a08860", sub:"300 – 538 CE", poly:[
+    {start:300, end:538, x1:0, x2:100}
+  ]},
+
+  // ═══ ASUKA PERIOD ═══
+  { name:"Asuka", glyph:"飛鳥", color:"#c87038", sub:"538 – 710 CE", poly:[
+    {start:538, end:710, x1:0, x2:100}
+  ]},
+
+  // ═══ NARA PERIOD ═══
+  { name:"Nara", glyph:"奈良", color:"#c83838", sub:"710 – 794 CE", poly:[
+    {start:710, end:794, x1:0, x2:100}
+  ]},
+
+  // ═══ HEIAN PERIOD ═══
+  { name:"Heian", glyph:"平安", color:"#8e4585", sub:"794 – 1185 CE", poly:[
+    {start:794, end:1185, x1:0, x2:100}
+  ]},
+
+  // ═══ KAMAKURA SHOGUNATE ═══
+  { name:"Kamakura", glyph:"鎌倉", color:"#2d6a4f", sub:"1185 – 1333 CE", poly:[
+    {start:1185, end:1333, x1:0, x2:100}
+  ]},
+
+  // ═══ MUROMACHI / ASHIKAGA ═══
+  { name:"Muromachi", glyph:"室町", color:"#4A90D9", sub:"1336 – 1573 CE", poly:[
+    {start:1336, end:1573, x1:0, x2:100}
+  ]},
+
+  // ═══ AZUCHI-MOMOYAMA ═══
+  { name:"Azuchi-Momoyama", glyph:"安土桃山", color:"#e8a838", sub:"1573 – 1603 CE", poly:[
+    {start:1573, end:1603, x1:0, x2:100}
+  ]},
+
+  // ═══ EDO / TOKUGAWA ═══
+  { name:"Edo", glyph:"江戸", color:"#5c4033", sub:"1603 – 1868 CE", poly:[
+    {start:1603, end:1868, x1:0, x2:100}
+  ]},
+
+  // ═══ MEIJI ═══
+  { name:"Meiji", glyph:"明治", color:"#c83838", sub:"1868 – 1912 CE", poly:[
+    {start:1868, end:1912, x1:0, x2:100}
+  ]},
+
+  // ═══ TAISHŌ ═══
+  { name:"Taishō", glyph:"大正", color:"#6a4c93", sub:"1912 – 1926 CE", poly:[
+    {start:1912, end:1926, x1:0, x2:100}
+  ]},
+
+  // ═══ SHŌWA ═══
+  { name:"Shōwa", glyph:"昭和", color:"#a0a0a0", sub:"1926 – 1989 CE", poly:[
+    {start:1926, end:1989, x1:0, x2:100}
+  ]},
+
+  // ═══ HEISEI & REIWA ═══
+  { name:"Heisei", glyph:"平成", color:"#4A90D9", sub:"1989 – 2019 CE", poly:[
+    {start:1989, end:2019, x1:0, x2:100}
+  ]},
+  { name:"Reiwa", glyph:"令和", color:"#2d8a4e", sub:"2019 – present", poly:[
+    {start:2019, end:2026, x1:0, x2:100}
+  ]},
+];
+
+const japanMapWrap = document.getElementById('japanMapWrap');
+const japanPanel = document.getElementById('japanPanel');
+let japanOpen = false;
+let japanStickyLabels = [];
+
+function toggleJapan() {
+  japanOpen = !japanOpen;
+  japanPanel.classList.toggle('collapsed', !japanOpen);
+  document.getElementById('japanToggleBtn').textContent = japanOpen ? '◂' : '🇯🇵';
+  savePanelState(); rerenderAll();
+}
+
+function renderJapan() {
+  japanMapWrap.innerHTML = '';
+  japanStickyLabels = [];
+  const height = (END_YEAR - BASE_YEAR) * scaleY;
+  const { japanW: jW } = computeWidths();
+  japanPanel.style.width = jW + 'px';
+  const svg = svgEl('svg', { width: jW, height: height });
+  const jScale = jW / 100;
+
+  // Grid lines
+  const fc = Math.ceil(BASE_YEAR / 100) * 100;
+  for (let y = fc; y <= END_YEAR; y += 100)
+    svg.appendChild(svgEl('line', { x1:0, y1:yPos(y), x2:jW, y2:yPos(y), class:'grid-line century' }));
+
+  japanData.forEach((k, idx) => {
+    const phases = k.poly;
+    let d = "";
+    for (let i = 0; i < phases.length; i++) {
+      const x = phases[i].x1 * jScale;
+      const yT = yPos(phases[i].start);
+      const yB = yPos(phases[i].end);
+      d += (i === 0 ? `M ${x} ${yT} ` : `L ${x} ${yT} `);
+      d += `L ${x} ${yB} `;
+    }
+    for (let i = phases.length - 1; i >= 0; i--) {
+      const x = phases[i].x2 * jScale;
+      const yT = yPos(phases[i].start);
+      const yB = yPos(phases[i].end);
+      d += `L ${x} ${yB} L ${x} ${yT} `;
+    }
+    d += "Z";
+
+    const path = svgEl('path', { d, fill: k.color, stroke: k.color, class:'kingdom-poly', 'data-idx': 'j'+idx });
+    if (k.name) path.dataset.kname = k.name;
+    svg.appendChild(path);
+
+    const lp = k.labelRect || phases[0];
+    const pxW = (lp.x2 - lp.x1) * jScale;
+    const pxH = (lp.end - lp.start) * scaleY;
+    const cx = (lp.x1 + lp.x2) / 2 * jScale;
+    const cy = (yPos(lp.start) + yPos(lp.end)) / 2;
+    const tc = getContrast(k.color);
+    const lm = labelMetrics(pxW, pxH, k.glyph, k.name);
+    const { hz, canFull, canHzGlyph, canVGlyph, vHz, glyphSz, fullLabelH } = lm;
+    const s = k.poly[0].start, e = k.poly[k.poly.length-1].end;
+    const isTall = pxH > 300;
+
+    if (isTall && !k.noSticky && pxW > 25) {
+      const allStarts = k.poly.map(p => p.start), allEnds = k.poly.map(p => p.end);
+      const topPx = yPos(Math.min(...allStarts));
+      const botPx = yPos(Math.max(...allEnds));
+      const el = document.createElement('div');
+      el.className = 'sticky-label';
+      el.style.color = tc;
+      el.style.left = (lp.x1 * jScale) + 'px';
+      el.style.width = pxW + 'px';
+      let inner = `<div class="sl-glyph" style="font-size:${hz}px">${k.glyph}</div>`;
+      inner += `<div class="sl-en">${k.name}</div>`;
+      if (k.sub) inner += `<div class="sl-sub">${k.sub}</div>`;
+      inner += `<div class="sl-dates">${fmtYr(s)} – ${fmtYr(e)}</div>`;
+      el.innerHTML = inner;
+      japanMapWrap.appendChild(el);
+      japanStickyLabels.push({ el, topPx, botPx, cx, group: k.group || null, aligned: false, noGroupFade: false });
+    } else if (canFull) {
+      svg.appendChild(svgEl('text', { x:cx, y:cy-8, fill:tc, class:'label-glyph', 'font-size':hz })).textContent = k.glyph;
+      svg.appendChild(svgEl('text', { x:cx, y:cy+hz/2+4, fill:tc, class:'label-en' })).textContent = k.name;
+      if (k.sub && pxH > fullLabelH + 14) svg.appendChild(svgEl('text', { x:cx, y:cy+hz/2+16, fill:tc, class:'label-sub' })).textContent = k.sub;
+      svg.appendChild(svgEl('text', { x:cx, y:cy+hz/2+(k.sub && pxH>fullLabelH+14?26:16), fill:tc, class:'label-dates' })).textContent = fmtYr(s)+' – '+fmtYr(e);
+    } else if (canHzGlyph) {
+      svg.appendChild(svgEl('text', { x:cx, y:cy, fill:tc, class:'label-glyph', 'font-size':glyphSz })).textContent = k.glyph;
+    } else if (canVGlyph) {
+      const chars = [...k.glyph];
+      const totalH = chars.length * vHz * 1.15;
+      const startY = cy - totalH / 2 + vHz / 2;
+      chars.forEach((ch, ci) => {
+        svg.appendChild(svgEl('text', { x:cx, y:startY + ci * vHz * 1.15, fill:tc, class:'label-glyph', 'font-size':vHz })).textContent = ch;
+      });
+    }
+  });
+
+  japanMapWrap.appendChild(svg);
+}
+
+function savePanelState() {
+  localStorage.setItem('timeline-panels', JSON.stringify({
+    china: chinaOpen, korea: koreaOpen, mongol: mongolOpen, japan: japanOpen
+  }));
+}
+
+// Restore saved panel states
+(function restorePanels() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('timeline-panels'));
+    if (!saved) return;
+    if (saved.china === false) { chinaOpen = false; chinaPanel.classList.add('collapsed'); document.getElementById('chinaToggleBtn').textContent = '🇨🇳'; }
+    if (saved.korea) { koreaOpen = true; koreaPanel.classList.remove('collapsed'); document.getElementById('koreaToggleBtn').textContent = '◂'; }
+    if (saved.mongol) { mongolOpen = true; mongolPanel.classList.remove('collapsed'); document.getElementById('mongolToggleBtn').textContent = '▸'; }
+    if (saved.japan) { japanOpen = true; japanPanel.classList.remove('collapsed'); document.getElementById('japanToggleBtn').textContent = '◂'; }
+  } catch(e) {}
+})();
+
+rerenderAll();
+</script>
+</body>
+</html>

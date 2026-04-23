@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyclic Calendar</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="header">
+        <button class="settings-button" onclick="toggleSettings()">&#9881;</button>
+        <div id="settingsPanel" class="settings-panel" style="display: none;">
+            <label>Language:</label>
+            <select id="languageSelect" onchange="changeLanguage()">
+                <option value="ja">Japanese</option>
+                <option value="en">English</option>
+                <option value="sc">Scandinavian</option>
+                <option value="ko">Korean</option>
+                <option value="fr">French</option>
+            </select>
+
+            <label style="margin-top: 15px;">Start day of week:</label>
+            <select id="startDaySelect" onchange="changeStartDay()">
+                <option value="0">Sunday (日)</option>
+                <option value="1">Monday (月)</option>
+                <option value="2">Tuesday (火)</option>
+                <option value="3">Wednesday (水)</option>
+                <option value="4">Thursday (木)</option>
+                <option value="5">Friday (金)</option>
+                <option value="6">Saturday (土)</option>
+            </select>
+
+            <label style="margin-top: 15px;">View mode:</label>
+            <select id="viewModeSelect" onchange="changeViewMode()">
+                <option value="year">Full year</option>
+                <option value="quarter">By quarter</option>
+            </select>
+        </div>
+        <div class="year-nav">
+            <button onclick="changeYear(-1)">&#8592;</button>
+            <div class="year-display-container">
+                <span id="yearDisplay" onclick="toggleYearInput()">2025</span>
+                <input type="number" id="yearInput" style="display: none;" onblur="applyYearInput()" onkeypress="handleYearKeypress(event)">
+            </div>
+            <button onclick="changeYear(1)">&#8594;</button>
+        </div>
+    </div>
+
+    <div class="quarters-container" id="quartersContainer"></div>
+
+    <div class="modal-overlay" id="leapWeekModal" onclick="closeModal(event)">
+        <div class="speech-bubble" id="speechBubble">
+            <h2>Leap Week</h2>
+            <p>With a cyclical calendar, the new year cannot always start on the first of January. To prevent it from starting too late into the new year, we use a "leap week." This ensures that the new year starts, at the very latest, on January 4.</p>
+            <button class="modal-close" onclick="closeModal()">Got it</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sort By Length</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Sort lines by length</h1>
+        <p class="subtitle">Sort your lines by actual pixel width, not just character count.</p>
+
+        <div class="controls">
+            <button onclick="sortLines()">Sort by pixel width</button>
+            <label class="auto-sort">
+                <input type="checkbox" id="autoSort" onchange="handleAutoSort()">
+                Auto-sort as you type
+            </label>
+        </div>
+
+        <div class="content">
+            <div class="panel">
+                <div class="panel-header">
+                    <span>Input</span>
+                    <div class="header-right">
+                        <button class="copy-btn" onclick="copyToClipboard('input', this)">Copy</button>
+                        <div class="font-selector">
+                            Font:
+                            <select id="fontSelect" onchange="updateFont()">
+                                <option value="Arial">Arial</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Helvetica">Helvetica</option>
+                                <option value="Verdana">Verdana</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Courier New">Courier New</option>
+                                <option value="Trebuchet MS">Trebuchet MS</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <textarea 
+                    id="input" 
+                    class="input-area" 
+                    placeholder="Paste your lines here...&#10;Each line will be measured&#10;And sorted by visual width"
+                    oninput="handleInput()"
+                ></textarea>
+                <div class="stats" id="inputStats"></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <span>Sorted (shortest → longest)</span>
+                    <button class="copy-btn" onclick="copyToClipboard('output', this)">Copy</button>
+                </div>
+                <textarea 
+                    id="output" 
+                    class="output-area" 
+                    readonly
+                    placeholder="Sorted lines will appear here..."
+                ></textarea>
+                <div class="stats" id="outputStats"></div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="measureCanvas" style="display: none;"></canvas>
+
+    <script src="script.js"></script>
+</body>
+</html>

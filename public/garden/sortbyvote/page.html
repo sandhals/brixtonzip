@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voting ball formatter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+ <main class="container">
+    <h1>Sort by vote</h1>
+    <p class="subtitle">
+      Use coloured emojis to cast your vote, and then sort by vote count automatically.
+    </p>
+
+    <!-- NEW: Emoji copy widget -->
+    <div class="emoji-widget" aria-label="Emoji copy tools">
+      <div class="emoji-row" id="emojiRow">
+        <button class="emoji-btn" type="button" data-emoji="🔴" title="Copy 🔴">🔴</button>
+        <button class="emoji-btn" type="button" data-emoji="🟣" title="Copy 🟣">🟣</button>
+        <button class="emoji-btn" type="button" data-emoji="🟤" title="Copy 🟤">🟤</button>
+        <button class="emoji-btn" type="button" data-emoji="🟡" title="Copy 🟡">🟡</button>
+        <button class="emoji-btn" type="button" data-emoji="🟢" title="Copy 🟢">🟢</button>
+      </div>
+      <button class="copy-all-btn" id="copyAllEmojisBtn" type="button">Copy all</button>
+      <span class="info-text">Click to copy</span>
+    </div>
+
+    <div class="controls">
+      <button id="formatBtn">Cast your votes!</button>
+      <div class="info-text">
+        Auto-formats as you type • Groups by vote count • Sorts each group by pixel width
+      </div>
+    </div>
+
+    <div class="content">
+      <section class="panel">
+        <div class="panel-header">
+          <span>Input</span>
+          <button class="copy-btn" id="copyInputBtn">Copy</button>
+        </div>
+
+        <textarea
+          id="input"
+          class="input-area"
+          placeholder="Paste your copy with votes here to be sorted!"
+        ></textarea>
+
+        <div class="stats" id="inputStats"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <span>Output (most votes → least)</span>
+          <div style="display: flex; gap: 8px;">
+            <button class="copy-btn" id="removeVotesBtn">Remove votes</button>
+            <button class="copy-btn" id="copyOutputBtn">Copy</button>
+          </div>
+        </div>
+
+        <textarea
+          id="output"
+          class="output-area"
+          readonly
+          placeholder="Formatted and sorted lines will appear here..."
+        ></textarea>
+
+        <div class="stats" id="outputStats"></div>
+      </section>
+    </div>
+  </main>
+
+  <canvas id="measureCanvas" style="display: none;"></canvas>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ratio Measurement Tool</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <div class="sidebar">
+            <div class="toolbar">
+                <h1>Ratio Tool</h1>
+                <label class="file-upload-btn">
+                    Upload Image
+                    <input type="file" id="imageUpload" accept="image/*">
+                </label>
+            </div>
+
+            <div class="tool-section">
+                <div class="section-label">Shape Tool</div>
+                <div class="tool-grid">
+                    <button class="tool-btn active" data-tool="line">
+                        <div class="tool-icon">─</div>
+                        <div class="tool-label">Line</div>
+                    </button>
+                    <button class="tool-btn" data-tool="circle-radius">
+                        <div class="tool-icon">◯</div>
+                        <div class="tool-label">Circle R</div>
+                    </button>
+                    <button class="tool-btn" data-tool="circle-diameter">
+                        <div class="tool-icon">⊕</div>
+                        <div class="tool-label">Circle D</div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings">
+                <div class="section-label">Settings</div>
+                <div class="setting-row">
+                    <span class="setting-label">Decimal places</span>
+                    <input type="number" class="setting-input" id="decimalPlaces" min="0" max="6" value="2">
+                </div>
+            </div>
+
+            <div class="measurements-panel" id="measurementList">
+                <div class="empty-state">No measurements yet</div>
+            </div>
+
+            <div class="actions">
+                <button class="action-btn undo" id="undoBtn" disabled>↶ Undo</button>
+                <button class="action-btn clear" id="clearBtn" disabled>Clear</button>
+            </div>
+        </div>
+
+        <div class="canvas-area">
+            <div class="status-bar" id="statusBar">Upload an image to begin</div>
+            <div class="canvas-container">
+                <canvas id="canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

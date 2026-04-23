@@ -1,0 +1,109 @@
+import type { NextApiRequest, NextApiResponse } from 'next'
+import { readFile } from 'fs/promises'
+import { join } from 'path'
+import { existsSync } from 'fs'
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  try {
+    const { path } = req.query
+    
+    if (!path || !Array.isArray(path)) {
+      return res.status(400).json({ error: 'Invalid path' })
+    }
+
+    // Filter out empty strings (from trailing slashes) and join
+    const pathString = path.filter(p => p).join('/')
+    const publicGardenPath = join(process.cwd(), 'public', 'garden', pathString)
+    
+    // Check if the last segment has a file extension (is a specific file)
+    const lastSegment = pathString.split('/').pop() || ''
+    const hasExtension = lastSegment.includes('.') && lastSegment.split('.').length > 1
+    
+    let filePath: string
+    let contentType = 'text/html; charset=utf-8'
+    
+    if (hasExtension) {
+      // Requesting a specific file (e.g., omikuji.js, mon.jpg)
+      filePath = publicGardenPath
+      
+      // Set appropriate content type based on file extension
+      const ext = lastSegment.split('.').pop()?.toLowerCase()
+      const contentTypes: Record<string, string> = {
+        'js': 'application/javascript',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'wav': 'audio/wav',
+        'mp3': 'audio/mpeg',
+        'css': 'text/css',
+        'json': 'application/json',
+        'html': 'text/html; charset=utf-8'
+      }
+      contentType = contentTypes[ext || ''] || 'application/octet-stream'
+    } else {
+      // Requesting a directory, serve page.html (not index.html to avoid Vercel static serving)
+      filePath = join(publicGardenPath, 'page.html')
+    }
+
+    try {
+      if (!existsSync(filePath)) {
+        return res.status(404).json({ error: 'Not found' })
+      }
+      
+      // Read file as binary for non-text files, UTF-8 for text files
+      const isBinary = !contentType.includes('text') && !contentType.includes('javascript') && !contentType.includes('json')
+      let content = isBinary 
+        ? await readFile(filePath) 
+        : await readFile(filePath, 'utf-8')
+      
+      // For HTML files served from a directory path, inject a base tag and cache-busting meta tags
+      if (!hasExtension && typeof content === 'string') {
+        const baseUrl = `/garden/${pathString}/`
+        // Check if base tag already exists
+        if (!content.includes('<base')) {
+          // Inject base tag and cache-busting meta tags right after <head>
+          const absoluteBaseUrl = baseUrl.startsWith('/') ? baseUrl : `/${baseUrl}`
+          const timestamp = Date.now()
+          const cacheBustingMeta = `
+    <base href="${absoluteBaseUrl}">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="cache-timestamp" content="${timestamp}">`
+          content = content.replace('<head>', `<head>${cacheBustingMeta}`)
+          
+          // Convert relative paths to absolute paths for static file serving on Vercel
+          // and add cache-busting query params
+          content = content.replace(/src="([^"]+\.(js))"/g, (match, src) => {
+            if (src.startsWith('http') || src.startsWith('/')) return match
+            const separator = src.includes('?') ? '&' : '?'
+            return `src="/garden/${pathString}/${src}${separator}v=${timestamp}"`
+          })
+          content = content.replace(/href="([^"]+\.(css))"/g, (match, href) => {
+            if (href.startsWith('http') || href.startsWith('/')) return match
+            const separator = href.includes('?') ? '&' : '?'
+            return `href="/garden/${pathString}/${href}${separator}v=${timestamp}"`
+          })
+        }
+      }
+      
+      // Set cache-control headers to prevent caching for all file types
+      res.setHeader('Content-Type', contentType)
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+      res.setHeader('Pragma', 'no-cache')
+      res.setHeader('Expires', '0')
+      return res.status(200).send(content)
+    } catch (fileError) {
+      // File doesn't exist
+      return res.status(404).json({ error: 'Not found' })
+    }
+  } catch (err) {
+    console.error('Error serving garden file:', err)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+

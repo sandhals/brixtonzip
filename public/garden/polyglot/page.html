@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polyglot Score</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.5; background: #fff; color: #000; }
+.container { max-width: 720px; margin: 0 auto; padding: 40px 20px; }
+h1 { font-size: 16px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 32px; }
+h2 { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; }
+h3 { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #666; margin-bottom: 8px; margin-top: 16px; }
+.lang-group:first-child h3 { margin-top: 0; }
+select { font-family: inherit; font-size: 14px; padding: 6px 8px; padding-right: 28px; border: 1px solid #000; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23000'/%3E%3C/svg%3E") no-repeat right 10px center; color: #000; appearance: none; -webkit-appearance: none; border-radius: 0; cursor: pointer; width: 100%; max-width: 280px; }
+select:focus { outline: 1px solid #000; outline-offset: -1px; }
+.section { margin-bottom: 36px; }
+.lang-group { margin-bottom: 4px; }
+.lang-grid { display: flex; flex-wrap: wrap; gap: 0; }
+.lang-chip { display: inline-flex; align-items: center; border: 1px solid #ccc; padding: 4px 10px; cursor: pointer; font-size: 13px; user-select: none; transition: border-color 0.1s, background 0.1s; margin: -0.5px; }
+.lang-chip:hover { border-color: #000; z-index: 1; position: relative; }
+.lang-chip.selected { background: #000; color: #fff; border-color: #000; z-index: 1; position: relative; }
+.lang-chip.disabled { opacity: 0.25; pointer-events: none; }
+.score-box { border: 1px solid #000; padding: 24px; text-align: center; margin-bottom: 24px; }
+.score-number { font-size: 48px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
+.score-label { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 6px; color: #555; }
+.breakdown { width: 100%; border-collapse: collapse; }
+.breakdown th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; text-align: left; padding: 6px 8px; border-bottom: 1px solid #000; font-weight: 600; }
+.breakdown th:last-child, .breakdown td:last-child { text-align: right; }
+.breakdown td { padding: 5px 8px; border-bottom: 1px solid #eee; font-size: 13px; }
+.breakdown .nearest { color: #888; font-size: 12px; }
+.breakdown tr:last-child td { border-bottom: 1px solid #000; }
+.bar-cell { padding: 5px 8px; }
+.mini-bar { height: 8px; background: #000; display: inline-block; vertical-align: middle; }
+button.toggle { font-family: inherit; font-size: 13px; padding: 8px 16px; border: 1px solid #000; background: #fff; color: #000; cursor: pointer; letter-spacing: 0.03em; }
+button.toggle:hover { background: #000; color: #fff; }
+.matrix-wrap { overflow-x: auto; margin-top: 16px; }
+.matrix { border-collapse: collapse; font-size: 11px; }
+.matrix th { padding: 3px 4px; font-weight: 600; border: 1px solid #ddd; white-space: nowrap; font-size: 10px; background: #fff; position: sticky; }
+.matrix th.row-header { text-align: right; left: 0; z-index: 2; }
+.matrix th.col-header { writing-mode: vertical-lr; transform: rotate(180deg); text-align: left; top: 0; z-index: 2; min-height: 80px; }
+.matrix th.corner { z-index: 3; left: 0; top: 0; }
+.matrix td { width: 24px; height: 24px; min-width: 24px; border: 1px solid #eee; padding: 0; text-align: center; font-size: 9px; color: transparent; cursor: default; }
+.matrix td:hover { color: #fff; mix-blend-mode: normal; outline: 1px solid #000; z-index: 1; position: relative; }
+.matrix td.light:hover { color: #000; }
+.legend { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 11px; color: #666; }
+.legend-bar { display: flex; height: 10px; width: 120px; }
+.legend-bar span { flex: 1; }
+.empty-state { color: #999; font-size: 13px; padding: 20px 0; }
+.info-toggle { font-size: 12px; color: #888; cursor: pointer; border-bottom: 1px dotted #888; }
+.info-toggle:hover { color: #000; border-color: #000; }
+.method-note { font-size: 12px; color: #666; margin-top: 16px; line-height: 1.6; border-left: 2px solid #ddd; padding-left: 12px; }
+.filter-row { margin-bottom: 12px; display: flex; gap: 8px; }
+.filter-btn { font-family: inherit; font-size: 11px; padding: 3px 8px; border: 1px solid #ccc; background: #fff; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em; }
+.filter-btn:hover, .filter-btn.active { border-color: #000; background: #000; color: #fff; }
+.native-chips { display: flex; flex-wrap: wrap; gap: 0; margin-bottom: 6px; }
+.native-chip { display: inline-flex; align-items: center; background: #000; margin-right:5px; color: #fff; border: 1px solid #000; padding: 4px 14px; font-size: 13px; z-index: 1; position: relative; }
+.native-chip .chip-x { margin-left: 6px; cursor: pointer; opacity: 0.6; font-size: 15px; line-height: 1; }
+.native-chip .chip-x:hover { opacity: 1; }
+.info-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; border: 1px solid #ccc; font-size: 9px; font-weight: 400; color: #aaa; cursor: help; position: relative; vertical-align: 3px; margin-left: 4px; text-transform: none; letter-spacing: 0; }
+.info-icon:hover, .info-icon:focus { border-color: #888; color: #666; }
+.info-tooltip { display: none; position: absolute; left: 50%; transform: translateX(-50%); top: calc(100% + 6px); background: #333; color: #fff; font-size: 12px; font-weight: 400; line-height: 1.5; padding: 8px 12px; border-radius: 4px; width: 240px; white-space: normal; z-index: 10; pointer-events: none; text-transform: none; letter-spacing: 0; }
+.info-tooltip::before { content: ''; position: absolute; left: 50%; transform: translateX(-50%); top: -4px; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 5px solid #333; }
+.info-icon:hover .info-tooltip, .info-icon:focus .info-tooltip { display: block; }
+#add-native-link { margin-top: 6px; font-size: 11px; color: #ccc; cursor: pointer; }
+#add-native-link:hover { color: #999; }
+@media (max-width: 600px) {
+  .container { padding: 24px 12px; }
+  .score-number { font-size: 36px; }
+  .lang-chip { font-size: 12px; padding: 3px 7px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Polyglot Score</h1>
+
+  <div class="section">
+    <h2>Native Language <span class="info-icon" tabindex="0">?<span class="info-tooltip">A language you spoke at home or conversationally before age ~12.</span></span></h2>
+    <div id="native-chips" class="native-chips"></div>
+    <div style="max-width:280px">
+      <select id="native-select"></select>
+    </div>
+    <div id="add-native-link">+ add another native language</div>
+  </div>
+
+  <div class="section">
+    <h2>Languages Learned <span class="info-icon" tabindex="0">?<span class="info-tooltip">Languages you can hold everyday conversations/maintain friendships in.</span></span></h2>
+    <div id="lang-list"></div>
+  </div>
+
+  <div class="section" id="score-section" style="display:none">
+    <h2>Score</h2>
+    <div class="score-box">
+      <div class="score-number" id="score-val">0</div>
+      <div class="score-label" id="score-tier"></div>
+      <div class="score-label" id="score-count" style="margin-top:2px"></div>
+    </div>
+    <table class="breakdown" id="breakdown"></table>
+  </div>
+
+  <div class="section">
+    <button class="toggle" id="matrix-toggle">Show language relationships</button>
+    <div id="matrix-section" style="display:none">
+      <div style="margin-top:16px; margin-bottom:8px;">
+        <div class="filter-row">
+          <button class="filter-btn active" data-filter="selected">Selected only</button>
+          <button class="filter-btn" data-filter="all">All languages</button>
+        </div>
+      </div>
+      <div class="matrix-wrap" id="matrix-wrap"></div>
+      <div class="legend">
+        <span>Similar</span>
+        <div class="legend-bar">
+          <span style="background:#000"></span>
+          <span style="background:#444"></span>
+          <span style="background:#888"></span>
+          <span style="background:#bbb"></span>
+          <span style="background:#eee"></span>
+        </div>
+        <span>Distant</span>
+      </div>
+      <div class="method-note" style="margin-top:16px;">
+        Similarity estimates combine genetic relationship (language family trees), lexical overlap
+        (shared vocabulary including loanwords from colonial contact, trade, religion), grammatical
+        typology (word order, morphology, case systems), and areal/Sprachbund effects (Balkan convergence,
+        Standard Average European, Sino-Xenic vocabulary sphere). Distances calibrated against FSI
+        difficulty ratings, Ethnologue lexical similarity data, and WALS typological features. Writing
+        system difficulty only factors in for systems requiring significant memorization effort (CJK
+        characters, Arabic abjad); Cyrillic, Hangul, and Greek alphabets are treated as trivially learnable.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// LANGUAGE DATA
+// ============================================================
+const LANGUAGES = [
+  { id:'en', name:'English', branch:'germanic', sub:'west', family:'ie' },
+  { id:'de', name:'German', branch:'germanic', sub:'west', family:'ie' },
+  { id:'nl', name:'Dutch', branch:'germanic', sub:'west', family:'ie' },
+  { id:'sv', name:'Swedish', branch:'germanic', sub:'north', family:'ie' },
+  { id:'no', name:'Norwegian', branch:'germanic', sub:'north', family:'ie' },
+  { id:'da', name:'Danish', branch:'germanic', sub:'north', family:'ie' },
+  { id:'is', name:'Icelandic', branch:'germanic', sub:'north', family:'ie' },
+  { id:'af', name:'Afrikaans', branch:'germanic', sub:'west', family:'ie' },
+  { id:'es', name:'Spanish', branch:'romance', sub:'iberian', family:'ie' },
+  { id:'pt', name:'Portuguese', branch:'romance', sub:'iberian', family:'ie' },
+  { id:'ca', name:'Catalan', branch:'romance', sub:'occitano', family:'ie' },
+  { id:'fr', name:'French', branch:'romance', sub:'gallo', family:'ie' },
+  { id:'it', name:'Italian', branch:'romance', sub:'italo', family:'ie' },
+  { id:'ro', name:'Romanian', branch:'romance', sub:'eastern', family:'ie' },
+  { id:'ru', name:'Russian', branch:'slavic', sub:'east', family:'ie' },
+  { id:'uk', name:'Ukrainian', branch:'slavic', sub:'east', family:'ie' },
+  { id:'pl', name:'Polish', branch:'slavic', sub:'west_s', family:'ie' },
+  { id:'cs', name:'Czech', branch:'slavic', sub:'west_s', family:'ie' },
+  { id:'sr', name:'Serbian/Croatian', branch:'slavic', sub:'south_s', family:'ie' },
+  { id:'bg', name:'Bulgarian', branch:'slavic', sub:'south_s', family:'ie' },
+  { id:'el', name:'Greek', branch:'hellenic', sub:'hellenic', family:'ie' },
+  { id:'lt', name:'Lithuanian', branch:'baltic', sub:'baltic', family:'ie' },
+  { id:'ga', name:'Irish', branch:'celtic', sub:'goidelic', family:'ie' },
+  { id:'cy', name:'Welsh', branch:'celtic', sub:'brythonic', family:'ie' },
+  { id:'hi', name:'Hindi/Urdu', branch:'indoiranian', sub:'indic', family:'ie' },
+  { id:'bn', name:'Bengali', branch:'indoiranian', sub:'indic', family:'ie' },
+  { id:'te', name:'Telugu', branch:'dravidian', sub:'south_central', family:'dravidian' },
+  { id:'fa', name:'Persian', branch:'indoiranian', sub:'iranian', family:'ie' },
+  { id:'hy', name:'Armenian', branch:'armenian', sub:'armenian', family:'ie' },
+  { id:'fi', name:'Finnish', branch:'uralic', sub:'finnic', family:'uralic' },
+  { id:'et', name:'Estonian', branch:'uralic', sub:'finnic', family:'uralic' },
+  { id:'hu', name:'Hungarian', branch:'uralic', sub:'ugric', family:'uralic' },
+  { id:'tr', name:'Turkish', branch:'turkic', sub:'oghuz', family:'turkic' },
+  { id:'ar', name:'Arabic', branch:'semitic', sub:'central_s', family:'afroasiatic' },
+  { id:'he', name:'Hebrew', branch:'semitic', sub:'central_s', family:'afroasiatic' },
+  { id:'zh', name:'Mandarin', branch:'sinitic', sub:'sinitic', family:'sinotibetan' },
+  { id:'yue', name:'Cantonese', branch:'sinitic', sub:'sinitic', family:'sinotibetan' },
+  { id:'ja', name:'Japanese', branch:'japonic', sub:'japonic', family:'japonic' },
+  { id:'ko', name:'Korean', branch:'koreanic', sub:'koreanic', family:'koreanic' },
+  { id:'vi', name:'Vietnamese', branch:'austroasiatic', sub:'vietic', family:'austroasiatic' },
+  { id:'th', name:'Thai', branch:'tai', sub:'tai', family:'kradai' },
+  { id:'id', name:'Indonesian', branch:'austronesian', sub:'malayopoly', family:'austronesian' },
+  { id:'tl', name:'Tagalog', branch:'austronesian', sub:'malayopoly', family:'austronesian' },
+  { id:'sw', name:'Swahili', branch:'nigercongo', sub:'bantu', family:'nigercongo' },
+  { id:'ka', name:'Georgian', branch:'kartvelian', sub:'kartvelian', family:'kartvelian' },
+  { id:'eu', name:'Basque', branch:'isolate', sub:'isolate', family:'isolate' },
+];
+
+// Display grouping for the UI
+const DISPLAY_GROUPS = [
+  { label: 'Germanic', ids: ['en','de','nl','af','sv','no','da','is'] },
+  { label: 'Romance', ids: ['es','pt','ca','fr','it','ro'] },
+  { label: 'Slavic', ids: ['ru','uk','pl','cs','sr','bg'] },
+  { label: 'Celtic', ids: ['ga','cy'] },
+  { label: 'Hellenic / Baltic', ids: ['el','lt'] },
+  { label: 'Indo-Iranian', ids: ['hi','bn','fa'] },
+  { label: 'Dravidian', ids: ['te'] },
+  { label: 'Armenian', ids: ['hy'] },
+  { label: 'Uralic', ids: ['fi','et','hu'] },
+  { label: 'Turkic', ids: ['tr'] },
+  { label: 'Semitic', ids: ['ar','he'] },
+  { label: 'East Asian', ids: ['zh','yue','ja','ko'] },
+  { label: 'Southeast Asian', ids: ['vi','th','id','tl'] },
+  { label: 'Other', ids: ['sw','ka','eu'] },
+];
+
+// ============================================================
+// DISTANCE MATRIX (0-100, lower = more similar)
+// Keys are sorted alphabetically: 'aa|bb' where aa < bb
+// ============================================================
+function pk(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
+
+const D = {
+  // ── Germanic internal ──
+  [pk('da','de')]: 38, [pk('da','en')]: 32, [pk('da','is')]: 42,
+  [pk('da','nl')]: 38, [pk('da','no')]: 12, [pk('da','sv')]: 15,
+  [pk('de','en')]: 35, [pk('de','is')]: 42, [pk('de','nl')]: 22,
+  [pk('de','no')]: 38, [pk('de','sv')]: 38,
+  [pk('en','is')]: 50, [pk('en','nl')]: 30, [pk('en','no')]: 30, [pk('en','sv')]: 32,
+  [pk('is','nl')]: 48, [pk('is','no')]: 40, [pk('is','sv')]: 42,
+  [pk('nl','no')]: 38, [pk('nl','sv')]: 38,
+  [pk('no','sv')]: 10,
+
+  // ── Romance internal ──
+  [pk('ca','es')]: 12, [pk('ca','fr')]: 22, [pk('ca','it')]: 16,
+  [pk('ca','pt')]: 14, [pk('ca','ro')]: 28,
+  [pk('es','fr')]: 25, [pk('es','it')]: 18, [pk('es','pt')]: 10, [pk('es','ro')]: 30,
+  [pk('fr','it')]: 22, [pk('fr','pt')]: 27, [pk('fr','ro')]: 28,
+  [pk('it','pt')]: 20, [pk('it','ro')]: 25,
+  [pk('pt','ro')]: 32,
+
+  // ── Slavic internal ──
+  [pk('bg','cs')]: 40, [pk('bg','pl')]: 40, [pk('bg','ru')]: 25,
+  [pk('bg','sr')]: 22, [pk('bg','uk')]: 30,
+  [pk('cs','pl')]: 20, [pk('cs','ru')]: 40, [pk('cs','sr')]: 38, [pk('cs','uk')]: 38,
+  [pk('pl','ru')]: 38, [pk('pl','sr')]: 38, [pk('pl','uk')]: 32,
+  [pk('ru','sr')]: 28, [pk('ru','uk')]: 15,
+  [pk('sr','uk')]: 32,
+
+  // ── Celtic ──
+  [pk('cy','ga')]: 50,
+
+  // ── Indo-Iranian internal ──
+  [pk('bn','fa')]: 48, [pk('bn','hi')]: 32, [pk('fa','hi')]: 45,
+
+  // ── Uralic internal ──
+  [pk('et','fi')]: 35, [pk('et','hu')]: 64, [pk('fi','hu')]: 62,
+
+  // ── Semitic ──
+  [pk('ar','he')]: 38,
+
+  // ── Sinitic ──
+  [pk('yue','zh')]: 35,
+
+  // ── Austronesian ──
+  [pk('id','tl')]: 40,
+
+  // ── English to non-Germanic ──
+  [pk('en','es')]: 34, [pk('en','pt')]: 34, [pk('en','fr')]: 32,
+  [pk('en','it')]: 35, [pk('en','ro')]: 40, [pk('en','ca')]: 35,
+  [pk('en','ru')]: 58, [pk('en','uk')]: 60, [pk('en','pl')]: 60,
+  [pk('en','cs')]: 60, [pk('en','sr')]: 60, [pk('en','bg')]: 58,
+  [pk('en','ga')]: 55, [pk('en','cy')]: 58,
+  [pk('en','hi')]: 55, [pk('en','bn')]: 60, [pk('en','fa')]: 52,
+  [pk('en','el')]: 50, [pk('en','lt')]: 60, [pk('en','hy')]: 62,
+  [pk('en','fi')]: 62, [pk('en','et')]: 62, [pk('en','hu')]: 65,
+  [pk('en','tr')]: 58, [pk('en','ar')]: 78, [pk('en','he')]: 62,
+  [pk('en','zh')]: 85, [pk('en','yue')]: 87, [pk('en','ja')]: 90,
+  [pk('en','ko')]: 85, [pk('en','vi')]: 65, [pk('en','th')]: 68,
+  [pk('en','id')]: 42, [pk('en','tl')]: 55, [pk('en','sw')]: 48,
+  [pk('en','ka')]: 68, [pk('en','eu')]: 70,
+
+  // ── German to non-Germanic ──
+  [pk('de','es')]: 40, [pk('de','fr')]: 38, [pk('de','it')]: 42,
+  [pk('de','pt')]: 42, [pk('de','ca')]: 42, [pk('de','ro')]: 45,
+  [pk('de','ru')]: 55, [pk('de','pl')]: 52, [pk('de','cs')]: 50,
+  [pk('de','uk')]: 56, [pk('de','sr')]: 56, [pk('de','bg')]: 56,
+  [pk('de','el')]: 52, [pk('de','lt')]: 55, [pk('de','hi')]: 58,
+  [pk('de','fa')]: 55, [pk('de','tr')]: 60, [pk('de','ar')]: 80,
+  [pk('de','zh')]: 87, [pk('de','ja')]: 92, [pk('de','ko')]: 87,
+  [pk('de','hu')]: 62, [pk('de','fi')]: 60,
+
+  // ── Dutch cross-family ──
+  [pk('fr','nl')]: 35, [pk('es','nl')]: 42, [pk('it','nl')]: 44,
+  [pk('nl','ru')]: 58, [pk('nl','pl')]: 56,
+
+  // ── Romance to Slavic ──
+  [pk('es','ru')]: 58, [pk('fr','ru')]: 56, [pk('it','ru')]: 55,
+  [pk('es','pl')]: 60, [pk('fr','pl')]: 58, [pk('it','pl')]: 58,
+  [pk('fr','cs')]: 58, [pk('ro','ru')]: 50,
+
+  // ── Romance cross-family ──
+  [pk('es','tl')]: 38, [pk('es','ar')]: 58, [pk('fr','ar')]: 56,
+  [pk('fr','vi')]: 55, [pk('pt','id')]: 50, [pk('it','el')]: 45,
+  [pk('es','el')]: 48, [pk('fr','el')]: 46, [pk('ro','el')]: 44,
+  [pk('es','hi')]: 55, [pk('fr','hi')]: 55, [pk('it','hi')]: 55,
+
+  // ── Slavic-Baltic ──
+  [pk('lt','pl')]: 45, [pk('lt','ru')]: 48, [pk('lt','uk')]: 48,
+  [pk('lt','cs')]: 48, [pk('lt','sr')]: 50, [pk('lt','bg')]: 50,
+
+  // ── Balkan Sprachbund ──
+  [pk('bg','el')]: 45, [pk('bg','ro')]: 40,
+  [pk('el','sr')]: 46, [pk('ro','sr')]: 42, [pk('bg','tr')]: 50,
+  [pk('el','tr')]: 52, [pk('ro','tr')]: 52,
+
+  // ── Greek cross ──
+  [pk('el','hy')]: 52, [pk('el','ka')]: 60,
+
+  // ── Persian / Armenian / Georgian cross ──
+  [pk('fa','tr')]: 42, [pk('ar','fa')]: 40, [pk('ar','hi')]: 50,
+  [pk('fa','hy')]: 50, [pk('hy','tr')]: 55, [pk('hy','ru')]: 55,
+  [pk('hy','ka')]: 50, [pk('ka','ru')]: 58, [pk('ka','tr')]: 55,
+
+  // ── Arabic/Hebrew cross ──
+  [pk('ar','tr')]: 45, [pk('ar','sw')]: 48, [pk('ar','id')]: 52,
+  [pk('he','fa')]: 48,
+  [pk('he','ru')]: 60,
+
+  // ── Uralic-Turkic typological ──
+  [pk('fi','tr')]: 55, [pk('hu','tr')]: 52, [pk('et','tr')]: 56,
+
+  // ── East Asian cross ──
+  [pk('ja','ko')]: 48, [pk('ja','zh')]: 55, [pk('ja','yue')]: 58,
+  [pk('ko','zh')]: 60, [pk('ko','yue')]: 63,
+  [pk('vi','zh')]: 52, [pk('vi','yue')]: 50,
+  [pk('th','vi')]: 55, [pk('th','zh')]: 60, [pk('th','yue')]: 58,
+  [pk('ja','vi')]: 62, [pk('ko','vi')]: 65,
+
+  // ── East Asian to SOV/agglutinative ──
+  [pk('ja','tr')]: 55, [pk('ko','tr')]: 55,
+  [pk('ja','fi')]: 62, [pk('ko','fi')]: 65,
+  [pk('ja','hu')]: 62, [pk('ko','hu')]: 65,
+
+  // ── Basque ──
+  [pk('es','eu')]: 48, [pk('eu','fr')]: 50,
+
+  // ── Indonesian / Tagalog cross ──
+  [pk('id','zh')]: 62, [pk('id','ja')]: 70,
+  [pk('id','sw')]: 68, [pk('tl','zh')]: 65, [pk('tl','ja')]: 72,
+
+  // ── Swahili cross ──
+  [pk('sw','fr')]: 58,
+
+  // ── Hindi-Urdu cross non-IE ──
+  [pk('hi','tr')]: 55, [pk('hi','ja')]: 80,
+  [pk('hi','zh')]: 82, [pk('hi','ko')]: 80,
+
+  // ── Slavic to East Asian ──
+  [pk('ru','zh')]: 82, [pk('ru','ja')]: 88, [pk('ru','ko')]: 85,
+  [pk('ru','ar')]: 72, [pk('ru','tr')]: 58, [pk('ru','fi')]: 58,
+  [pk('ru','hu')]: 62, [pk('ru','hi')]: 52, [pk('ru','fa')]: 52,
+  [pk('ru','el')]: 50,
+
+  // ── Romance to East Asian ──
+  [pk('es','zh')]: 85, [pk('es','ja')]: 90, [pk('es','ko')]: 85,
+  [pk('fr','zh')]: 85, [pk('fr','ja')]: 90, [pk('fr','ko')]: 85,
+  [pk('it','zh')]: 85, [pk('it','ja')]: 90, [pk('it','ko')]: 85,
+  [pk('pt','zh')]: 85, [pk('pt','ja')]: 90, [pk('pt','ko')]: 85, [pk('pt','yue')]: 87,
+  [pk('ca','zh')]: 85, [pk('ca','ja')]: 90, [pk('ca','ko')]: 85,
+  [pk('ro','zh')]: 85, [pk('ro','ja')]: 90, [pk('ro','ko')]: 85,
+
+  // ── Germanic to East Asian (not yet covered) ──
+  [pk('nl','zh')]: 87, [pk('nl','ja')]: 90, [pk('nl','ko')]: 87,
+  [pk('sv','zh')]: 87, [pk('sv','ja')]: 90, [pk('sv','ko')]: 87,
+  [pk('no','zh')]: 87, [pk('no','ja')]: 90, [pk('no','ko')]: 87,
+  [pk('da','zh')]: 87, [pk('da','ja')]: 90, [pk('da','ko')]: 87,
+  [pk('is','zh')]: 88, [pk('is','ja')]: 92, [pk('is','ko')]: 88,
+
+  // ── Slavic to East Asian (fill gaps) ──
+  [pk('uk','zh')]: 83, [pk('uk','ja')]: 88, [pk('uk','ko')]: 85,
+  [pk('pl','zh')]: 83, [pk('pl','ja')]: 88, [pk('pl','ko')]: 85,
+  [pk('cs','zh')]: 83, [pk('cs','ja')]: 88, [pk('cs','ko')]: 85,
+  [pk('sr','zh')]: 83, [pk('sr','ja')]: 88, [pk('sr','ko')]: 85,
+  [pk('bg','zh')]: 83, [pk('bg','ja')]: 88, [pk('bg','ko')]: 85,
+
+  // ── Arabic/Hebrew to East Asian ──
+  [pk('ar','zh')]: 88, [pk('ar','ja')]: 92, [pk('ar','ko')]: 88,
+  [pk('ar','yue')]: 90,
+  [pk('he','zh')]: 85, [pk('he','ja')]: 90, [pk('he','ko')]: 85,
+
+  // ── Uralic to East Asian (gaps) ──
+  [pk('fi','zh')]: 82, [pk('fi','yue')]: 84,
+  [pk('hu','zh')]: 82, [pk('hu','yue')]: 84,
+  [pk('et','zh')]: 82, [pk('et','ja')]: 88, [pk('et','ko')]: 85,
+
+  // ── Celtic / Baltic / Armenian to East Asian ──
+  [pk('ga','ja')]: 90, [pk('ga','zh')]: 85, [pk('ga','ko')]: 85,
+  [pk('cy','ja')]: 90, [pk('cy','zh')]: 85, [pk('cy','ko')]: 85,
+  [pk('lt','ja')]: 90, [pk('lt','zh')]: 85, [pk('lt','ko')]: 85,
+  [pk('hy','ja')]: 90, [pk('hy','zh')]: 85, [pk('hy','ko')]: 85,
+
+  // ── Distant miscellaneous (that would default too low at 78) ──
+  [pk('ka','ja')]: 90, [pk('ka','zh')]: 88, [pk('ka','ko')]: 88,
+  [pk('eu','ja')]: 92, [pk('eu','zh')]: 88, [pk('eu','ko')]: 88,
+  [pk('sw','ja')]: 90, [pk('sw','zh')]: 88, [pk('sw','ko')]: 88,
+  [pk('eu','ar')]: 82, [pk('ka','ar')]: 82,
+  [pk('eu','ru')]: 78,
+
+  // ── Arabic to IE (fill gaps) ──
+  [pk('ar','nl')]: 80,
+  [pk('ar','pl')]: 75, [pk('ar','cs')]: 75,
+  [pk('ar','uk')]: 75, [pk('ar','bg')]: 72, [pk('ar','sr')]: 72,
+  [pk('ar','el')]: 70, [pk('ar','lt')]: 78,
+  [pk('ar','ga')]: 80, [pk('ar','cy')]: 80,
+  [pk('ar','bn')]: 52, [pk('ar','hy')]: 78,
+
+  // ── Afrikaans ──
+  [pk('af','nl')]: 12, [pk('af','en')]: 25, [pk('af','de')]: 28,
+  [pk('af','sv')]: 40, [pk('af','no')]: 40, [pk('af','da')]: 40, [pk('af','is')]: 48,
+  [pk('af','fr')]: 38, [pk('af','es')]: 42, [pk('af','pt')]: 40,
+  [pk('af','it')]: 44, [pk('af','ca')]: 42, [pk('af','ro')]: 48,
+  [pk('af','ru')]: 58, [pk('af','uk')]: 60, [pk('af','pl')]: 58,
+  [pk('af','cs')]: 58, [pk('af','sr')]: 60, [pk('af','bg')]: 58,
+  [pk('af','el')]: 52, [pk('af','lt')]: 60, [pk('af','hi')]: 58,
+  [pk('af','bn')]: 62, [pk('af','fa')]: 55, [pk('af','hy')]: 62,
+  [pk('af','ga')]: 58, [pk('af','cy')]: 60,
+  [pk('af','fi')]: 62, [pk('af','et')]: 62, [pk('af','hu')]: 65, [pk('af','tr')]: 60,
+  [pk('af','ar')]: 80, [pk('af','he')]: 65,
+  [pk('af','zh')]: 87, [pk('af','yue')]: 88, [pk('af','ja')]: 90, [pk('af','ko')]: 87,
+  [pk('af','vi')]: 68, [pk('af','th')]: 70, [pk('af','id')]: 48, [pk('af','tl')]: 58,
+  [pk('af','sw')]: 50, [pk('af','ka')]: 68, [pk('af','eu')]: 70, [pk('af','te')]: 72,
+
+  // ── Telugu ──
+  [pk('te','hi')]: 50, [pk('te','bn')]: 52, [pk('te','fa')]: 62,
+  [pk('te','en')]: 70, [pk('te','de')]: 75, [pk('te','nl')]: 75, [pk('te','is')]: 80,
+  [pk('te','fr')]: 75, [pk('te','es')]: 75, [pk('te','pt')]: 75,
+  [pk('te','it')]: 75, [pk('te','ca')]: 75, [pk('te','ro')]: 75,
+  [pk('te','el')]: 75, [pk('te','hy')]: 75,
+  [pk('te','ga')]: 80, [pk('te','cy')]: 80,
+  [pk('te','fi')]: 70, [pk('te','et')]: 72, [pk('te','hu')]: 68, [pk('te','tr')]: 62,
+  [pk('te','ar')]: 65, [pk('te','zh')]: 85, [pk('te','yue')]: 87,
+  [pk('te','ja')]: 78, [pk('te','ko')]: 75,
+  [pk('te','vi')]: 75, [pk('te','th')]: 72, [pk('te','id')]: 75,
+  [pk('te','sw')]: 80, [pk('te','ka')]: 72, [pk('te','eu')]: 80,
+};
+
+// ============================================================
+// DISTANCE COMPUTATION
+// ============================================================
+const langMap = {};
+LANGUAGES.forEach(l => langMap[l.id] = l);
+
+function defaultDistance(a, b) {
+  if (a.id === b.id) return 0;
+  if (a.branch === b.branch) {
+    if (a.sub === b.sub) return 25;
+    return 38;
+  }
+  if (a.family === b.family) return 52;
+  return 78;
+}
+
+function getDistance(idA, idB) {
+  if (idA === idB) return 0;
+  const key = pk(idA, idB);
+  if (D[key] !== undefined) return D[key];
+  return defaultDistance(langMap[idA], langMap[idB]);
+}
+
+function getSimilarity(idA, idB) {
+  return 100 - getDistance(idA, idB);
+}
+
+// ============================================================
+// SCORING
+// ============================================================
+const TIERS = [
+  [0,   'Monoglot'],
+  [1,   'Beginner'],
+  [30,  'Bilingual+'],
+  [75,  'Multilingual'],
+  [150, 'Polyglot'],
+  [250, 'Serious Polyglot'],
+  [400, 'Hyperpolyglot'],
+  [600, 'Legendary'],
+];
+
+function getTier(score) {
+  let tier = TIERS[0][1];
+  for (const [threshold, label] of TIERS) {
+    if (score >= threshold) tier = label;
+  }
+  return tier;
+}
+
+function calculateScore(nativeIds, learnedIds) {
+  if (!learnedIds.length) return { total: 0, tier: 'Monoglot', breakdown: [] };
+
+  // Greedy: always lock in the most novel remaining language next,
+  // comparing only against native(s) + already-locked languages.
+  // This guarantees adding a language never lowers the total score.
+  const remaining = [...learnedIds];
+  const known = [...nativeIds];
+  const breakdown = [];
+
+  while (remaining.length > 0) {
+    let bestIdx = 0;
+    let bestDist = -1;
+    let bestNearest = nativeIds[0];
+
+    for (let i = 0; i < remaining.length; i++) {
+      let minDist = 100;
+      let nearest = nativeIds[0];
+      for (const kid of known) {
+        const d = getDistance(remaining[i], kid);
+        if (d < minDist) { minDist = d; nearest = kid; }
+      }
+      if (minDist > bestDist) {
+        bestDist = minDist;
+        bestIdx = i;
+        bestNearest = nearest;
+      }
+    }
+
+    const lid = remaining.splice(bestIdx, 1)[0];
+    const points = Math.max(5, bestDist);
+    breakdown.push({
+      id: lid, name: langMap[lid].name, points,
+      nearest: bestNearest, nearestName: langMap[bestNearest].name,
+      distance: bestDist
+    });
+    known.push(lid);
+  }
+
+  breakdown.sort((a, b) => b.points - a.points);
+  const total = breakdown.reduce((s, i) => s + i.points, 0);
+  return { total, tier: getTier(total), breakdown };
+}
+
+// ============================================================
+// UI STATE
+// ============================================================
+let state = {
+  natives: ['en'],
+  learned: [],
+  matrixFilter: 'selected',
+};
+
+// ============================================================
+// RENDERING
+// ============================================================
+let nativeExpanded = false;
+
+function renderNativeSection() {
+  const chipsDiv = document.getElementById('native-chips');
+  const sel = document.getElementById('native-select');
+  const addLink = document.getElementById('add-native-link');
+  const isMulti = state.natives.length > 1 || nativeExpanded;
+
+  if (!isMulti) {
+    // Simple mode: just a dropdown to pick your native language
+    chipsDiv.innerHTML = '';
+    chipsDiv.style.display = 'none';
+    addLink.style.display = state.natives.length > 0 ? '' : 'none';
+    sel.style.display = '';
+    sel.innerHTML = '';
+    LANGUAGES.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l.id;
+      opt.textContent = l.name;
+      if (l.id === state.natives[0]) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.onchange = () => {
+      state.natives = [sel.value];
+      state.learned = state.learned.filter(id => !state.natives.includes(id));
+      renderLangList();
+      renderScore();
+      renderMatrix();
+    };
+  } else {
+    // Expanded mode: chips + dropdown that auto-adds
+    chipsDiv.style.display = '';
+    addLink.style.display = 'none';
+
+    chipsDiv.innerHTML = '';
+    state.natives.forEach(id => {
+      const chip = document.createElement('div');
+      chip.className = 'native-chip';
+      chip.textContent = langMap[id].name;
+      if (state.natives.length > 1) {
+        const x = document.createElement('span');
+        x.className = 'chip-x';
+        x.innerHTML = '&times;';
+        x.onclick = (e) => {
+          e.stopPropagation();
+          state.natives = state.natives.filter(n => n !== id);
+          if (state.natives.length <= 1) nativeExpanded = false;
+          renderNativeSection();
+          renderLangList();
+          renderScore();
+          renderMatrix();
+        };
+        chip.appendChild(x);
+      }
+      chipsDiv.appendChild(chip);
+    });
+
+    // Dropdown auto-adds on selection
+    sel.style.display = '';
+    sel.innerHTML = '';
+    const ph = document.createElement('option');
+    ph.value = '';
+    ph.textContent = 'Add language\u2026';
+    ph.disabled = true;
+    ph.selected = true;
+    sel.appendChild(ph);
+    LANGUAGES.filter(l => !state.natives.includes(l.id)).forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l.id;
+      opt.textContent = l.name;
+      sel.appendChild(opt);
+    });
+    sel.onchange = () => {
+      const id = sel.value;
+      if (id && !state.natives.includes(id)) {
+        state.natives.push(id);
+        state.learned = state.learned.filter(x => !state.natives.includes(x));
+        renderNativeSection();
+        renderLangList();
+        renderScore();
+        renderMatrix();
+      }
+    };
+  }
+}
+
+function renderLangList() {
+  const container = document.getElementById('lang-list');
+  container.innerHTML = '';
+  const hasNative = state.natives.length > 0;
+  DISPLAY_GROUPS.forEach(group => {
+    const gDiv = document.createElement('div');
+    gDiv.className = 'lang-group';
+    const h3 = document.createElement('h3');
+    h3.textContent = group.label;
+    gDiv.appendChild(h3);
+    const grid = document.createElement('div');
+    grid.className = 'lang-grid';
+    const ids = [...group.ids].sort((a, b) => state.natives.includes(b) - state.natives.includes(a));
+    ids.forEach(id => {
+      const chip = document.createElement('div');
+      chip.className = 'lang-chip';
+      chip.textContent = langMap[id].name;
+      if (state.natives.includes(id)) {
+        chip.classList.add('disabled');
+        chip.title = 'Your native language';
+      } else if (!hasNative) {
+        chip.classList.add('disabled');
+        chip.title = 'Select a native language first';
+      } else {
+        if (state.learned.includes(id)) chip.classList.add('selected');
+        chip.onclick = () => {
+          if (state.learned.includes(id)) {
+            state.learned = state.learned.filter(x => x !== id);
+            chip.classList.remove('selected');
+          } else {
+            state.learned.push(id);
+            chip.classList.add('selected');
+          }
+          renderScore();
+          renderMatrix();
+        };
+      }
+      grid.appendChild(chip);
+    });
+    gDiv.appendChild(grid);
+    container.appendChild(gDiv);
+  });
+}
+
+function renderScore() {
+  const section = document.getElementById('score-section');
+  const { total, tier, breakdown } = calculateScore(state.natives, state.learned);
+
+  if (!state.learned.length) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = '';
+  document.getElementById('score-val').textContent = total;
+  document.getElementById('score-tier').textContent = tier;
+  const nativeStr = state.natives.length === 1 ? '1 native' : state.natives.length + ' native';
+  document.getElementById('score-count').textContent = state.learned.length + ' language' + (state.learned.length !== 1 ? 's' : '') + ' + ' + nativeStr;
+
+  const table = document.getElementById('breakdown');
+  let html = `<thead><tr><th>Language</th><th style="width:40%">Difficulty</th><th>Points</th></tr></thead><tbody>`;
+  const maxPoints = Math.max(...breakdown.map(b => b.points), 1);
+  breakdown.forEach(item => {
+    const barW = Math.round((item.points / 100) * 100);
+    const isNative = state.natives.includes(item.nearest);
+    html += `<tr>
+      <td>${item.name} <span class="nearest">&larr; ${isNative ? '<strong style="color:#000">' + item.nearestName + '</strong>' : item.nearestName}</span></td>
+      <td class="bar-cell"><span class="mini-bar" style="width:${barW}%"></span></td>
+      <td>${item.points}</td>
+    </tr>`;
+  });
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+function renderMatrix() {
+  const wrap = document.getElementById('matrix-wrap');
+  if (document.getElementById('matrix-section').style.display === 'none') return;
+
+  let langIds;
+  if (state.matrixFilter === 'selected') {
+    langIds = [...state.natives, ...state.learned];
+    if (langIds.length < 2) {
+      wrap.innerHTML = '<div class="empty-state">Select at least one language to see relationships.</div>';
+      return;
+    }
+  } else {
+    langIds = LANGUAGES.map(l => l.id);
+  }
+
+  const langs = langIds.map(id => langMap[id]);
+  let html = '<table class="matrix"><thead><tr><th class="corner"></th>';
+  langs.forEach(l => {
+    html += `<th class="col-header">${l.name}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  langs.forEach((lA, i) => {
+    html += `<tr><th class="row-header">${lA.name}</th>`;
+    langs.forEach((lB, j) => {
+      const sim = getSimilarity(lA.id, lB.id);
+      const intensity = sim / 100;
+      const bg = `rgba(0,0,0,${intensity})`;
+      const isLight = intensity < 0.45;
+      html += `<td class="${isLight ? 'light' : ''}" style="background:${bg}" title="${lA.name} — ${lB.name}: ${sim}% similar">${sim}%</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+document.getElementById('matrix-toggle').onclick = function() {
+  const sec = document.getElementById('matrix-section');
+  if (sec.style.display === 'none') {
+    sec.style.display = '';
+    this.textContent = 'Hide language relationships';
+    renderMatrix();
+  } else {
+    sec.style.display = 'none';
+    this.textContent = 'Show language relationships';
+  }
+};
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.matrixFilter = btn.dataset.filter;
+    renderMatrix();
+  };
+});
+
+document.getElementById('add-native-link').onclick = () => {
+  nativeExpanded = true;
+  renderNativeSection();
+};
+
+// ============================================================
+// INIT
+// ============================================================
+renderNativeSection();
+renderLangList();
+renderScore();
+</script>
+</body>
+</html>

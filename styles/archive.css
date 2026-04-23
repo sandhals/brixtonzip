@@ -1,0 +1,35 @@
+.curiusitem{
+    margin-bottom:0.5rem;
+}
+
+.curiuslink{
+ font-family:'Garamond';
+ font-size:0.95rem;
+ text-overflow: ellipsis;
+}
+
+.curiusdate{
+font-family:'Roboto';
+font-size:0.65rem;
+color:rgba(25, 25, 25, 0.5)
+}
+
+.recentcurius{
+    margin-top:-1.1em;
+}
+
+.curiusitem {
+    overflow: hidden;
+    text-overflow:ellipsis;
+    position: relative;
+}
+
+.curiusitem {
+    white-space: nowrap;
+    overflow: hidden;
+    position: relative;
+}
+
+hr{
+    margin-top:0.5em;
+}

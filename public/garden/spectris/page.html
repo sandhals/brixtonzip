@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SPECTRIS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="game-container" id="gameContainer">
+        <div class="main-section">
+            <div class="game-title">SPECTRIS</div>
+            <div class="game-info">
+                <div class="level-indicator">LVL <span id="level">1</span></div>
+                <div class="difficulty-indicator"><span id="colorDifficulty">HARD</span> MODE</div>
+            </div>
+            <canvas id="gameCanvas" width="280" height="560"></canvas>
+        </div>
+
+        <div class="side-panel">
+            <div class="info-box">
+                <h2>Hold</h2>
+                <canvas id="holdCanvas" class="preview-canvas" width="80" height="80"></canvas>
+            </div>
+
+            <div class="info-box">
+                <h2>Next</h2>
+                <canvas id="previewCanvas" class="preview-canvas" width="80" height="80"></canvas>
+            </div>
+
+            <button id="pauseBtn">⏸</button>
+
+            <button class="settings-btn" id="settingsBtn">⚙</button>
+
+            <div class="info-box">
+                <h2>Score</h2>
+                <div class="score" id="score">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <h1>SETTINGS</h1>
+
+            <div class="setting-group">
+                <label>Ghost Pieces</label>
+                <div class="toggle-group">
+                    <button class="toggle-btn" data-setting="ghostMode" data-value="easy">Easy</button>
+                    <button class="toggle-btn" data-setting="ghostMode" data-value="hard">Hard</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label>Color Matching</label>
+                <div class="toggle-group">
+                    <button class="toggle-btn" data-setting="colorMode" data-value="easy">Easy</button>
+                    <button class="toggle-btn" data-setting="colorMode" data-value="medium">Medium</button>
+                    <button class="toggle-btn" data-setting="colorMode" data-value="hard">Hard</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label>Color Palette</label>
+                <div class="toggle-group">
+                    <button class="toggle-btn" data-setting="palette" data-value="dungeon">Dungeon</button>
+                    <button class="toggle-btn" data-setting="palette" data-value="pudding">Pudding</button>
+                </div>
+            </div>
+
+            <button class="close-settings-btn" id="closeSettings">CLOSE</button>
+        </div>
+    </div>
+
+    <div class="pause-overlay" id="pauseOverlay">
+        <h1>PAUSED</h1>
+        <p>PRESS P TO CONTINUE</p>
+        <button id="pauseSettingsBtn">SETTINGS</button>
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <h1>GAME OVER</h1>
+        <p>FINAL SCORE: <span id="finalScore">0</span></p>
+        <p>DUNGEON CLEARED: LVL <span id="finalLevel">1</span></p>
+        <button onclick="location.reload()">Try Again</button>
+    </div>
+
+<script src="game.js"></script>
+</body>
+</html>

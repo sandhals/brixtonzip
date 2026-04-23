@@ -1,0 +1,825 @@
+@font-face {
+  font-family: 'Garamond';
+  src: url('/fonts/apple-garamond/AppleGaramond-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Garamond';
+  src: url('/fonts/apple-garamond/AppleGaramond-LightItalic.ttf') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face{
+  font-family: 'OCR';
+  src: url('/fonts/ocr/OCRAStd.otf');
+  font-weight: 300;
+  font-style:normal;
+}
+
+body {
+  font-family: 'Garamond', serif;
+}
+
+@font-face {
+  font-family: 'linguistics';
+  src: local('Times New Roman');
+  unicode-range: U+0250–U+02AF;
+}
+
+:root,
+[data-theme="light"] {
+  --black: rgb(24, 24, 24);
+  --white: rgb(247, 247, 247);
+  --softwhite: rgba(247, 247, 247, 0.875);
+  --white-0: rgba(247, 247, 247, 0);
+  --link-color: blue;
+  --img-blend: multiply;
+  /* sunlit */
+  --sl-shadow: #1a1917;
+  --sl-bounce: #fffffc;
+  --sl-timing: cubic-bezier(0.455, 0.190, 0.000, 0.985);
+}
+
+[data-theme="dark"] {
+  --black: rgb(210, 210, 205);
+  --white: rgb(20, 20, 20);
+  --softwhite: rgba(22, 22, 22, 0.97);
+  --white-0: rgba(20, 20, 20, 0);
+  --link-color: #6fa3ef;
+  --img-blend: normal;
+  /* sunlit */
+  --sl-shadow: #030307;
+  --sl-bounce: #1b293f;
+}
+
+[data-theme="warm"] {
+  --black: rgb(44, 34, 22);
+  --white: rgb(245, 238, 217);
+  --softwhite: rgba(245, 238, 217, 0.875);
+  --white-0: rgba(245, 238, 217, 0);
+  --link-color: blue;
+  --img-blend: multiply;
+  /* sunlit */
+  --sl-shadow: #2c2010;
+  --sl-bounce: #fff8ec;
+}
+
+/* ========================================
+   Sunlit ambient light overlay
+   Based on github.com/jackyzha0/sunlit (jzhao.xyz)
+   Two-layer approach:
+     #sunlit-glow    — diffuse light, behind content (z-index: 0)
+     #sunlit-shadows — shadow structure, above content (z-index: 3), no blur
+   ======================================== */
+
+/* --- Layer 1: ambient glow (behind content) --- */
+
+#sunlit-glow {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+  transition: opacity 1.2s ease;
+  /* Fade glow toward center — keeps warmth on the right margin, not over content */
+  -webkit-mask-image: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 1)    0%,
+    rgba(0, 0, 0, 0.75) 22%,
+    rgba(0, 0, 0, 0.35) 42%,
+    rgba(0, 0, 0, 0.1)  58%,
+    rgba(0, 0, 0, 0)    70%
+  );
+  mask-image: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 1)    0%,
+    rgba(0, 0, 0, 0.75) 22%,
+    rgba(0, 0, 0, 0.35) 42%,
+    rgba(0, 0, 0, 0.1)  58%,
+    rgba(0, 0, 0, 0)    70%
+  );
+}
+
+body.sunlit-hidden #sunlit-glow {
+  opacity: 0;
+}
+
+body.sunlit-notransition #sunlit-glow {
+  transition: none !important;
+}
+
+#glow {
+  position: absolute;
+  background: linear-gradient(309deg, var(--sl-bounce), var(--sl-bounce) 20%, transparent);
+  transition: background 1s var(--sl-timing);
+  height: 100%;
+  width: 100%;
+  opacity: 0.35;
+  filter: blur(60px);
+}
+
+#glow-bounce {
+  position: absolute;
+  background: linear-gradient(355deg, var(--sl-bounce) 0%, transparent 30%, transparent 100%);
+  transition: background 1s var(--sl-timing);
+  opacity: 0.28;
+  height: 100%;
+  width: 100%;
+  bottom: 0;
+  filter: blur(60px);
+}
+
+/* --- Layer 2: shadow structure (above content) --- */
+
+#sunlit-shadows {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 3;
+  transition: opacity 1.2s ease;
+}
+
+body.sunlit-hidden #sunlit-shadows {
+  opacity: 0;
+}
+
+body.sunlit-notransition #sunlit-shadows,
+body.sunlit-notransition .sunlit-perspective,
+body.sunlit-notransition #blinds > .shutters,
+body.sunlit-notransition .shutter {
+  transition: none !important;
+}
+
+/* Suppresses only shutter transitions — used to snap closed before animating open */
+body.sunlit-shutters-notransition #blinds > .shutters,
+body.sunlit-shutters-notransition .shutter {
+  transition: none !important;
+}
+
+.sunlit-perspective {
+  position: absolute;
+  transition: transform 1.7s var(--sl-timing), opacity 4s ease;
+  top: -30vh;
+  right: 0;
+  width: 80vw;
+  height: 130vh;
+  opacity: 0.035;
+  background-blend-mode: darken;
+  transform-origin: top right;
+  transform-style: preserve-3d;
+  transform: matrix3d(0.75, -0.0625, 0, 0.0008, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+  /* No blur on the whole overlay — that creates a page-wide haze over content.
+     Blur lives on individual shadow children instead, keeping lines soft without
+     blurring text behind the layer. */
+  -webkit-mask-image: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 1)    0%,
+    rgba(0, 0, 0, 0.92) 12%,
+    rgba(0, 0, 0, 0.5)  28%,
+    rgba(0, 0, 0, 0.14) 44%,
+    rgba(0, 0, 0, 0.03) 55%,
+    rgba(0, 0, 0, 0)    63%
+  );
+  mask-image: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 1)    0%,
+    rgba(0, 0, 0, 0.92) 12%,
+    rgba(0, 0, 0, 0.5)  28%,
+    rgba(0, 0, 0, 0.14) 44%,
+    rgba(0, 0, 0, 0.03) 55%,
+    rgba(0, 0, 0, 0)    63%
+  );
+}
+
+/* Blur the shadow shapes themselves — gives projected-light softness
+   without turning the whole layer into a veil over text */
+#sunlit-shadows .shutters,
+#sunlit-shadows .vertical,
+#sunlit-shadows #leaves {
+  filter: blur(2px);
+}
+
+body.sunlit-dark .sunlit-perspective {
+  opacity: 0.07;
+  transform: matrix3d(0.8333, 0.0833, 0, 0.0003, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+}
+
+body.sunlit-warm .sunlit-perspective {
+  opacity: 0.05;
+}
+
+#leaves {
+  position: absolute;
+  background-size: cover;
+  background-repeat: no-repeat;
+  bottom: 0;
+  right: -600px;
+  width: 1600px;
+  height: 1400px;
+  background-image: url('/leaves.png');
+  perspective: 400px;
+  animation: sunlit-billow 8s ease-in-out infinite;
+}
+
+#blinds {
+  position: relative;
+  width: 100%;
+}
+
+#blinds .shutter,
+#blinds .bar {
+  background-color: var(--sl-shadow);
+  transition: background-color 1s var(--sl-timing);
+}
+
+#blinds > .shutters {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 60px;
+  transition: gap 1s var(--sl-timing);
+}
+
+body.sunlit-dark #blinds > .shutters {
+  gap: 20px;
+}
+
+#blinds > .vertical {
+  top: 0;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+}
+
+.vertical > .bar {
+  width: 12px;
+  height: 100%;
+}
+
+.shutter {
+  width: 100%;
+  height: 40px;
+  transition: height 1s var(--sl-timing);
+}
+
+body.sunlit-dark .shutter {
+  height: 80px;
+}
+
+/* Transient class: shutters start closed when entering warm mode, then animate open */
+body.sunlit-shutters-closed #blinds > .shutters {
+  gap: 20px;
+}
+
+body.sunlit-shutters-closed .shutter {
+  height: 80px;
+}
+
+
+@keyframes sunlit-billow {
+  0%   { transform: rotateX(0deg)  rotateY(0deg)  scale(1);    }
+  18%  { transform: rotateX(1deg)  rotateY(2deg)  scale(1.03); }
+  32%  { transform: rotateX(-4deg) rotateY(-2deg) scale(0.96); }
+  66%  { transform: rotateX(3deg)  rotateY(-1deg) scale(1.04); }
+  100% { transform: rotateX(0deg)  rotateY(0deg)  scale(1);    }
+}
+
+::selection {
+  background: var(--black);
+  color: var(--white);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  color: var(--black);
+}
+
+body {
+  width: 100%;
+  background: var(--white);
+}
+
+.container {
+  background: transparent;
+  max-width: 500px;
+  margin: auto;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  min-height: 100vh;
+}
+
+/* when showing the source */
+body.is-showing-source .sourcecode {
+  position: static;    /* put it back in normal flow so the page grows */
+  filter: blur(0);
+}
+
+body.is-showing-source .content {
+  display: none;       /* hide your normal page content */
+}
+
+body.is-showing-source .container {
+  overflow: visible;   /* allow page to expand and scroll */
+}
+
+
+
+.content {
+  background-color: var(--softwhite);
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  box-sizing: border-box;
+  display: block;
+  padding-bottom: 5em;
+}
+
+.content.extra-padding {
+  padding-bottom: 10em;
+}
+
+.footer {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 2;
+  margin-top: -2em;
+  width: 100%;
+  transform: translate(-50%, 0);
+}
+
+.pill {
+  font-family: Roboto;
+  font-weight: 400;
+  font-size: 0.6em;
+  border: 1px solid var(--black);
+  border-radius: 7px;
+  padding: 0 0.6em;
+  opacity: 80%;
+  color: var(--black);
+  user-select: none;
+}
+
+a.pill:hover {
+  text-decoration: none;
+  color: var(--black);
+}
+
+.opener {
+  margin-right: 5em;
+  transition: 100ms;
+  line-height: 1em;
+}
+
+.hometext {
+  padding-bottom: 1em;
+  text-indent: 0 !important;
+  filter: grayscale(1);
+}
+
+.hometext:hover > .opener {
+  margin-left: 1.5em;
+  margin-right: 3.5em;
+  transition: 400ms ease-in-out;
+}
+
+a.opener {
+  position: relative;
+}
+
+.hometext:hover > a.opener::before {
+  content: '';
+  position: absolute;
+  left: -1.5em;
+  top: 0;
+  bottom: 0;
+  width: 1.5em;
+}
+
+a {
+  color: var(--link-color);
+  transition: 300ms;
+}
+
+.hometext:hover {
+  filter: grayscale(0);
+  transition: 300ms;
+}
+
+.box {
+  border-top: solid 1px var(--black);
+  border-left: solid 1px var(--black);
+  border-right: solid 1px var(--black);
+  padding: 5% 5% 3em 5%;
+  width: calc(94%);
+  margin: 1vh auto 0 auto;
+  height: 110%;
+  box-sizing: border-box;
+  position: relative;
+  text-align: justify;
+  font-family: 'Garamond', 'linguistics', serif;
+}
+
+.box > p {
+  text-indent: 2rem;
+  font-size: 14pt;
+  margin-bottom: 1rem;
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Roboto', sans-serif;
+  letter-spacing: -0.05rem;
+  margin-bottom: 0.8rem;
+}
+
+h2 {
+  font-weight: 500;
+}
+
+h3 {
+  font-weight: 300;
+}
+
+details {
+  font-family: Roboto;
+  font-weight: 300;
+  margin-bottom: 1em;
+}
+
+.hometext,
+#shh {
+  font-size: 14pt;
+  font-family: 'Garamond', serif;
+  text-decoration: none;
+  color: var(--black);
+  cursor: text;
+}
+
+.status-marquee-box {
+  overflow: hidden;
+  background: var(--black);
+  height: 1.3em;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.marquee-face {
+  flex-shrink: 0;
+  height: 100%;
+  padding-left: 0.4em;
+  padding-right: 0.5em;
+  display: flex;
+  align-items: center;
+}
+
+.marquee-face svg {
+  height: 1.6em;
+  width: auto;
+  margin-top: -0.2em;
+}
+
+.marquee-text-wrapper {
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+}
+
+.status-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: scroll-left 20s linear infinite;
+  color: var(--white);
+  font-family: monospace;
+  line-height: 1.3em;
+  font-size: 1em;
+  width: max-content;
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.status-marquee * {
+  color: var(--white) !important;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(100vw);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+
+
+img {
+  width: 100%;
+  height: 45vh;
+  object-fit: cover;
+  object-position: 50% 35%;
+  mix-blend-mode: multiply;
+  background-color: var(--black) !important;
+}
+
+a {
+  font-family: Roboto;
+  font-weight: 300;
+  text-decoration: none;
+  font-size: 0.8em;
+}
+
+a:hover {
+  text-decoration: underline;
+  color: var(--link-color);
+}
+
+.norwegian-easter {
+  display: inline;
+  all: unset;
+  cursor: default;
+}
+
+.hidden-link {
+  all: unset;
+  pointer-events: none;
+  color: inherit;
+  cursor: text;
+  text-decoration: none;
+}
+
+/* Wait 2s before link activates */
+.norwegian-easter:hover .hidden-link {
+  animation: activateLink 0s linear 2s forwards;
+}
+
+/* When hover ends, immediately deactivate */
+.norwegian-easter:not(:hover) .hidden-link {
+  animation: none;
+  pointer-events: none;
+  cursor: text;
+}
+
+@keyframes activateLink {
+  to {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+}
+
+
+.recentcurius {
+  filter: grayscale(1);
+}
+
+u {
+  text-decoration: none;
+  font-family: Roboto;
+  font-weight: 300;
+  font-size: 0.8em;
+}
+
+ul {
+  margin-top: -1.1em;
+  margin-left: 6em;
+  list-style: none;
+}
+
+li {
+  margin-bottom: 0.2em;
+}
+
+.showsource {
+  padding: 1em 0 3.5rem 0;
+  text-align: center;
+  font-size: 0.6rem;
+  font-family: monospace;
+  opacity: 0.5;
+  line-height: 1em;
+  cursor: help;
+  white-space: nowrap;
+}
+
+.showsource:hover {
+  opacity: 1;
+  transition: 1s;
+  color: var(--link-color);
+}
+
+.hidesource {
+  color: var(--link-color);
+  width: 26em;
+  padding: 2em;
+  text-align: center;
+  font-size: 0.6rem;
+  font-family: monospace;
+  line-height: 1em;
+  cursor: alias;
+  position: fixed;
+  bottom: 10.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--white);
+  z-index: 500;
+  border: 1px solid var(--black);
+}
+
+.sourcecode {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 5% 5% 3em 5%;
+  font-family: monospace;
+  font-size: 0.5rem;
+  white-space: pre-wrap;
+  z-index: 1;
+  filter: blur(1px);
+  pointer-events: none;
+  word-wrap: break-word;
+}
+
+.titlemark {
+  padding-top: 5vh;
+  font-family: 'Roboto';
+  font-weight: 900;
+  font-size: 5rem;
+  letter-spacing: -0.05em;
+  text-align: center;
+  background: linear-gradient(0deg, var(--white) 80%, var(--white-0) 100%);
+}
+
+.titlemark > * {
+  font-weight: inherit;
+  font-size: inherit;
+  color: var(--black) !important;
+}
+
+.titlemark > *:hover {
+  text-decoration: none !important;
+}
+
+.jptext {
+  font-size: 0.8em !important;
+  font-family: serif;
+  font-weight: 100;
+}
+
+.tooltip {
+  display: none;
+  border: solid var(--black) 1px;
+  height: 100px;
+  width: 170px;
+  position: absolute;
+  background: var(--white);
+  bottom: 15pt;
+  left: -50%;
+}
+
+span:hover .tooltip {
+  display: block;
+}
+
+span {
+  position: relative;
+}
+
+.tooltip > img {
+  object-fit: contain;
+  height: 100%;
+}
+
+.tooltip > span {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  color: var(--white);
+  font-size: 8pt;
+  z-index: 1000;
+  font-family: monospace;
+  background: var(--black);
+}
+
+.name-tooltip {
+  position: relative;
+  cursor: help;
+  border-bottom: 1px dotted rgba(0, 0, 0, 0.3);
+}
+
+.name-tooltip .name-tooltip-text {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  margin-left: 0.5em;
+  background: var(--black);
+  color: var(--white);
+  font-size: 0.75em;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  padding: 0.5em 0.75em;
+  border-radius: 3px;
+  width: 220px;
+  line-height: 1.4;
+  z-index: 1000;
+}
+
+.name-tooltip:hover .name-tooltip-text {
+  display: block;
+}
+
+.receipt{
+  font-family: 'OCR';
+  text-align:center;
+  text-indent: 0;
+}
+
+.receipttitle{
+  font-size:2.5em;
+}
+
+/* Bio length slider */
+.bio-slider {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  margin-bottom: 1.5em;
+}
+
+.bio-label {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  font-size: 0.7em;
+  white-space: nowrap;
+  opacity: 0.5;
+  width: 7.5em;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.bio-range {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 1px;
+  background: var(--black);
+  outline: none;
+  opacity: 0.4;
+  transition: opacity 300ms;
+}
+
+.bio-range:hover {
+  opacity: 1;
+}
+
+.bio-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--black);
+  cursor: pointer;
+}
+
+.bio-range::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--black);
+  border: none;
+  cursor: pointer;
+}
+
+/* Dark mode: images shown normally via --img-blend variable (multiply is designed for light backgrounds) */
+[data-theme="dark"] img {
+  mix-blend-mode: var(--img-blend);
+  background-color: transparent !important;
+}
+
+/* Theme transition */
+body, .container, .content, .footer, .status-marquee-box {
+  transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease;
+}

@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/garden/:project",
+      "destination": "/api/garden/:project"
+    },
+    {
+      "source": "/garden/:project/",
+      "destination": "/api/garden/:project"
+    }
+  ]
+}
