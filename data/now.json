@@ -4,12 +4,16 @@
   "status": [
     { "label": "eating", "value": "hallabong with chia pudding" },
     { "label": "reading", "value": "" },
-    { "label": "listening to", "value": "hypnotized by xg" }
+    { "label": "listening to", "value": "kgb by adéla" }
   ],
 
   "split": ["Arms", "Chest", "Back", "Delts", "Arms", "Chest", "Rest"],
 
   "sections": [
+    {
+      "title": "Moving House",
+      "body": "I've been busy recently with getting ready to move house, so my day to day schedule has been a bit all over the place."
+    },
     {
       "title": "Languages",
       "body": "For the first few months of the year I'm focusing on French, and maintaining my Japanese and Korean more passively."
