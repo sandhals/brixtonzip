@@ -81,7 +81,7 @@ export default function AboutPage() {
               <td style={{ padding: '0.25em 0' }}>
                 <span className="name-tooltip">
                   振楠
-                  <span className="name-tooltip-text">Derived from a kanji reading of my name in Japanese, where 振 is read as "buri" and 楠 as "kusu." In Mandarin these characters are read as zhènnán, which happens to work as a plausible-sounding Chinese given name.</span>
+                  <span className="name-tooltip-text">Derived from a kanji reading of my name in Japanese (振楠敦 Buri-kusu-ton), where "buri" is represented by "振" and kusu by "楠" to form my Chinese name, Zhènnán. </span>
                 </span>
               </td>
             </tr>

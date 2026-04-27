@@ -59,12 +59,12 @@ body {
 }
 
 [data-theme="warm"] {
-  --black: rgb(28, 16, 8);
+  --black: rgb(38, 31, 18);
   --white: rgb(245, 238, 217);
   --softwhite: rgba(245, 238, 217, 0.875);
   --white-0: rgba(245, 238, 217, 0);
   --link-color: #c0351a;
-  --img-blend: multiply;
+  --img-blend: normal;
   /* sunlit */
   --sl-shadow: #2c2010;
   --sl-bounce: #fff8ec;
@@ -613,6 +613,12 @@ a:hover {
   filter: grayscale(1);
 }
 
+hr {
+  border: none;
+  border-top: 1px solid var(--black);
+  opacity: 0.18;
+}
+
 u {
   text-decoration: none;
   font-family: Roboto;
@@ -832,6 +838,24 @@ span {
   background: var(--black);
   border: none;
   cursor: pointer;
+}
+
+/* Warm mode: grayscale filter strips colour — remove it so warm brown shows through */
+[data-theme="warm"] .hometext,
+[data-theme="warm"] .recentcurius {
+  filter: none;
+}
+
+[data-theme="warm"] .hometext:hover {
+  filter: none;
+}
+
+
+/* Warm mode: remap image tones so black→--black, white→white via SVG feColorMatrix (defined in _app.tsx) */
+/* .color-image excluded — it's the true-colour reveal layer in GardenHeaderImage */
+[data-theme="warm"] img:not(.color-image) {
+  mix-blend-mode: normal;
+  filter: url(#warm-tone-filter);
 }
 
 /* Dark mode: images shown normally via --img-blend variable (multiply is designed for light backgrounds) */

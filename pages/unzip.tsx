@@ -301,7 +301,7 @@ export async function getStaticProps() {
     const data = await response.json();
     const tree: GitHubTreeItem[] = data.tree;
 
-    const excludeFromPages = ['api', '_document', 'unzip', 'sitemap', '_app', 'garden', 'lussekatter'];
+    const excludeFromPages = ['api', '_document', 'unzip', 'sitemap', '_app', 'garden', 'lussekatter', '[...slug]'];
 
     const filteredTree = tree.filter((item) => {
       if (item.path.startsWith('public/garden/')) return true;

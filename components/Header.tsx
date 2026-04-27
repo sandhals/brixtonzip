@@ -91,10 +91,10 @@ export default function Header({ variant = 'article' }: HeaderProps) {
     <div className="marquee-text-wrapper">
       <div className="status-marquee">
         {variant === 'home' ? homeCopy : articleCopy}
-        <span id="currentWeekday"></span>
-        <span id="currentTime"></span>
+        <span id="currentWeekday" suppressHydrationWarning></span>
+        <span id="currentTime" suppressHydrationWarning></span>
         {variant === 'home' ? 'IN SEOUL, SO I\'M PROBABLY' : 'IN SEOUL ON A '}
-        <span id="myStatus"></span>
+        <span id="myStatus" suppressHydrationWarning></span>
         RIGHT NOW
       </div>
     </div>
