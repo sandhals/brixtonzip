@@ -299,6 +299,7 @@ html, body {
   margin: 1.2em 0;
 }
 #styled-editor .s-empty { min-height: 1.7em; }
+#styled-editor .s-line { white-space: pre-wrap; }
 
 /* Active panel indicator */
 .panel.active {

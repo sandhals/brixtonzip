@@ -893,6 +893,47 @@ markdownInput.addEventListener('keydown', (e) => {
   }
 });
 
+richtext.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  e.preventDefault();
+
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const savedRange = sel.getRangeAt(0).cloneRange();
+
+  let li = sel.getRangeAt(0).startContainer;
+  while (li && li !== richtext) {
+    if (li.nodeName === 'LI') break;
+    li = li.parentNode;
+  }
+
+  if (li && li.nodeName === 'LI') {
+    const parentList = li.parentElement;
+    if (e.shiftKey) {
+      const parentLi = parentList.parentElement;
+      if (parentLi && parentLi.nodeName === 'LI') {
+        parentLi.parentElement.insertBefore(li, parentLi.nextSibling);
+        if (parentList.children.length === 0) parentList.remove();
+      }
+    } else {
+      const prevLi = li.previousElementSibling;
+      if (prevLi) {
+        let subList = Array.from(prevLi.children).find(c => c.nodeName === 'UL' || c.nodeName === 'OL');
+        if (!subList) {
+          subList = document.createElement(parentList.nodeName);
+          prevLi.appendChild(subList);
+        }
+        subList.appendChild(li);
+      }
+    }
+    try { sel.removeAllRanges(); sel.addRange(savedRange); } catch (_) {}
+  } else if (!e.shiftKey) {
+    document.execCommand('insertText', false, '  ');
+  }
+
+  richtext.dispatchEvent(new Event('input'));
+});
+
 styledEditor.addEventListener('keydown', (e) => {
   if (e.key !== 'Tab') return;
   e.preventDefault();
