@@ -857,6 +857,85 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ==============================
+// TAB INDENTATION
+// ==============================
+
+markdownInput.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  e.preventDefault();
+
+  const ta = markdownInput;
+  const text = ta.value;
+  const pos = ta.selectionStart;
+  const lineStart = text.lastIndexOf('\n', pos - 1) + 1;
+  const lineEndIdx = text.indexOf('\n', pos);
+  const lineEnd = lineEndIdx === -1 ? text.length : lineEndIdx;
+  const line = text.substring(lineStart, lineEnd);
+
+  if (e.shiftKey) {
+    const m = line.match(/^( {1,2})/);
+    if (m) {
+      const n = m[1].length;
+      ta.value = text.substring(0, lineStart) + text.substring(lineStart + n);
+      ta.selectionStart = ta.selectionEnd = Math.max(lineStart, pos - n);
+      ta.dispatchEvent(new Event('input'));
+    }
+  } else {
+    const isList = /^\s*([-*]|\d+\.)\s/.test(line);
+    if (isList) {
+      ta.value = text.substring(0, lineStart) + '  ' + text.substring(lineStart);
+      ta.selectionStart = ta.selectionEnd = pos + 2;
+    } else {
+      ta.value = text.substring(0, pos) + '  ' + text.substring(pos);
+      ta.selectionStart = ta.selectionEnd = pos + 2;
+    }
+    ta.dispatchEvent(new Event('input'));
+  }
+});
+
+styledEditor.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  e.preventDefault();
+
+  const md = extractTextFromStyled();
+  const offset = getCursorOffset(styledEditor);
+  const lineStart = md.lastIndexOf('\n', offset - 1) + 1;
+  const lineEndIdx = md.indexOf('\n', offset);
+  const lineEnd = lineEndIdx === -1 ? md.length : lineEndIdx;
+  const line = md.substring(lineStart, lineEnd);
+
+  let newMd = md;
+  let newOffset = offset;
+
+  if (e.shiftKey) {
+    const m = line.match(/^( {1,2})/);
+    if (m) {
+      const n = m[1].length;
+      newMd = md.substring(0, lineStart) + md.substring(lineStart + n);
+      newOffset = Math.max(lineStart, offset - n);
+    }
+  } else {
+    const isList = /^\s*([-*]|\d+\.)\s/.test(line);
+    if (isList) {
+      newMd = md.substring(0, lineStart) + '  ' + md.substring(lineStart);
+      newOffset = offset + 2;
+    } else {
+      newMd = md.substring(0, offset) + '  ' + md.substring(offset);
+      newOffset = offset + 2;
+    }
+  }
+
+  if (newMd !== md) {
+    markdownInput.value = newMd;
+    styledEditor.innerHTML = generateStyledHtml(newMd);
+    richtext.innerHTML = marked.parse(newMd);
+    setCursorOffset(styledEditor, newOffset);
+    debounceSave(newMd);
+    updateWordCount(newMd);
+  }
+});
+
+// ==============================
 // PASTE HANDLING
 // ==============================
 

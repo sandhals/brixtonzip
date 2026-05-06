@@ -3,6 +3,9 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
-  "/about": "pages/about.js",
-  "/unzip": "pages/unzip.js"
+  "/[...slug]": "pages/[...slug].js",
+  "/api/garden/[...path]": "pages/api/garden/[...path].js",
+  "/unzip": "pages/unzip.js",
+  "/api/curius": "pages/api/curius.js",
+  "/api/source": "pages/api/source.js"
 }
