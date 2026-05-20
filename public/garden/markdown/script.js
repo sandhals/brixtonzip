@@ -857,6 +857,126 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ==============================
+// TAB INDENTATION
+// ==============================
+
+markdownInput.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  e.preventDefault();
+
+  const ta = markdownInput;
+  const text = ta.value;
+  const pos = ta.selectionStart;
+  const lineStart = text.lastIndexOf('\n', pos - 1) + 1;
+  const lineEndIdx = text.indexOf('\n', pos);
+  const lineEnd = lineEndIdx === -1 ? text.length : lineEndIdx;
+  const line = text.substring(lineStart, lineEnd);
+
+  if (e.shiftKey) {
+    const m = line.match(/^( {1,2})/);
+    if (m) {
+      const n = m[1].length;
+      ta.value = text.substring(0, lineStart) + text.substring(lineStart + n);
+      ta.selectionStart = ta.selectionEnd = Math.max(lineStart, pos - n);
+      ta.dispatchEvent(new Event('input'));
+    }
+  } else {
+    const isList = /^\s*([-*]|\d+\.)\s/.test(line);
+    if (isList) {
+      ta.value = text.substring(0, lineStart) + '  ' + text.substring(lineStart);
+      ta.selectionStart = ta.selectionEnd = pos + 2;
+    } else {
+      ta.value = text.substring(0, pos) + '  ' + text.substring(pos);
+      ta.selectionStart = ta.selectionEnd = pos + 2;
+    }
+    ta.dispatchEvent(new Event('input'));
+  }
+});
+
+richtext.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  e.preventDefault();
+
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const savedRange = sel.getRangeAt(0).cloneRange();
+
+  let li = sel.getRangeAt(0).startContainer;
+  while (li && li !== richtext) {
+    if (li.nodeName === 'LI') break;
+    li = li.parentNode;
+  }
+
+  if (li && li.nodeName === 'LI') {
+    const parentList = li.parentElement;
+    if (e.shiftKey) {
+      const parentLi = parentList.parentElement;
+      if (parentLi && parentLi.nodeName === 'LI') {
+        parentLi.parentElement.insertBefore(li, parentLi.nextSibling);
+        if (parentList.children.length === 0) parentList.remove();
+      }
+    } else {
+      const prevLi = li.previousElementSibling;
+      if (prevLi) {
+        let subList = Array.from(prevLi.children).find(c => c.nodeName === 'UL' || c.nodeName === 'OL');
+        if (!subList) {
+          subList = document.createElement(parentList.nodeName);
+          prevLi.appendChild(subList);
+        }
+        subList.appendChild(li);
+      }
+    }
+    try { sel.removeAllRanges(); sel.addRange(savedRange); } catch (_) {}
+  } else if (!e.shiftKey) {
+    document.execCommand('insertText', false, '  ');
+  }
+
+  richtext.dispatchEvent(new Event('input'));
+});
+
+styledEditor.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  e.preventDefault();
+
+  const md = extractTextFromStyled();
+  const offset = getCursorOffset(styledEditor);
+  const lineStart = md.lastIndexOf('\n', offset - 1) + 1;
+  const lineEndIdx = md.indexOf('\n', offset);
+  const lineEnd = lineEndIdx === -1 ? md.length : lineEndIdx;
+  const line = md.substring(lineStart, lineEnd);
+
+  let newMd = md;
+  let newOffset = offset;
+
+  if (e.shiftKey) {
+    const m = line.match(/^( {1,2})/);
+    if (m) {
+      const n = m[1].length;
+      newMd = md.substring(0, lineStart) + md.substring(lineStart + n);
+      newOffset = Math.max(lineStart, offset - n);
+    }
+  } else {
+    const isList = /^\s*([-*]|\d+\.)\s/.test(line);
+    if (isList) {
+      newMd = md.substring(0, lineStart) + '  ' + md.substring(lineStart);
+      newOffset = offset + 2;
+    } else {
+      newMd = md.substring(0, offset) + '  ' + md.substring(offset);
+      newOffset = offset + 2;
+    }
+  }
+
+  if (newMd !== md) {
+    markdownInput.value = newMd;
+    styledEditor.innerHTML = generateStyledHtml(newMd);
+    richtext.innerHTML = marked.parse(newMd);
+    setCursorOffset(styledEditor, newOffset);
+    debounceSave(newMd);
+    updateWordCount(newMd);
+  }
+});
+
+// ==============================
 // PASTE HANDLING
 // ==============================
 

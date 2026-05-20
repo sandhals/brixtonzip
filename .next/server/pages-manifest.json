@@ -2,11 +2,9 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
+  "/api/garden/[...path]": "pages/api/garden/[...path].js",
   "/[...slug]": "pages/[...slug].js",
   "/": "pages/index.js",
   "/unzip": "pages/unzip.js",
-  "/api/garden/[...path]": "pages/api/garden/[...path].js",
-  "/about": "pages/about.js",
-  "/api/curius": "pages/api/curius.js",
-  "/api/source": "pages/api/source.js"
+  "/api/curius": "pages/api/curius.js"
 }
