@@ -117,13 +117,14 @@ if (!window.__brixtonScriptInitialized) {
       document.body.classList.add("is-showing-source");
 
       const heartSpan = trigger.querySelector("span#heart");
-      if (heartSpan) heartSpan.textContent = "💙";
+      const activeHeart = document.documentElement.dataset.theme === "warm" ? "🧡" : "💙";
+      if (heartSpan) heartSpan.textContent = activeHeart;
 
       let hideButton = document.querySelector(".hidesource");
       if (!hideButton) {
         hideButton = document.createElement("div");
         hideButton.className = "hidesource";
-        hideButton.innerText = "this site was handmade with love 💙";
+        hideButton.innerText = `this site was handmade with love ${activeHeart}`;
         document.body.appendChild(hideButton);
       }
 

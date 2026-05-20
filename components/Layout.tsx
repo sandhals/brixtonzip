@@ -17,7 +17,7 @@ export default function Layout({
   children,
   variant = 'article',
   title = 'brixton.zip',
-  description = 'site of brixton.zip – copywriting, language, life in Seoul'
+  description = 'a website is just a folder'
 }: LayoutProps) {
   const sharedHead = (
     <Head>
