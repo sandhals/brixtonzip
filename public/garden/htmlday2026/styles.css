@@ -149,6 +149,81 @@ html, body {
   transition-duration: 1.2s, 3.5s;
 }
 
+/* --- the gate ------------------------------------------------------------
+   Deliberately quiet rather than a modal: the orbs keep drifting behind it,
+   so the piece is already playing while the question is asked. Dismissing it
+   is a label ticking a checkbox — no navigation, no script.
+
+   Note it cannot remember the answer. Without JS there is no storage, so the
+   question returns on every visit; that is the honest cost of staying pure. */
+.gate-toggle { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.6rem;
+  font: 300 11px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: lowercase;
+  text-align: center;
+  color: black;
+}
+
+.gate p { margin: 0 0 0.4rem; }
+
+.gate label,
+.gate a {
+  cursor: pointer;
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid black;
+  padding-bottom: 0.5rem;
+  transition: border-color 0.4s ease, opacity 0.4s ease;
+}
+
+.gate label span,
+.gate a span { display: block; letter-spacing: 0.1em; padding-top: 0.35rem; }
+
+.gate label:hover,
+.gate a:hover { border-color: black; }
+
+.gate:has(label:hover) a,
+.gate:has(a:hover) label { opacity: 0.25; }
+
+.hint {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  margin-top: 1.6rem;
+  transform: translateX(-50%);
+  z-index: 19000;
+  pointer-events: none;
+  opacity: 0;
+  font: 300 11px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: lowercase;
+  color: black;
+  white-space: nowrap;
+}
+
+@keyframes hint {
+  0%   { opacity: 0; }
+  12%  { opacity: 1; }
+  72%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.gate-toggle:checked ~ .hint-desk { animation: hint 2.3s ease forwards; }
+
+.gate-toggle:not(:checked) ~ .mark { visibility: hidden; }
+
+.gate-toggle:checked ~ .gate { display: none; }
+
 .grain {
   position: fixed;
   inset: 0;

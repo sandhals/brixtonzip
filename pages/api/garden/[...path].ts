@@ -74,7 +74,22 @@ export default async function handler(
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="cache-timestamp" content="${timestamp}">`
-          content = content.replace('<head>', `<head>${cacheBustingMeta}`)
+
+          // Opt-in progressive enhancement. An entry can offer a scripted
+          // variant by dropping a mobile.js next to its page.html; it is only
+          // ever served when the visitor explicitly asks for it with ?tilt.
+          // Without the query the response contains no script at all, so the
+          // default page stays pure HTML/CSS.
+          const wantsScript = req.query.tilt !== undefined
+          const scriptPath = join(publicGardenPath, 'mobile.js')
+          const enhancement = wantsScript && existsSync(scriptPath)
+            // !important because this style is injected at the top of <head>,
+            // above the page's own stylesheet link, so it would otherwise lose
+            // the cascade to any equally specific rule in that stylesheet.
+            ? `\n    <script src="mobile.js" defer></script>\n    <style>.gate { display: none !important } .mark { visibility: visible !important } .hint-tilt { animation: hint 1.5s ease forwards }</style>`
+            : ''
+
+          content = content.replace('<head>', `<head>${cacheBustingMeta}${enhancement}`)
           
           // Convert relative paths to absolute paths for static file serving on Vercel
           // and add cache-busting query params
