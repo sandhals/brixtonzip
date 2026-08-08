@@ -1,0 +1,219 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: white;
+}
+
+.zones {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  pointer-events: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#warm:checked  ~ .on-warm,
+#cool:checked  ~ .on-cool,
+#green:checked ~ .on-green { pointer-events: auto; }
+
+.col      { flex: 1 1 0; display: flex; flex-direction: column; }
+.col > i  { flex: 1 1 0; display: block; }
+
+.phase {
+  position: fixed;
+  width: 1px; height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.field {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  --mx: 0.5;
+  --my: 0.5;
+  transition: transform 2.2s cubic-bezier(0.16, 1, 0.3, 1),
+              rotate    0.4s ease;
+}
+
+.orb {
+  position: absolute;
+  mix-blend-mode: multiply;
+  --bloom: 1;
+  transform:
+    translate(calc((0.5 - var(--mx)) * var(--depth) * 14vw),
+              calc((0.5 - var(--my)) * var(--depth) * 14vh))
+    scale(var(--bloom));
+  background: currentColor;
+  -webkit-mask-image: radial-gradient(circle, black, transparent 66%);
+          mask-image: radial-gradient(circle, black, transparent 66%);
+
+  transition: transform 4s cubic-bezier(0.16, 1, 0.3, 1),
+              color   3.5s cubic-bezier(0.22, 1, 0.36, 1),
+              translate 2.2s cubic-bezier(0.16, 1, 0.3, 1),
+              scale     2.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hotpink    { color: hotpink; }
+.tomato     { color: tomato; }
+.gold       { color: gold; }
+.sandybrown { color: sandybrown; }
+
+#cool:checked ~ .field .deepskyblue   { color: deepskyblue; }
+#cool:checked ~ .field .darkturquoise { color: darkturquoise; }
+#cool:checked ~ .field .dodgerblue    { color: dodgerblue; }
+#cool:checked ~ .field .mediumorchid  { color: mediumorchid; }
+#cool:checked ~ .field .limegreen     { color: limegreen; }
+
+#green:checked ~ .field .chartreuse   { color: chartreuse; }
+#green:checked ~ .field .springgreen  { color: springgreen; }
+#green:checked ~ .field .greenyellow  { color: greenyellow; }
+#green:checked ~ .field .lime         { color: lime; }
+#green:checked ~ .field .lawngreen    { color: lawngreen; }
+
+@keyframes wanderA {
+  0%   { translate: -4vw -5vh; }  19%  { translate:  4vw -8vh; }
+  37%  { translate:  9vw -1vh; }  54%  { translate:  2vw  5vh; }
+  71%  { translate: -6vw  7vh; }  88%  { translate: -9vw  1vh; }
+  100% { translate: -4vw -5vh; }
+}
+@keyframes wanderB {
+  0%   { translate:  6vw  5vh; }  21%  { translate: -1vw  8vh; }
+  39%  { translate: -7vw  3vh; }  56%  { translate: -5vw -5vh; }
+  73%  { translate:  2vw -8vh; }  89%  { translate:  8vw -2vh; }
+  100% { translate:  6vw  5vh; }
+}
+
+@keyframes pulseA { from { scale: 0.86; } to { scale: 1.18; } }
+@keyframes pulseB { from { scale: 1.14; } to { scale: 0.90; } }
+@keyframes breatheA { from { opacity: 0.03; } to { opacity: 0.32; } }
+@keyframes breatheB { from { opacity: 0.28; } to { opacity: 0.06; } }
+.o1  { left: 18%; top: 24%; width: 44vmax; height: 44vmax; margin: -22vmax 0 0 -22vmax; --depth: 0.3;
+       animation: wanderA 83s linear -14s infinite, pulseB 37s ease-in-out  -5s infinite alternate, breatheB  91s ease-in-out -20s infinite alternate; }
+.o2  { left: 74%; top: 18%; width: 38vmax; height: 38vmax; margin: -19vmax 0 0 -19vmax; --depth: 0.5;
+       animation: wanderB 71s linear -37s infinite, pulseA 43s ease-in-out -19s infinite alternate, breatheA 107s ease-in-out -52s infinite alternate; }
+.o3  { left: 46%; top: 62%; width: 46vmax; height: 46vmax; margin: -23vmax 0 0 -23vmax; --depth: 0.2;
+       animation: wanderA 97s linear -61s infinite, pulseA 29s ease-in-out -11s infinite alternate, breatheA  83s ease-in-out -35s infinite alternate; }
+.o4  { left: 88%; top: 70%; width: 32vmax; height: 32vmax; margin: -16vmax 0 0 -16vmax; --depth: 0.9;
+       animation: wanderB 59s linear  -8s infinite, pulseB 47s ease-in-out -23s infinite alternate, breatheA  67s ease-in-out -12s infinite alternate; }
+.o5  { left:  8%; top: 78%; width: 34vmax; height: 34vmax; margin: -17vmax 0 0 -17vmax; --depth: 1.1;
+       animation: wanderB 89s linear -45s infinite, pulseA 31s ease-in-out  -7s infinite alternate, breatheB  99s ease-in-out -47s infinite alternate; }
+.o6  { left: 62%; top: 40%; width: 24vmax; height: 24vmax; margin: -12vmax 0 0 -12vmax; --depth: 1.6;
+       animation: wanderA 53s linear -23s infinite, pulseA 41s ease-in-out -17s infinite alternate, breatheA  73s ease-in-out -29s infinite alternate; }
+.o7  { left: 30%; top: 52%; width: 20vmax; height: 20vmax; margin: -10vmax 0 0 -10vmax; --depth: 2.0;
+       animation: wanderA 67s linear -70s infinite, pulseB 33s ease-in-out -25s infinite alternate, breatheA  87s ease-in-out -66s infinite alternate; }
+.o8  { left: 92%; top: 34%; width: 26vmax; height: 26vmax; margin: -13vmax 0 0 -13vmax; --depth: 1.3;
+       animation: wanderB 79s linear -31s infinite, pulseA 51s ease-in-out -13s infinite alternate, breatheB 113s ease-in-out  -9s infinite alternate; }
+.o9  { left: 14%; top: 46%; width: 30vmax; height: 30vmax; margin: -15vmax 0 0 -15vmax; --depth: 0.7;
+       animation: wanderB 61s linear -55s infinite, pulseA 39s ease-in-out -29s infinite alternate, breatheA  95s ease-in-out -41s infinite alternate; }
+.o10 { left: 54%; top: 12%; width: 22vmax; height: 22vmax; margin: -11vmax 0 0 -11vmax; --depth: 1.8;
+       animation: wanderA 73s linear -17s infinite, pulseB 27s ease-in-out  -3s infinite alternate, breatheA  79s ease-in-out -24s infinite alternate; }
+.o11 { left: 78%; top: 88%; width: 18vmax; height: 18vmax; margin:  -9vmax 0 0  -9vmax; --depth: 2.4;
+       animation: wanderB 47s linear -49s infinite, pulseA 45s ease-in-out -31s infinite alternate, breatheB  63s ease-in-out -57s infinite alternate; }
+.o12 { left: 36%; top: 86%; width: 26vmax; height: 26vmax; margin: -13vmax 0 0 -13vmax; --depth: 1.4;
+       animation: wanderA 91s linear -26s infinite, pulseA 35s ease-in-out -15s infinite alternate, breatheA 103s ease-in-out -33s infinite alternate; }
+.o13 { left: 66%; top: 66%; width: 16vmax; height: 16vmax; margin:  -8vmax 0 0  -8vmax; --depth: 2.8;
+       animation: wanderB 51s linear -64s infinite, pulseB 49s ease-in-out -21s infinite alternate, breatheA  71s ease-in-out -15s infinite alternate; }
+.o14 { left: 24%; top:  8%; width: 28vmax; height: 28vmax; margin: -14vmax 0 0 -14vmax; --depth: 1.0;
+       animation: wanderA 87s linear -39s infinite, pulseA 28s ease-in-out  -9s infinite alternate, breatheB 117s ease-in-out -60s infinite alternate; }
+.o15 { left: 50%; top: 34%; width: 14vmax; height: 14vmax; margin:  -7vmax 0 0  -7vmax; --depth: 3.0;
+       animation: wanderB 43s linear -11s infinite, pulseA 53s ease-in-out -27s infinite alternate, breatheA  69s ease-in-out -43s infinite alternate; }
+.o16 { left: 96%; top: 52%; width: 18vmax; height: 18vmax; margin:  -9vmax 0 0  -9vmax; --depth: 2.2;
+       animation: wanderA 77s linear -58s infinite, pulseB 32s ease-in-out -35s infinite alternate, breatheA  89s ease-in-out -27s infinite alternate; }
+
+@media (hover: hover) and (pointer: fine) {
+  .zones:has(.c1:hover)  ~ .field { --mx: 0.050; }
+  .zones:has(.c2:hover)  ~ .field { --mx: 0.150; }
+  .zones:has(.c3:hover)  ~ .field { --mx: 0.250; }
+  .zones:has(.c4:hover)  ~ .field { --mx: 0.350; }
+  .zones:has(.c5:hover)  ~ .field { --mx: 0.450; }
+  .zones:has(.c6:hover)  ~ .field { --mx: 0.550; }
+  .zones:has(.c7:hover)  ~ .field { --mx: 0.650; }
+  .zones:has(.c8:hover)  ~ .field { --mx: 0.750; }
+  .zones:has(.c9:hover)  ~ .field { --mx: 0.850; }
+  .zones:has(.c10:hover) ~ .field { --mx: 0.950; }
+
+  .zones:has(.r1:hover)  ~ .field { --my: 0.083; }
+  .zones:has(.r2:hover)  ~ .field { --my: 0.250; }
+  .zones:has(.r3:hover)  ~ .field { --my: 0.417; }
+  .zones:has(.r4:hover)  ~ .field { --my: 0.583; }
+  .zones:has(.r5:hover)  ~ .field { --my: 0.750; }
+  .zones:has(.r6:hover)  ~ .field { --my: 0.917; }
+}
+
+.zones:active ~ .field .orb {
+  --bloom: 1.12;
+  transition-duration: 1.2s, 3.5s;
+}
+
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.055;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.mark {
+  position: fixed;
+  left: 50%;
+  bottom: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  pointer-events: none;
+  font: 300 11px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: lowercase;
+  color: black;
+  white-space: nowrap;
+}
+
+.mark a {
+  pointer-events: auto;
+  color: black;
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+  text-decoration-thickness: 1px;
+}
+.mark:has(a:hover, a:focus-visible) ~ .field  {
+  transform: scale(0.38);
+  rotate: 540deg;
+  transition-duration: 2.2s, 24s; 
+}
+.mark:has(a:hover, a:focus-visible) ~ .field .orb  {
+  opacity: 0.5 !important;
+  translate: 0 0 !important;
+  transition-duration: 2.2s, 3.5s, 2.2s, 2.2s;  
+}
+
+.mark:has(a:hover, a:focus-visible) ~ .field .o1   { transform: translate(calc(  46.9vw +   0.0vmax), calc(  38.1vh +   0.0vmax)); scale: 0.682 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o2   { transform: translate(calc( -31.7vw +  -0.5vmax), calc(  42.2vh +   0.5vmax)); scale: 0.758 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o3   { transform: translate(calc(   6.7vw +   0.1vmax), calc( -20.0vh +  -1.7vmax)); scale: 0.600 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o4   { transform: translate(calc( -46.1vw +   1.1vmax), calc( -24.2vh +   1.5vmax)); scale: 0.825 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o5   { transform: translate(calc(  56.7vw +  -2.7vmax), calc( -37.8vh +  -0.5vmax)); scale: 0.741 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o6   { transform: translate(calc( -12.0vw +   2.2vmax), calc(  10.0vh +  -1.4vmax)); scale: 1.000 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o7   { transform: translate(calc(  17.5vw +  -0.7vmax), calc(  -1.8vh +   2.6vmax)); scale: 1.140 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o8   { transform: translate(calc( -50.6vw +  -2.0vmax), calc(  19.3vh +  -3.8vmax)); scale: 0.831 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o9   { transform: translate(calc(  52.9vw +   5.6vmax), calc(   5.9vh +   2.1vmax)); scale: 0.680 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o10  { transform: translate(calc(  -4.6vw +  -4.9vmax), calc(  43.5vh +   2.0vmax)); scale: 0.873 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o11  { transform: translate(calc( -28.0vw +   2.2vmax), calc( -38.0vh +  -4.6vmax)); scale: 1.000 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o12  { transform: translate(calc(  21.7vw +   2.6vmax), calc( -55.7vh +   8.3vmax)); scale: 0.646 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o13  { transform: translate(calc( -16.4vw +  -5.4vmax), calc( -16.4vh +  -3.1vmax)); scale: 0.975 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o14  { transform: translate(calc(  50.6vw +  12.6vmax), calc(  81.7vh +  -2.8vmax)); scale: 0.514 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o15  { transform: translate(calc(   0.0vw +  -4.4vmax), calc(  17.0vh +   6.2vmax)); scale: 0.943 !important; }
+.mark:has(a:hover, a:focus-visible) ~ .field .o16  { transform: translate(calc( -69.0vw +  -1.5vmax), calc(  -3.0vh + -11.4vmax)); scale: 0.667 !important; }
+
+.mark:has(a:active) ~ .field {
+  transform: scale(0.04);
+  transition-duration: 0.22s, 24s;
+  transition-timing-function: cubic-bezier(0.7, 0, 0.85, 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb { animation: none; opacity: 0.24; transition-duration: 0.4s; }
+  .zones:active ~ .field .orb { transition-duration: 0.2s; }
+}

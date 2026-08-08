@@ -33,6 +33,8 @@ const ITEMS = [
     desc: 'Sometimes at work, we need to sort lines of text by their precise pixel length. I couldn\'t find a reliable tool that did this so I made one!' },
   { name: 'Sort by Vote', href: '/garden/sortbyvote', cat: 'tools',
     desc: 'Also at work, we often use ball emojis to cast votes on copy in Google Docs. I built this tool to organize those votes. Probably not useful to many others, but I keep it hosted on my site for easy access!' },
+  { name: 'HTML Day 2026', href: '/garden/htmlday2026', cat: 'play', featured: true,
+    desc: 'Ambient HTML energy project for the 2026 HTML Day meetup in Seoul.' },
 ]
 
 const BREWING = [
