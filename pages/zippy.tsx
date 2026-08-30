@@ -39,7 +39,7 @@ export default function ZippyPage() {
               <Zippy />
             </div>
             <div className="zippy-text">
-              <h3>idle and attentive</h3>
+              <h3>yapping and shocked</h3>
               <p>Zippy spends most of his time reciting Brixton's daily schedule. His SVG mouthflaps cycle between a square, circle, and diamond to represent his speech. If you interrupt him by hovering over him, he'll freeze, shocked, in the circle position.</p>
             </div>
           </div>
@@ -69,7 +69,7 @@ export default function ZippyPage() {
               />
             </label>
             <div className="zippy-text">
-              <h3>flustered, and unzipped</h3>
+              <h3>nervous and unzipped</h3>
               <p>If you hover over the "UNZIP" checkbox, Zippy will get a little nervous. Click it and reveal the menu lying under the hood, he gets really embarrassed. Wouldn't you?</p>
             </div>
           </div>

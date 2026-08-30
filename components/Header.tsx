@@ -71,6 +71,7 @@ export default function Header({ variant = 'article' }: HeaderProps) {
     }
     .marquee-face:hover .mouth-strip,
     [data-pose="demo-hover"]:hover .mouth-strip,
+    [data-pose="reading"]:hover .mouth-strip,
     [data-pose="attentive"] .mouth-strip,
     [data-pose="woken"] .mouth-strip {
       animation: none;
