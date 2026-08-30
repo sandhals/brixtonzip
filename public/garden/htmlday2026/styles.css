@@ -51,7 +51,7 @@ html, body {
   -webkit-mask-image: radial-gradient(circle, black, transparent 66%);
           mask-image: radial-gradient(circle, black, transparent 66%);
 
-  transition: transform 4s cubic-bezier(0.16, 1, 0.3, 1),
+  transition: transform var(--glide, 4s) cubic-bezier(0.16, 1, 0.3, 1),
               color   3.5s cubic-bezier(0.22, 1, 0.36, 1),
               translate 2.2s cubic-bezier(0.16, 1, 0.3, 1),
               scale     2.2s cubic-bezier(0.16, 1, 0.3, 1);
