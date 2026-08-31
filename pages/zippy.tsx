@@ -89,6 +89,29 @@ export default function ZippyPage() {
           </div>
 
         </div>
+
+        {/* Offers the star up in the marquee. Scrolls back up as well, or the
+            treat would appear off-screen behind you. */}
+        <p className="zippy-treat-line">
+          <button
+            type="button"
+            className="zippy-treat"
+            onClick={() => {
+              window.dispatchEvent(new Event('zippy:treat'));
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
+            {/* The same asterisk he gets handed, at text size. */}
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+              <g stroke="currentColor" strokeWidth="5.5" strokeLinecap="round">
+                <line x1="50" y1="18" x2="50" y2="82" />
+                <line x1="22.3" y1="34" x2="77.7" y2="66" />
+                <line x1="77.7" y1="34" x2="22.3" y2="66" />
+              </g>
+            </svg>
+            give Zippy a treat
+          </button>
+        </p>
         <br />
       </div>
     </Layout>

@@ -485,6 +485,7 @@ details {
 }
 
 .marquee-face {
+  text-decoration: none;
   flex-shrink: 0;
   height: 100%;
   padding-left: 0.4em;
@@ -506,6 +507,164 @@ details {
   height: 1.6em;
   width: auto;
   margin-top: -0.2em;
+}
+
+/* Both the star being dragged and the star being thrown are rendered onto the
+   body rather than into the strip. They have to be: the strip is
+   overflow:hidden and only 1.3em tall, so a star left inside it is sliced off
+   the moment it leaves that band. Above everything, since they pass over the
+   whole page. */
+.zippy-treat-flying {
+  position: fixed;
+  z-index: 2147483647;
+  pointer-events: none;
+  width: auto;
+  /* Centres the star on the pointer. The independent translate property
+     composes ahead of transform, so the keyframes below are free to use
+     transform for the throw without undoing this. */
+  translate: -50% -50%;
+}
+
+.zippy-treat-flying svg {
+  height: 100%;
+  width: auto;
+  display: block;
+}
+
+.zippy-treat-flying > span {
+  display: block;
+  height: 100%;
+}
+
+/* Thrown: horizontal travel on the outer at a constant rate, vertical on the
+   inner under gravity. Two animations multiplying together give a parabola;
+   one animation carrying both would only ever give a straight diagonal. */
+.zippy-treat-flying.is-falling {
+  animation: treat-throw-x 1.05s linear forwards;
+}
+
+.zippy-treat-flying.is-falling > span {
+  animation: treat-fall-y 1.05s forwards;
+}
+
+@keyframes treat-throw-x {
+  from { transform: translateX(0); }
+  to   { transform: translateX(var(--throw-x, 0px)); }
+}
+
+@keyframes treat-fall-y {
+  /* Out of the hand fast and slowing (the toss), then accelerating away. */
+  0%   { transform: translateY(0) rotate(0deg);
+         animation-timing-function: cubic-bezier(0.15, 0.7, 0.4, 1); }
+  16%  { transform: translateY(var(--toss, 0px)) rotate(calc(var(--spin, 170deg) * 0.16));
+         animation-timing-function: cubic-bezier(0.55, 0, 0.9, 1); }
+  100% { transform: translateY(105vh) rotate(var(--spin, 170deg)); }
+}
+
+/* Every third treat: a heart drifts up and off to his right. The slot carries
+   no width of its own, so nothing in the strip shifts when one appears. */
+.marquee-heart-slot {
+  position: relative;
+  flex: 0 0 0;
+  width: 0;
+  align-self: center;
+  /* The slot sits before the text in the DOM, so without this the marquee
+     paints straight over the heart on its way past. */
+  z-index: 3;
+}
+
+.marquee-heart {
+  position: absolute;
+  left: -0.25em;
+  top: -0.36em;
+  height: 0.72em;
+  width: auto;
+  pointer-events: none;
+  animation: heart-float 1.9s ease-out both;
+}
+
+/* It rises only about half the strip's height before it is gone -- the box
+   clips at 1.3em, and a heart cut in half on the way out reads as a glitch.
+   It also drifts less far right than it could: past about 1.2em it is deep in
+   the marquee text and reading it takes effort even with the halo.
+
+   The opacity holds flat at 1 for most of the flight instead of ramping down
+   across it. A partly transparent heart lets the letter underneath show
+   straight through the fill, which no amount of halo fixes -- so it stays
+   solid over the text and does all its fading in the last quarter. */
+@keyframes heart-float {
+  0%   { opacity: 0; transform: translate(0, 0.15em) scale(0.4); }
+  14%  { opacity: 1; transform: translate(0.25em, -0.05em) scale(1); }
+  74%  { opacity: 1; transform: translate(0.92em, -0.36em) scale(0.98); }
+  100% { opacity: 0; transform: translate(1.2em, -0.48em) scale(0.9); }
+}
+
+/* The second of the pair: a beat behind, smaller, and on a shallower arc, so
+   the two read as one after the other rather than as a single fat blob. */
+.marquee-heart.is-trailing {
+  top: -0.24em;
+  height: 0.52em;
+  animation-name: heart-float-trailing;
+  animation-delay: 0.36s;
+}
+
+@keyframes heart-float-trailing {
+  0%   { opacity: 0; transform: translate(0, 0.18em) scale(0.4); }
+  14%  { opacity: 1; transform: translate(0.2em, 0.06em) scale(1); }
+  74%  { opacity: 1; transform: translate(0.74em, -0.14em) scale(0.98); }
+  100% { opacity: 0; transform: translate(0.98em, -0.24em) scale(0.9); }
+}
+
+/* The star, offered from /zippy. Sits in the strip beside him, and is dragged
+   onto his face to feed him. */
+.marquee-treat {
+  flex-shrink: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 0.35em;
+  background: none;
+  border: 0;
+  cursor: grab;
+  color: rgb(247, 247, 247);
+  /* It has to travel over the marquee text to reach him, and a drag that
+     scrolls the page instead of moving the star is no drag at all. */
+  position: relative;
+  z-index: 2;
+  touch-action: none;
+  animation: treat-in 1.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* The star is the cursor for the duration of the drag, so the arrow goes. */
+/* The real button stays in the flow while its portalled copy does the moving,
+   so the marquee text does not jump sideways for the length of the drag. */
+.marquee-treat.is-dragging {
+  cursor: none;
+  animation: none;
+  visibility: hidden;
+}
+
+body.zippy-dragging,
+body.zippy-dragging * {
+  cursor: none !important;
+}
+
+.marquee-treat svg {
+  height: 0.95em;
+  width: auto;
+}
+
+/* Long and slow, with a settle at the bottom: an arrival rather than a pop.
+   Nothing here but opacity and vertical travel -- the star is exactly the same
+   size the whole way down. No scale, and no spin either: six points at 60
+   degrees are symmetric enough that a turn barely reads, while it does swell
+   the box the star occupies as it goes. */
+@keyframes treat-in {
+  0%   { opacity: 0; transform: translateY(-1.7em); }
+  40%  { opacity: 1; }
+  72%  { transform: translateY(0.1em); }
+  86%  { transform: translateY(-0.04em); }
+  100% { opacity: 1; transform: none; }
 }
 
 .marquee-theme-slot {
@@ -724,7 +883,7 @@ li {
    off-screen, so the link is still readable to screen readers and search. */
 .titlemark .wordmark {
   display: block;
-  width: min(84vw, 522px);
+  width: min(96vw, 522px);
   aspect-ratio: 1681 / 281;
   margin: 0 auto;
   background: var(--black);
@@ -995,6 +1154,61 @@ body, .container, .content, .footer, .status-marquee-box {
   color: rgb(247, 247, 247);
   opacity: 0.75;
   pointer-events: none;
+}
+
+/* Qualified with .box, or `.box > p { text-indent: 2rem }` outranks this and
+   the button centres 16px right of true centre -- half the indent it is still
+   carrying. */
+.box > p.zippy-treat-line {
+  text-indent: 0;
+  text-align: center;
+  margin-top: 1.6em;
+}
+
+/* Built on the same language as .pill -- Roboto, a hairline in --black -- but
+   squared off and at button proportions rather than tag ones. Filling on hover
+   lands it on the page's other motif: the dark chips the demos sit on. */
+.zippy-treat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  font-size: 0.72em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--black);
+  background: none;
+  border: 1px solid var(--black);
+  border-radius: 0;
+  padding: 0.6em 1.05em;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: background 0.16s ease, color 0.16s ease, opacity 0.16s ease;
+}
+
+/* Literal rather than var(--white): --white inverts to near-black in the dark
+   theme, which on the near-black fill leaves the label unreadable. The chips
+   above hardcode it for the same reason. */
+.zippy-treat:hover,
+.zippy-treat:focus-visible {
+  background: var(--marquee-bg, var(--black));
+  color: rgb(247, 247, 247);
+  opacity: 1;
+}
+
+/* see .marquee-face svg — `* { color: var(--black) }` sets the colour on the
+   svg itself, so inheriting has to be asked for explicitly or the asterisk
+   stays dark when the button fills in. */
+.zippy-treat svg,
+.zippy-treat svg * {
+  color: inherit;
+}
+
+.zippy-treat svg {
+  height: 0.95em;
+  width: auto;
+  flex: 0 0 auto;
 }
 
 .zippy-card em {

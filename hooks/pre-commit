@@ -1,0 +1,9 @@
+#!/bin/sh
+# Keeps data/now.json's lastUpdated honest: if the file is part of this commit,
+# restamp it and include the change in the same commit.
+#
+# Tracked in the repo rather than living in .git/hooks so it survives a clone.
+# Enable it once per clone with:  git config core.hooksPath hooks
+git diff --cached --name-only | grep -qx 'data/now.json' || exit 0
+node scripts/stamp-now.mjs || exit 1
+git add data/now.json

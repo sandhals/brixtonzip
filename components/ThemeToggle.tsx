@@ -16,7 +16,7 @@ const nextLabel: Record<Theme, string> = {
 
 function MoonIcon() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg width="1upda" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor" />
     </svg>
   )
