@@ -27,6 +27,7 @@ import UnzipBox from '@/components/UnzipBox'
 import LinkList from '@/components/LinkList'
 import { GetStaticProps } from 'next'
 import nowData from '@/data/now.json'
+import { fetchCurrentlyReading } from '@/lib/goodreads'
 
 interface Book { title: string; author: string; }
 interface StatusItem { label: string; value: string; values?: Book[]; }
@@ -107,15 +108,7 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   for (const item of nowData.status) {
     if (item.label === 'reading' && !item.value) {
       try {
-        const res = await fetch('https://www.goodreads.com/review/list_rss/6432075?shelf=currently-reading');
-        const xml = await res.text();
-        const books = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(m => {
-          const block = m[1];
-          const rawTitle = block.match(/<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/)?.[1];
-          const author = block.match(/<author_name>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/author_name>/)?.[1] ?? '';
-          const title = rawTitle ? rawTitle.replace(/\s*:.*$/, '') : null;
-          return title ? { title, author } : null;
-        }).filter((b): b is Book => b !== null);
+        const books = await fetchCurrentlyReading();
         if (books.length > 0) {
           const first = books[0];
           status.push({ label: 'reading', value: first.title + (first.author ? ` by ${first.author}` : ''), ...(books.length > 1 ? { values: books } : {}) });
