@@ -1,5 +1,6 @@
-.hometext > a[href^="http"]:not([href*="brixton.zip"])::after,
-.hometext > a[href^="//"]:not([href*="brixton.zip"])::after {
+.hometext > a[href^="http"]:not([href*="brixton.zip"]):not(.has-trailing-punct)::after,
+.hometext > a[href^="//"]:not([href*="brixton.zip"]):not(.has-trailing-punct)::after,
+.hometext > .ext-punct::after {
   content: "";
   display: inline-block;
   width: 8px;

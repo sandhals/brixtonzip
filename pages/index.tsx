@@ -139,7 +139,7 @@ export default function HomePage({ status, lastUpdated }: HomeProps) {
       <div className="box">
         <p className="hometext">
           <a href="/about" className="pill opener">PROFILE</a>
-          Hi, I'm Brixton! I was born in Canada, relocated to the Japanese countryside in 2016, and since 2021 have been living in Korea. I spend most of my free time learning languages, working out, <a href="/garden">building websites</a>, reading, writing, and <a href="sketchbook">sketching</a>. Welcome to my online zip folder.
+          Hi, I'm Brixton! Born and bred in rural, northwestern Canada, I left at 20 to spend five years in the Japanese countryside and since 2021 have been living in Seoul, Korea. I spend my free time learning languages, working out, <a href="/garden">building websites</a>, writing, <a href="http://goodreads.com/lehtia">reading</a>, and <a href="sketchbook">sketching</a>. You can open a simple map of the site by unzipping it with the checkbox in the bottom right corner of the image above.
         </p>
         
         <p className="hometext">
